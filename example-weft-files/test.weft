@@ -1,0 +1,51 @@
+// Sample Weft pseudocode file
+// This demonstrates basic syntax highlighting
+
+function calculateTotal(items) 
+    var total to 0
+    
+    for each item in items
+        if item.price is greater than 0 then
+            add item.price to total
+        else
+            log "Invalid price found"
+        endif
+    endfor
+    
+    return total
+endfunction
+
+function processUser(user)
+    // Check if user is valid
+    if user is not null and user.email contains "@" then
+        const welcomeMessage to "Hello " + user.name
+        send welcomeMessage to user.email
+        
+        // Update user status
+        set user.lastLogin to currentTime
+        update user in database
+    else
+        print "Invalid user data"
+    endif
+endfunction
+
+// Example with different data types
+var userList to empty list
+var preferences to empty map
+const isActive to true
+const maxRetries to 3
+
+/* Multi-line comment
+   showing various Weft constructs
+   with natural language flow */
+
+for each attempt from 1 to maxRetries
+    call connectToAPI with credentials
+    
+    if connection is successful then
+        fetch userList from "/api/users"
+        break
+    else
+        log "Retry attempt " + attempt
+    endif
+endfor
