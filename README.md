@@ -1,8 +1,8 @@
 # Weft Programming Language
 
-`STATUS: repo pretty empty, language server coming soon`
+`STATUS: new repo, language server coming soon`
 
-A modern pseudocode-like language and VS Code integration designed to bridge human-readable logic and real-world programming languages. Weft serves as an intermediate representation that enables seamless translation between human thought and machine code, facilitating **much higher bandwidth per token** coding for developers by separating concerns of syntax and logical/creative flow in software engineering.
+A modern pseudocode language and VS Code integration designed to bridge human-readable logic and real-world programming languages. Weft serves as an intermediate representation that enables seamless translation between human thought and machine code, facilitating **much higher bandwidth per token** coding for developers by separating concerns of syntax and logical/creative flow in software engineering.
 
 ## Overview
 
@@ -17,55 +17,64 @@ A modern pseudocode-like language and VS Code integration designed to bridge hum
 
 ---
 
-## Language Capabilities
+## Language Philosophy
 
-Weft is designed to be the most flexible pseudocode language in existence, versatile enough to support every edge case and cover the bases of every existing executable language.
+**Write however you want.** Weft is designed to accept syntax from virtually any programming language, allowing you to express logic in whatever style feels natural to you. Whether you prefer brackets `{}`, indentation-based scoping, semicolons, or natural language - Weft adapts to your thinking style.
 
-### Key Features
+The core principle: **focus on logic and flow, not syntax memorization.**
 
-* **Declarative UI** (inspired by React, SwiftUI, Jetpack Compose)
-* **Asynchronous code patterns** (async/await, callbacks, promises)
-* **Stateful logic** (state management primitives)
-* **Memory and resource management** (abstracted but hint-able)
-* **Database operations** (CRUD, transactions, schemas)
-* **Strong type hinting** and **interfaces**
-* **Custom modules and imports**
-* **Pattern matching** and **control flow constructs**
+### Universal Syntax Support
 
-### Example Syntax
+Weft accepts and understands:
+* **All comment styles** - `//`, `/* */`, `#`, `<!-- -->`, etc
+* **All scoping methods** - brackets, indentation, keywords
+* **All operator styles** - symbolic (`==`, `+=`) or natural language (`equals`, `add to`)
+* **Mixed paradigms** - functional, object-oriented, imperative - use what fits the problem
+
+### What You Can Express in Weft
+
+These examples showcase Weft's versatility - not limitations. Weft can handle any coding problem:
 
 ```weft
-component HomePage
+// Declarative UI (React/SwiftUI style)
+component HomePage {
     state user = fetchUser()
-    render:
-        if user is loading then
-            show LoadingSpinner()
-        else
-            show UserProfile(user)
-        endif
-endcomponent
+    render: user.loading ? LoadingSpinner() : UserProfile(user)
+}
 
-async function fetchUser
-    await get('/api/user')
-endfunction
+// Async operations
+async function fetchUser() {
+    try {
+        const response = await api.get('/user')
+        return response.data
+    } catch error {
+        log error.message
+        return null
+    }
+}
+
+// Database operations
+query users from database 
+    where active is true 
+    and lastLogin > 30.days.ago
+    order by createdAt desc
+
+// Concurrent processing
+parallel tasks:
+    worker processImages(imageQueue)
+    worker sendNotifications(userList)
+    worker updateAnalytics(eventData)
 ```
 
 ---
 
-## Handling Complex Cases
+## Why Weft?
 
-| Problem | Mitigation Strategy | Example |
-|---------|-------------------|---------|
-| Complex async flows | Use `async function`, `await`, `try/catch`, `then`, `finally` keywords | `async function fetchUser: await get('/api/user')` |
-| Declarative UI with nested state | Use `component`, `state`, `computed`, and `render:` blocks | `component HomePage: state user = fetchUser() render: ...` |
-| Interop with other languages | Define clear `bindings` blocks or `import js`, `import swift` | `import js from './analytics.js' bindings TrackEvent` |
-| Memory/resource management | Abstract with `allocate`, `defer`, or `release` blocks | `allocate buffer = NewBuffer() defer release(buffer)` |
-| Database operations | Use `database table`, `query`, `insert`, `transaction` keywords | `database table Users { id: Int, name: String } insert Users(id: 1, name: "Alice")` |
-| Recursive algorithms | Use `function`, `node`, and `recurse:` patterns | `function traverseTree(node): if node: recurse traverseTree(node.left)` |
-| Graph traversal with memory constraints | Leverage `visited` state tracking and explicit `allocate/release` | `function crawlGraph(start): state visited = Set() allocate queue = Queue()` |
-| Streaming I/O with transforms | Use `stream`, `transform`, and `pipe` keywords | `stream input = ReadFile('data.csv') transform clean = RemoveEmptyRows(input) pipe clean` |
-| Multi-threading or concurrency | Use `parallel`, `worker`, `lock`, and `shared` keywords | `parallel workers: worker compress(files), worker upload(files)` |
-| Stateful UIs reacting to DB changes | Connect `state` blocks to `query` results with `onChange:` handlers | `state users = query AllUsers onChange: refresh UI` |
+**Separate logic from syntax.** Every programming language forces you to learn its specific way of expressing ideas. Weft lets you focus on *what* your program does, not *how* to write it in a particular syntax.
+
+**Perfect for LLM collaboration.** Large language models excel at understanding and translating logical flow. By expressing your ideas in Weft, you can seamlessly translate to any target language while preserving the core logic.
+
+**Universal understanding.** Team members, stakeholders, and collaborators can read and contribute to Weft code regardless of their programming background, because it accepts natural language alongside traditional code syntax.
 
 ---
 
@@ -85,117 +94,60 @@ endfunction
 
 ---
 
-## File Organization Strategies
+## File Organization
 
-### Goals
+Weft uses a **mirror folder structure** to keep your codebase clean while maintaining perfect synchronization between executable code and Weft logic files.
 
-* Prevent clutter from pseudocode mirrors
-* Enable seamless navigation between real and pseudocode
-* Make the system feel elegant and scalable
-
-### Recommended Approach: Mirror Folder + Virtual Toggle
-
-#### Option 1: Mirror Folder Structure
+### Directory Structure
 ```
 src/
   App.tsx
   api.ts
+  components/
+    Button.tsx
+    Modal.tsx
 .weft/
   src/
     App.weft
     api.weft
+    components/
+      Button.weft
+      Modal.weft
 ```
 
-**Pros:** Keeps file tree clean, scalable  
-**Cons:** Slightly more complex tooling
+### How It Works
 
-#### Option 2: Virtual Mode via Extension
-* Toggle Weft mode hides all `.ts` files and shows `.weft` or generated views
-* Requires more extension logic but provides cleanest experience
+**Automatic Synchronization:** The Weft compiler maintains bidirectional sync between your executable code and Weft files. Edit either version, and the other updates automatically.
 
-### Alternative Options
+**Clean File Tree:** Your main codebase stays uncluttered. The `.weft/` directory mirrors your project structure but contains only the logical flow versions of your files.
 
-#### Adjacent Files
-```
-src/
-  App.tsx
-  App.weft
-  api.ts
-  api.weft
-```
-
-#### Embedded in Comments
-```typescript
-// WEFT_START
-// Describes a dynamic component with live data
-// WEFT_END
-function Widget() {...}
-```
+**VS Code Integration:** The extension provides UI toggles to seamlessly switch between "Code Mode" and "Weft Mode" views, letting you work in whichever representation feels right for the task at hand.
 
 ---
 
 ## Developer Tools and Commands
 
-### File Management
+### Extension Features
 
-Hide Weft files in `.vscode/settings.json`:
+#### View Mode Toggle
+* **Code Mode** - Work with your executable files (`.tsx`, `.ts`, `.py`, etc.)
+* **Weft Mode** - Work with logical flow files (`.weft`)
+* **Split View** - See both representations side-by-side
+
+#### Seamless Navigation
+* Jump between corresponding files instantly
+* Maintain cursor position and context when switching modes
+* Visual indicators showing sync status between file pairs
+
+#### Auto-Hide Configuration
 ```json
+// .vscode/settings.json
 {
   "files.exclude": {
-    "**/*.weft": true
+    ".weft/**": true  // Hide .weft folder in Code Mode
   }
 }
 ```
-
-### Extension Features
-
-#### Command Palette
-* `Toggle Weft View`
-* `Generate Weft from Current File`
-* `Convert Weft to Real Code`
-
-#### CodeLens Integration
-* `View/Edit Weft` buttons in file headers
-
-#### Diff View
-* Visual comparison between Weft and source code
-
----
-
-## Project Setup
-
-### Bootstrap (TypeScript Extension)
-
-1. **Install dependencies:**
-```bash
-npm install --save-dev vscode vscode-languageclient typescript ts-node @types/node
-```
-
-2. **Project Structure:**
-```
-weft-language-server/
-  src/
-    server.ts      # Language server entry
-    weft.ts        # Parser + validator for Weft
-    lsp.ts         # LSP bindings
-  package.json
-  tsconfig.json
-  extension/
-    src/
-      extension.ts # VS Code client extension entry
-```
-
-3. **Compile and Test:**
-```bash
-npx tsc
-code .
-```
-
-4. **Debug** inside VS Code with launch configuration
-
-### Core Dependencies
-* Only core LSP tooling and minimal utilities
-* No framework dependencies by default
 
 ---
 
@@ -220,48 +172,97 @@ function calculateTotal(items, taxRate)
 endfunction
 ```
 
-### Syntax Highlighting Categories (very early rn)
+### Syntax Highlighting (Weft 1.0 Starting Point)
 
-**Keywords** (Blue): `function`, `if`, `then`, `else`, `for`, `while`, `return`, `async`, `await`
+Weft recognizes and highlights syntax from all major programming languages. Write using your favorite keywords, operators, and patterns from any language you know:
 
-**Actions** (Green): `add`, `remove`, `call`, `create`, `update`, `delete`, `send`, `fetch`
+**Keywords:**
+- Control flow: `if`, `then`, `else`, `elif`, `endif`, `for`, `while`, `do`, `loop`, `until`, `break`, `continue`, `switch`, `case`, `when`, `match`
+- Functions: `function`, `def`, `func`, `fn`, `method`, `async`, `await`, `return`, `yield`, `lambda`
+- Variables: `var`, `let`, `const`, `set`, `declare`, `auto`, `mut`, `static`, `final`
+- Classes/Objects: `class`, `struct`, `interface`, `trait`, `enum`, `type`, `extends`, `implements`
+- Modules: `import`, `export`, `from`, `include`, `require`, `use`, `namespace`, `module`
 
-**Operators** (Purple): `to`, `from`, `with`, `in`, `is`, `equals`, `greater than`
+**Operators:**
+- Natural language: `is`, `equals`, `contains`, `greater than`, `less than`, `and`, `or`, `not`, `to`, `from`, `with`, `in`
+- Symbolic: `==`, `!=`, `<`, `>`, `<=`, `>=`, `&&`, `||`, `!`, `+`, `-`, `*`, `/`, `%`, `=`, `+=`, `-=`, `=>`, `->`, `::`, `::`
 
-**Values** (Orange): Strings, numbers, booleans
+**Types:**
+- Primitives: `String`, `Number`, `Int`, `Float`, `Bool`, `Boolean`, `Char`, `Byte`
+- Collections: `Array`, `List`, `Vector`, `Set`, `Map`, `Dict`, `Tuple`, `Queue`, `Stack`
+- Advanced: `Promise`, `Future`, `Option`, `Maybe`, `Result`, `Either`
 
-**Comments** (Gray): `//`, `/* */`
+**Support Functions:**
+- CRUD: `create`, `read`, `update`, `delete`, `insert`, `select`, `modify`, `remove`
+- Operations: `add`, `subtract`, `multiply`, `divide`, `append`, `prepend`, `push`, `pop`
+- I/O: `print`, `log`, `console`, `read`, `write`, `fetch`, `send`, `call`, `invoke`
 
-### Modern Programming Concepts
+**Constants:**
+- Literals: `"strings"`, `'chars'`, `123`, `45.67`, `true`, `false`, `null`, `undefined`, `nil`, `None`
+
+**Comments:**
+- All styles: `//`, `/* */`, `#`, `<!-- -->`, `--`, `'''`, `"""`, `(*  *)`
+
+### Super Versatile For Modern Programming
+
 ```weft
-// API calls
-var users = fetch "/users" with auth token
+// API calls with mixed syntax styles
+const users = await fetch("/users", { auth: token })
+let results = users.filter(user => user.active is true)
 
-// State management  
+// Database operations (SQL-like)
+SELECT * FROM orders WHERE status == "pending" 
+    AND created_at > yesterday
+UPDATE inventory SET quantity -= order.amount
+
+// State management with natural language
 update user state where id equals currentUserId
+set loading to false
+trigger dataChanged event
 
-// Event handling
-on button click
-    call submitForm
-end
+// Async/concurrent operations  
+parallel {
+    worker processImages(queue)
+    worker sendEmails(users)
+    worker updateAnalytics()
+}
+
+// Event handling (multiple styles)
+on button.click -> submitForm()
+when user.login { redirect("/dashboard") }
+if mouse.hover then showTooltip()
+
+// Functional programming patterns
+map users to user.name
+filter orders where amount > 100
+reduce totals with (sum, item) => sum + item.value
+
+// Type-safe operations
+function calculateTax(amount: Number) -> Number {
+    return amount * 0.08
+}
+
+// Error handling across paradigms
+try {
+    const result = await riskyOperation()
+} catch error {
+    log error.message
+    return fallbackValue
+}
 ```
 
 ---
 
 ## Integration Features
 
-### Auto-completion
-* Type "f" → suggests `for each`, `function`
-* Smart suggestions based on context and variable types
+### Integration Features
 
-### Error Highlighting
-* Missing `end` statements
-* Undefined variables
-* Type mismatches
-
-### Code Folding
-* Collapse `if` blocks, `for` loops, `function` definitions
-* Visual hierarchy for complex logic
+* **Bidirectional sync** - Automatic translation between Weft and executable code maintains perfect consistency
+* **Universal auto-completion** - Context-aware suggestions work with any syntax style you prefer
+* **Intelligent error detection** - Understands logical flow and catches errors regardless of syntax choice
+* **Flexible code folding** - Adapts to any scoping method (brackets, indentation, keywords)
+* **Multi-language translation** - Seamless conversion to and from any programming language via LLM integration
+* **Live collaboration** - Team members can edit in different syntax styles while working on the same logical flow
 
 ---
 
@@ -284,17 +285,6 @@ end
 * Multi-language code generation
 * Real-time collaboration
 * Visual programming interface
-
----
-
-## Philosophy
-
-Weft embodies the principle that **logic should be separate from syntax**. By providing structured design thinking with real-world tooling choices, Weft optimizes for:
-
-* **Clarity** - Express ideas without syntactic overhead
-* **Speed** - Rapid prototyping and iteration
-* **Collaboration** - Non-programmers can read and contribute
-* **Future-ready** - AI-assisted development and translation
 
 ---
 
