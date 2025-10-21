@@ -5,12 +5,18 @@ Weft makes heavy use of annotations to capture intent, context, and metadata abo
 ## Core Annotations
 
 ### @Main
-Marks the main entry point of the application. There should be only one `@Main` annotation in the entire codebase.
+
+Marks the main entry point of the application. There should be only one `@Main` annotation in the entire codebase. Can be applied to either a function or a class/type. If writing a standard application for mobile and/or web and/or desktop, you should annotate a class that conforms to the `App` protocol. `App` requires the implementation of a single `content` computed property that returns a view to be shown on screen.
 
 ```weft
 @Main
-func main() {
-    // application entry point
+class ClearlyReformed: App {
+  @State var wpEngine = WPEngine()
+
+  var content: View = {
+    MainView() {
+      environment: [wpEngine]
+  }
 }
 ```
 
@@ -163,7 +169,7 @@ class ArticleEngine {
 ```
 
 When you mark a type with `@Observed`, the translator knows to:
-- **SwiftUI**: Make it conform to `Observable`
+- **SwiftUI**: Use the `@Observable` macro
 - **Jetpack Compose**: Use `mutableStateOf` for reactive properties
 - **React**: Create appropriate state management (Context, store, etc.)
 
@@ -209,6 +215,8 @@ Use `@State` when:
 - The state is private to this view
 - The view is responsible for creating and managing the state
 - Child views don't need to modify this state (otherwise use `@Binding`)
+
+You would also use `@State` to initialize an `@Observed` object/type in a view if the view owns the state of that object/type (e.g. the view does not expect it to be handed down from a parent).
 
 ### @Binding
 
@@ -257,6 +265,22 @@ Use `@Environment` when:
 - The state is shared across many views
 - You don't want to pass state explicitly through every level
 - Working with app-wide concerns (theme, auth, navigation, etc.)
+
+Inject environment objects at the root of your view hierarchy, typically in your `@Main` function/object, by passing in an array of all objects you need access to in the environment:
+
+```weft
+@Main
+class SomeApp {
+  @State var theme = Theme() // this class owns the theme state
+  @State var authService = AuthService() // also owns auth state
+
+  view MainView(
+    environment: [theme, authService]
+  ) {
+      // other views
+  }
+}
+```
 
 ### State Ownership Summary
 
