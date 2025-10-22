@@ -5,6 +5,19 @@ Welcome to the Weft documentation! This guide will help you understand and use W
 ## Featured Project: Clearly Reformed Mobile
 Want to see a Weft codebase in active development? Check out [Clearly Reformed in Weft](https://github.com/intrinsic-labs/clearly-reformed-weft), the first project to adopt Weft. The app targets iOS and Android and uses Weft as the baseline source of truth.
 
+## Quick Start
+
+New to Weft? Follow this learning path:
+
+1. Read the [Introduction](01-introduction.md) to understand what Weft is and why it exists
+2. Learn about [Types & Collections](02-types.md) to understand Weft's type system
+3. Study [Control Flow & Operators](03-control-flow.md) for conditional logic and loops
+4. Review [Syntax](04-syntax.md) for variable declarations and type definitions
+5. Explore [Annotations](05-annotations.md) to learn how to add context and intent
+6. If building UI, dive into [User Interface](06-user-interface.md) for views and state management
+
+---
+
 ## Table of Contents
 
 1. **[Introduction](01-introduction.md)** - Start here
@@ -37,24 +50,13 @@ Want to see a Weft codebase in active development? Check out [Clearly Reformed i
 5. **[Annotations](05-annotations.md)**
    - Core annotations (@Instruction, @SumFunc, @Index, @JSON)
    - Database annotations (@Schema, @Id, @ForeignKey, etc.)
-   - State management annotations (see User Interface)
+   - State management annotations (also see User Interface)
 
 6. **[User Interface](06-user-interface.md)**
    - The `view` keyword
    - State management (@State, @Binding, @Observed, @Environment)
    - Lifecycle hooks
    - Parent-child state flow
-
-## Quick Start
-
-New to Weft? Follow this learning path:
-
-1. Read the [Introduction](01-introduction.md) to understand what Weft is and why it exists
-2. Learn about [Types & Collections](02-types.md) to understand Weft's type system
-3. Study [Control Flow & Operators](03-control-flow.md) for conditional logic and loops
-4. Review [Syntax](04-syntax.md) for variable declarations and type definitions
-5. Explore [Annotations](05-annotations.md) to learn how to add context and intent
-6. If building UI, dive into [User Interface](06-user-interface.md) for views and state management
 
 ## Philosophy
 
