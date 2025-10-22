@@ -1,6 +1,9 @@
-# Weft Documentation
+# Weft
 
-Welcome to the Weft documentation! This guide will help you understand and use Weft, an interpretable pseudocode language for cross-platform development.
+Welcome to the Weft documentation! This guide will help you understand and use Weft, an interpretable pseudocode language for collaborative cross-platform development.
+
+## Featured Project: Clearly Reformed Mobile
+Want to see a Weft codebase in active development? Check out [Clearly Reformed in Weft](https://github.com/intrinsic-labs/clearly-reformed-weft), the first project to adopt Weft. The app targets iOS and Android and uses Weft as the baseline source of truth.
 
 ## Table of Contents
 
