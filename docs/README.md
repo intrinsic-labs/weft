@@ -49,8 +49,8 @@ New to Weft? Follow this learning path:
 1. Read the [Introduction](01-introduction.md) to understand what Weft is and why it exists
 2. Learn about [Types & Collections](02-types.md) to understand Weft's type system
 3. Study [Control Flow & Operators](03-control-flow.md) for conditional logic and loops
-4. Explore [Annotations](04-annotations.md) to learn how to add context and intent
-5. Review [Syntax](05-syntax.md) for variable declarations and type definitions
+4. Review [Syntax](04-syntax.md) for variable declarations and type definitions
+5. Explore [Annotations](05-annotations.md) to learn how to add context and intent
 6. If building UI, dive into [User Interface](06-user-interface.md) for views and state management
 
 ## Philosophy
