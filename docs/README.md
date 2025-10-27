@@ -32,6 +32,7 @@ Learn the core language features:
 - [Functions](language/04-functions.md) - Function declarations, async/await, closures
 - [Operators](language/05-operators.md) - Boolean, comparison, null safety operators
 - [Error Handling](language/06-error-handling.md) - Try/catch, throwing errors, Result types
+- [Annotations](language/07-annotations.md) - Core annotations (@Main, @Instruction, @SumFunc, @Index)
 
 ### Code Organization
 
@@ -47,14 +48,13 @@ Organize your codebase effectively:
 Design scalable, maintainable applications:
 
 - [Overview](architecture/01-overview.md) - Architecture philosophy and patterns
-- [Observability](architecture/02-observability.md) - `@Observable` and reactive state
-- [State Ownership](architecture/03-state-ownership.md) - `@State`, `@Binding`, `@Environment` *(coming soon)*
-- [Lifecycle & Scope](architecture/04-lifecycle-scope.md) - `@Singleton`, `@ViewScoped`, `@FeatureScoped`
-- [Repositories](architecture/05-repositories.md) - Data layer pattern *(coming soon)*
-- [ViewModels](architecture/06-viewmodels.md) - Presentation layer pattern *(coming soon)*
-- [Services](architecture/07-services.md) - Business logic pattern *(coming soon)*
-- [Dependency Flow](architecture/08-dependency-flow.md) - How dependencies work *(coming soon)*
-- [Complete Example](architecture/09-complete-example.md) - Full app architecture *(coming soon)*
+- [Lifecycle & Scope](architecture/02-lifecycle-scope.md) - `@Singleton`, `@ViewScoped`, `@FeatureScoped`
+- [Observability](architecture/03-observability.md) - `@Observable` and reactive state
+- [State Ownership](architecture/04-state-ownership.md) - `@State`, `@Binding`, `@Environment`
+- [Patterns Overview](architecture/05-patterns-overview.md) - Repositories, ViewModels, Services working together
+- [Repository Pattern](architecture/06-repositories.md) - Data layer implementation
+- [ViewModel Pattern](architecture/07-viewmodels.md) - Presentation layer implementation
+- [Service Pattern](architecture/08-services.md) - Business logic and utilities
 
 ### User Interface
 
@@ -80,7 +80,7 @@ Work with data:
 
 Complete references for quick lookup:
 
-- [All Annotations](reference/annotations.md) - Complete annotation reference *(coming soon)*
+- [All Annotations](reference/annotations.md) - Complete annotation reference
 - [All Types](reference/types.md) - Complete type reference *(coming soon)*
 - [All Components](reference/components.md) - Complete UI component reference *(coming soon)*
 - [All Keywords](reference/keywords.md) - Complete keyword reference *(coming soon)*

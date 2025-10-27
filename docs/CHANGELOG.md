@@ -23,9 +23,15 @@ docs/
 #### New Content
 
 **Architecture Section (NEW)**
-- `architecture/01-overview.md` - Architecture philosophy and patterns
-- `architecture/02-observability.md` - `@Observable` pattern for reactive state
-- `architecture/04-lifecycle-scope.md` - `@Singleton`, `@ViewScoped`, `@FeatureScoped`, `@SessionScoped`
+- `architecture/01-overview.md` - Architecture philosophy and patterns (added @SumFunc examples)
+- `architecture/02-lifecycle-scope.md` - `@Singleton`, `@ViewScoped`, `@FeatureScoped`, `@SessionScoped` (reordered to precede observability)
+- `architecture/03-observability.md` - `@Observable` pattern for reactive state (added @SumFunc alternative example)
+- `architecture/04-state-ownership.md` - `@State`, `@Binding`, `@Environment` for UI state management (removed redundant rules section)
+- `architecture/05-patterns-overview.md` - How Repositories, ViewModels, and Services work together
+- `architecture/06-repositories.md` - Repository pattern implementation and best practices
+- `architecture/07-viewmodels.md` - ViewModel pattern implementation and best practices
+- `architecture/08-services.md` - Service pattern implementation and best practices
+</parameter>
 
 **Language Section (Refactored & Expanded)**
 - Reordered for better learning flow:
@@ -46,6 +52,10 @@ docs/
 - `structure/02-access-control.md` - Access modifiers and encapsulation (clarified public by default, added @Repository to examples)
 - `structure/03-scope.md` - Braces vs indentation, semicolons (changed Python-style examples to use def keyword)
 - `structure/04-imports.md` - Module system and imports (significantly trimmed for clarity, ~50% shorter)
+
+**Reference Section (NEW)**
+- `reference/annotations.md` - Complete annotation reference with quick index table
+</parameter>
 
 #### Key Changes
 
@@ -97,15 +107,30 @@ docs/
 - `type` keyword should be last resort - prefer specific keywords for clearer intent
 - All declarations are public by default unless explicitly marked private
 - Python-style syntax uses `def` keyword for functions
+- `@Repository`, `@ViewModel`, and `@Service` annotations are explicit - always mark pattern classes with appropriate annotations
+</parameter>
+
+#### Architecture Section Complete
+
+Phase 1 now includes complete architecture documentation:
+- Lifecycle & Scope (object lifetimes)
+- Observability (reactive state)
+- State Ownership (UI state patterns)
+- Patterns Overview (how patterns work together)
+- Repository Pattern (data layer with caching, pagination, offline-first examples)
+- ViewModel Pattern (presentation layer with validation, coordination examples)
+- Service Pattern (business logic and cross-cutting concerns)
+
+Each pattern doc is focused (200-300 lines) for easy reading.
+</parameter>
 
 #### Coming Soon (Phase 2)
-
-- Complete architecture section (state ownership, repositories, viewmodels, services, examples)
-- State ownership documentation (`@State`, `@Binding`, `@Environment`)
 - UI section (views, components, layouts, styling)
 - Data section (JSON, databases, API integration)
 - Reference section (complete annotation/type/component references)
 - Example apps (TODO, news reader, shopping cart)
+
+**Note on @SumFunc:** Examples now properly demonstrate @SumFunc by replacing implementation code with plain English summaries, showing how Weft enables writing high-level logic that translators implement.
 
 ## Version 0.1.1 - 2025
 

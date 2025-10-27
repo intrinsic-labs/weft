@@ -463,8 +463,8 @@ class ProfileViewModel {
 
 ## See Also
 
-- [Observability](02-observability.md) - Reactive state management
-- [State Ownership](03-state-ownership.md) - Local vs shared state
+- [Observability](03-observability.md) - Reactive state management
+- [State Ownership](04-state-ownership.md) - Local vs shared state
 - [Repositories](05-repositories.md) - Repository pattern and scoping
 - [ViewModels](06-viewmodels.md) - ViewModel pattern and scoping
 - [Dependency Flow](08-dependency-flow.md) - How dependencies are injected

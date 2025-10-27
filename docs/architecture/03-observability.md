@@ -315,6 +315,14 @@ func processAndStoreUsers(rawData: [UserDTO]) async {
     var validated = processed.filter(user => user.isValid())
     repository.setUsers(validated)
 }
+
+// Weft alternative: Use @SumFunc to describe logic in plain English
+func processAndStoreUsers(rawData: [UserDTO]) async {
+    @SumFunc
+    => transform each DTO into a User object
+    => filter out any invalid users
+    => store validated users in repository
+}
 ```
 
 **Don't over-observe**: Not everything needs to be observable. Simple data types and DTOs don't need `@Observable`.
@@ -417,7 +425,7 @@ class AuthService {
 
 ## See Also
 
-- [State Ownership](03-state-ownership.md) - Managing local vs shared state
-- [Lifecycle & Scope](04-lifecycle-scope.md) - Controlling object lifetimes
+- [Lifecycle & Scope](02-lifecycle-scope.md) - Controlling object lifetimes
+- [State Ownership](04-state-ownership.md) - Managing local vs shared state
 - [Repositories](05-repositories.md) - Repository pattern in depth
 - [ViewModels](06-viewmodels.md) - ViewModel pattern in depth

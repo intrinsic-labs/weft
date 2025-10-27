@@ -261,11 +261,10 @@ class ArticleRepository {
     }
     
     func bookmarkArticle(id: string) async {
-        var article = articles.find(a => a.id == id)
-        if let article = article {
-            article.isBookmarked = true
-            await database.updateArticle(article)
-        }
+        @SumFunc
+        => find article in articles array by id
+        => mark article as bookmarked
+        => update article in database
     }
 }
 
@@ -297,16 +296,11 @@ class ArticleListViewModel {
     }
     
     func refresh() async {
-        isRefreshing = true
-        errorMessage = null
-        
-        try {
-            await repository.fetchArticles()
-        } catch error {
-            errorMessage = "Failed to load articles"
-        } finally {
-            isRefreshing = false
-        }
+        @SumFunc
+        => set refreshing state to true
+        => attempt to fetch articles from repository
+        => handle any errors by setting error message
+        => always set refreshing state to false when complete
     }
     
     func bookmarkArticle(id: string) async {
@@ -344,14 +338,10 @@ view ArticleListView {
 
 Continue reading to learn about each architectural concept in depth:
 
-1. [Observability](02-observability.md) - Making state reactive
-2. [State Ownership](03-state-ownership.md) - Managing state lifecycle
-3. [Lifecycle & Scope](04-lifecycle-scope.md) - Controlling object lifetimes
-4. [Repositories](05-repositories.md) - Data layer pattern
-5. [ViewModels](06-viewmodels.md) - Presentation layer pattern
-6. [Services](07-services.md) - Business logic pattern
-7. [Dependency Flow](08-dependency-flow.md) - How dependencies work
-8. [Complete Example](09-complete-example.md) - Full application architecture
+1. [Lifecycle & Scope](02-lifecycle-scope.md) - Controlling object lifetimes
+2. [Observability](03-observability.md) - Making state reactive
+3. [State Ownership](04-state-ownership.md) - Managing state lifecycle
+4. [Patterns in Practice](05-patterns-in-practice.md) - Repositories, ViewModels, and Services in action
 
 ## See Also
 
