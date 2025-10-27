@@ -10,7 +10,7 @@ Weft supports five primary definition keywords:
 - **`class`** - Complex types with inheritance and state management
 - **`struct`** - Data-centric types with helper methods
 - **`data`** - Pure data containers (auto-generates boilerplate)
-- **`object`** - Singleton instances or constant containers
+- **`object`** - Stateless constant containers
 
 Each keyword communicates different intent about how the type should be used and implemented.
 
@@ -28,15 +28,13 @@ type Article {
 ```
 
 **Use `type` when:**
-- You want flexibility in implementation
-- The translator should choose the best platform-specific approach
-- You're defining a simple data model
-- You don't need to specify inheritance or complex behavior
+- You're rapidly prototyping and implementation details don't matter yet
+- The best implementation truly depends on platform characteristics
+- You need maximum flexibility for the translator to decide
 
-**Translates to:**
-- **Swift**: `struct` (value type with automatic copying)
-- **Kotlin**: `data class` (with equals, hashCode, toString)
-- **TypeScript**: `interface` or `type` alias
+**Prefer specific keywords when possible:** While `type` provides flexibility, using `class`, `struct`, `data`, or `object` communicates clearer intent about how the type should behave. Reach for `type` only when you genuinely want the translator to decide the best implementation approach.
+
+The translator chooses the best platform-specific implementation based on usage patterns and context.
 
 ## Class Keyword
 
@@ -46,14 +44,14 @@ The `class` keyword indicates complex types with inheritance, state management, 
 class ArticleManager {
     private var cache: [Article] = []
     private var apiClient: APIClient
-    
+
     func fetchArticles() async => [Article] {
         if cache.isEmpty {
             cache = await apiClient.fetchArticles()
         }
         return cache
     }
-    
+
     func clearCache() {
         cache = []
     }
@@ -78,7 +76,7 @@ Classes support inheritance with familiar syntax:
 ```weft
 class Vehicle {
     var speed: float
-    
+
     func accelerate() {
         speed += 10
     }
@@ -86,7 +84,7 @@ class Vehicle {
 
 class Car: Vehicle {
     var numberOfDoors: int
-    
+
     func honk() {
         playSound("beep")
     }
@@ -103,7 +101,7 @@ struct Article {
     var title: string
     var content: string
     var author: string
-    
+
     func toDisplayFormat() => DisplayArticle {
         return DisplayArticle(
             title: title,
@@ -111,7 +109,7 @@ struct Article {
             preview: content.substring(0, 100)
         )
     }
-    
+
     func isPublishable() => bool {
         return !title.isEmpty && !content.isEmpty && !author.isEmpty
     }
@@ -156,49 +154,50 @@ data ArticleMetadata {
 - Copy/clone functionality
 
 **Translates to:**
-- **Swift**: `struct` with `Equatable`, `Hashable`, `CustomStringConvertible`
+- **Swift**: `struct` with `Equatable`, `Hashable`
 - **Kotlin**: `data class` (auto-generates all boilerplate)
 - **TypeScript**: `interface` or `type`
 
 ## Object Keyword
 
-The `object` keyword defines singleton instances or constant containers. Only one instance exists throughout your application.
+The `object` keyword defines stateless constant containers—a namespace for related immutable values. No instances can be created, and no mutable state is allowed.
 
 ```weft
-object ENDPOINTS {
+object API {
     let BASE_URL = "https://api.example.com"
     let ARTICLES = BASE_URL + "/articles"
     let VIDEOS = BASE_URL + "/videos"
-    let USERS = BASE_URL + "/users"
+    let TIMEOUT = 30
 }
 
-object Config {
-    let MAX_RETRIES = 3
-    let TIMEOUT_SECONDS = 30
-    let API_VERSION = "v2"
+object Colors {
+    let PRIMARY = "#007AFF"
+    let SECONDARY = "#5856D6"
+    let ERROR = "#FF3B30"
 }
 ```
 
 **Use `object` when:**
-- You need a singleton (only one instance)
-- You're defining global constants
-- You're creating a namespace for related values
-- You want shared configuration or resources
+- You're defining groups of related constants
+- You need a namespace for immutable values
+- No state will ever change
+
+**Note:** For stateful singletons (like repositories or services), use `@Singleton` with `class`. See [Lifecycle & Scope](../architecture/04-lifecycle-scope.md) for managing object lifetimes with state.
 
 **Translates to:**
-- **Swift**: `enum` with static properties (no instances) or `class` with shared instance
-- **Kotlin**: `object` (singleton)
-- **TypeScript**: `const` object or singleton pattern
+- **Swift**: `enum` with static properties (no instances)
+- **Kotlin**: `object` declaration
+- **TypeScript**: `const` object literal
 
 ### Usage
 
 ```weft
-// Access singleton properties
-var url = ENDPOINTS.ARTICLES
-var maxRetries = Config.MAX_RETRIES
+// Access constants directly
+var url = API.ARTICLES
+var primaryColor = Colors.PRIMARY
 
 // Cannot instantiate
-// var config = Config()  // Error: object cannot be instantiated
+// var api = API()  // Error: object cannot be instantiated
 ```
 
 ## Comparison
@@ -232,7 +231,7 @@ struct Article {
     var content: string
     var authorId: string
     var publishedDate: datetime
-    
+
     static func fromResponse(response: ArticleResponse) => Article {
         return Article(
             id: response.id,
@@ -242,14 +241,14 @@ struct Article {
             publishedDate: datetime.parse(response.published_at)
         )
     }
-    
+
     func wordCount() => int {
         return content.split(" ").count
     }
 }
 ```
 
-### Configuration Management
+### Configuration Constants
 
 ```weft
 object AppConfig {
@@ -259,42 +258,31 @@ object AppConfig {
     let LOG_LEVEL = "info"
 }
 
-object Colors {
-    let PRIMARY = Color(hex: "#007AFF")
-    let SECONDARY = Color(hex: "#5856D6")
-    let ERROR = Color(hex: "#FF3B30")
-    let SUCCESS = Color(hex: "#34C759")
+object Theme {
+    let PRIMARY_COLOR = "#007AFF"
+    let SECONDARY_COLOR = "#5856D6"
+    let ERROR_COLOR = "#FF3B30"
+    let SUCCESS_COLOR = "#34C759"
 }
 ```
 
-### State Management
+### Stateful Singleton
 
 ```weft
+@Observable
+@Singleton
 class AppState {
     private(set) var isAuthenticated: bool = false
     private(set) var currentUser: User? = null
-    private var listeners: [(AppState) => void] = []
-    
+
     func login(user: User) {
         self.currentUser = user
         self.isAuthenticated = true
-        notifyListeners()
     }
-    
+
     func logout() {
         self.currentUser = null
         self.isAuthenticated = false
-        notifyListeners()
-    }
-    
-    func subscribe(listener: (AppState) => void) {
-        listeners.append(listener)
-    }
-    
-    private func notifyListeners() {
-        for listener in listeners {
-            listener(self)
-        }
     }
 }
 ```
@@ -304,11 +292,11 @@ class AppState {
 ```weft
 class BaseRepository {
     protected var database: Database
-    
+
     func init(database: Database) {
         self.database = database
     }
-    
+
     protected func logQuery(query: string) {
         print("Query: \(query)")
     }
@@ -319,7 +307,7 @@ class ArticleRepository: BaseRepository {
         logQuery("SELECT * FROM articles")
         return database.query("SELECT * FROM articles")
     }
-    
+
     func getById(id: string) => Article? {
         logQuery("SELECT * FROM articles WHERE id = \(id)")
         return database.queryOne("SELECT * FROM articles WHERE id = ?", id)
@@ -350,7 +338,7 @@ class UserManager {               // Complex state management
 }
 ```
 
-**Use `object` for constants**: Group related constants together.
+**Use `object` for constant namespaces**: Group related immutable values.
 
 ```weft
 // Good: Organized constants
@@ -364,7 +352,23 @@ let API_BASE_URL = "https://api.example.com"
 let API_TIMEOUT = 30
 ```
 
-**Prefer `data` for simple DTOs**: Let the translator generate boilerplate.
+**Use `@Singleton` for stateful singletons**: For mutable shared state.
+
+```weft
+// Good: Stateful singleton
+@Singleton
+@Repository
+class UserRepository {
+    private(set) var currentUser: User? = null
+}
+
+// Avoid: Mutable state in object
+object UserData {
+    var currentUser: User? = null  // Don't do this
+}
+```
+
+**Prefer `data` for simple DTOs**: Let the translator or target language compiler generate boilerplate.
 
 ```weft
 // Good: Simple and clean
@@ -377,7 +381,7 @@ data ArticleDTO {
 class ArticleDTO {
     var id: string
     var title: string
-    
+
     func equals(other: ArticleDTO) => bool {
         return self.id == other.id && self.title == other.title
     }

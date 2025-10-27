@@ -2,6 +2,8 @@
 
 Access control in Weft allows you to control the visibility and accessibility of types, properties, and functions. Use access modifiers to encapsulate implementation details and expose clean public APIs.
 
+**By default, all declarations are public unless explicitly marked otherwise.** Use access modifiers to restrict visibility where needed.
+
 ## Access Modifiers
 
 Weft supports standard access control modifiers that translate cleanly to all target platforms:
@@ -256,6 +258,8 @@ var query = QueryBuilder.from("articles")
 Separate public interface from private implementation:
 
 ```weft
+@Repository
+@Singleton
 public class ArticleRepository {
     private var api: APIClient
     private var database: Database

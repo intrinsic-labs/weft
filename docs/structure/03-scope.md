@@ -9,17 +9,17 @@ C-style curly braces are the most common approach:
 ```weft
 func calculateTotal(items: [Item]) => float {
     var total: float = 0.0
-    
+
     for item in items {
         total += item.price
     }
-    
+
     return total
 }
 
 class ArticleRepository {
     private var cache: [Article] = []
-    
+
     func getArticles() => [Article] {
         if cache.isEmpty {
             cache = fetchArticles()
@@ -36,18 +36,18 @@ This style is familiar to developers from Swift, Kotlin, JavaScript, Java, C#, a
 Python-style indentation is also supported:
 
 ```weft
-func calculateTotal(items: [Item]) => float:
+def calculateTotal(items: [Item]) => float:
     var total: float = 0.0
-    
+
     for item in items:
         total += item.price
-    
+
     return total
 
 class ArticleRepository:
     private var cache: [Article] = []
-    
-    func getArticles() => [Article]:
+
+    def getArticles() => [Article]:
         if cache.isEmpty:
             cache = fetchArticles()
         return cache
@@ -57,17 +57,17 @@ Use a colon (`:`) at the end of the declaration line, then indent the body.
 
 ## Mixed Styles
 
-You can mix both styles in the same file—Weft accepts whatever feels natural:
+You can mix both styles in the same file (although we recommend you pick one style and stick with it, at least on a per-file level) - Weft accepts whatever feels natural:
 
 ```weft
-func processArticles(articles: [Article]) => [Article] {
+def processArticles(articles: [Article]) => [Article] {
     var results: [Article] = []
-    
+
     for article in articles:
         if article.isPublished {
             results.append(article)
         }
-    
+
     return results
 }
 ```
@@ -124,13 +124,13 @@ Blocks define scope for variables:
 ```weft
 func example() {
     var x = 10
-    
+
     {
         var y = 20
         print(x)  // OK: x is in outer scope
         print(y)  // OK: y is in this scope
     }
-    
+
     print(x)  // OK: x is in this scope
     // print(y)  // Error: y is not in scope
 }
@@ -165,15 +165,15 @@ func validateEmail(email: string) => bool {
     if email.isEmpty {
         return false
     }
-    
+
     if !email.contains("@") {
         return false
     }
-    
+
     if !email.contains(".") {
         return false
     }
-    
+
     return true
 }
 ```
@@ -181,16 +181,16 @@ func validateEmail(email: string) => bool {
 ### Function with Indentation
 
 ```weft
-func validateEmail(email: string) => bool:
+def validateEmail(email: string) => bool:
     if email.isEmpty:
         return false
-    
+
     if not email.contains("@"):
         return false
-    
+
     if not email.contains("."):
         return false
-    
+
     return true
 ```
 
@@ -200,30 +200,30 @@ func validateEmail(email: string) => bool:
 class ArticleRepository {
     private var articles: [Article] = []
     private var database: Database
-    
+
     public func init(database: Database) {
         self.database = database
     }
-    
+
     public func getAll() async => [Article] {
         if articles.isEmpty {
             articles = await database.queryAll()
         }
         return articles
     }
-    
+
     public func getById(id: string) async => Article? {
         for article in articles {
             if article.id == id {
                 return article
             }
         }
-        
+
         var article = await database.queryOne(id)
         if article != null {
             articles.append(article)
         }
-        
+
         return article
     }
 }
@@ -245,7 +245,7 @@ func processOrder(order: Order) {
 }
 
 // Equivalent with indentation
-func processOrder(order: Order):
+def processOrder(order: Order):
     if order.isValid:
         if order.isPaid:
             shipOrder(order)
@@ -274,7 +274,7 @@ func functionOne() {
     // body
 }
 
-func functionTwo():
+def functionTwo():
     // body
 ```
 

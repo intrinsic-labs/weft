@@ -42,10 +42,10 @@ docs/
 - Clarified async context requirements (Task blocks)
 
 **Structure Section (NEW)**
-- `structure/01-definitions.md` - type, class, struct, data, object keywords
-- `structure/02-access-control.md` - Access modifiers and encapsulation
-- `structure/03-scope.md` - Braces vs indentation, semicolons
-- `structure/04-imports.md` - Module system and imports
+- `structure/01-definitions.md` - type, class, struct, data, object keywords (clarified object vs @Singleton distinction, discouraged overuse of type, removed incorrect Swift boilerplate)
+- `structure/02-access-control.md` - Access modifiers and encapsulation (clarified public by default, added @Repository to examples)
+- `structure/03-scope.md` - Braces vs indentation, semicolons (changed Python-style examples to use def keyword)
+- `structure/04-imports.md` - Module system and imports (significantly trimmed for clarity, ~50% shorter)
 
 #### Key Changes
 
@@ -91,9 +91,16 @@ docs/
 - `05-annotations.md` → To be split across architecture, data, reference sections
 - `06-user-interface.md` → To be split across `ui/` and `architecture/03-*.md`
 
+**Clarifications**
+- `object` keyword is for stateless constant containers only (no instances, no mutable state)
+- `@Singleton` annotation is for stateful singletons (mutable shared state with lifecycle)
+- `type` keyword should be last resort - prefer specific keywords for clearer intent
+- All declarations are public by default unless explicitly marked private
+- Python-style syntax uses `def` keyword for functions
+
 #### Coming Soon (Phase 2)
 
-- Complete architecture section (repositories, viewmodels, services, examples)
+- Complete architecture section (state ownership, repositories, viewmodels, services, examples)
 - State ownership documentation (`@State`, `@Binding`, `@Environment`)
 - UI section (views, components, layouts, styling)
 - Data section (JSON, databases, API integration)
