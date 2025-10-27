@@ -2,6 +2,24 @@
 
 Weft supports common control flow patterns with familiar variants from popular languages. Write using the syntax you're most comfortable with—all variants are valid and will be properly translated.
 
+## Supported Keywords
+
+Weft accepts multiple keyword variants for control flow:
+
+**Conditionals:**
+- `if`, `else`, `elif`, `else if`
+
+**Loops:**
+- `for`, `in`, `while`
+
+**Loop Control:**
+- `break`, `continue`, `return`
+
+**Pattern Matching:**
+- `switch`, `case`, `default`, `match`, `=>`, `_`
+
+All variants are equivalent—use whichever feels most natural to you.
+
 ## Conditionals
 
 Weft accepts multiple conditional syntax styles:
@@ -176,6 +194,6 @@ func handleResponse(result: Result) => string {
 
 ## See Also
 
-- [Functions](03-functions.md) - Function declarations and async/await
-- [Operators](04-operators.md) - Boolean and comparison operators
-- [Error Handling](05-error-handling.md) - Try/catch blocks
+- [Functions](04-functions.md) - Function declarations and async/await
+- [Operators](05-operators.md) - Boolean and comparison operators
+- [Error Handling](06-error-handling.md) - Try/catch blocks

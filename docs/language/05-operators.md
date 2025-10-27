@@ -43,6 +43,14 @@ Standard comparison operators work as expected:
 >   // greater than
 <=  // less than or equal to
 >=  // greater than or equal to
+
+// Natural language variants (all valid)
+is equal to
+is not equal to
+is less than
+is greater than
+is less than or equal to
+is greater than or equal to
 ```
 
 ### Examples
@@ -63,6 +71,23 @@ if status == "active" {
 if price != 0.0 {
     // price is set
 }
+
+// Natural language comparisons
+if age is greater than or equal to 18 {
+    // user is an adult
+}
+
+if score is less than passingGrade {
+    // student failed
+}
+
+if status is equal to "active" {
+    // status is active
+}
+
+if count is not equal to 0 {
+    // has items
+}
 ```
 
 ## Arithmetic Operators
@@ -73,6 +98,13 @@ if price != 0.0 {
 *   // multiplication
 /   // division
 %   // modulo (remainder)
+
+// Natural language variants (also valid)
+plus
+minus
+times
+divided by
+modulo
 
 // Compound assignment
 +=  // add and assign
@@ -93,6 +125,12 @@ count += 1  // count is now 1
 count *= 2  // count is now 2
 
 var isEven = number % 2 == 0
+
+// Natural language arithmetic
+var total = price plus tax
+var perItem = total divided by itemCount
+var discount = price times 0.1
+var remaining = total minus discount
 ```
 
 ## String Operators
@@ -101,9 +139,13 @@ var isEven = number % 2 == 0
 // Concatenation
 var fullName = firstName + " " + lastName
 
-// String interpolation (preferred)
-var greeting = "Hello, \(name)!"
-var message = "User \(user.id) has \(user.points) points"
+// String interpolation (multiple styles supported)
+var greeting = "Hello, \(name)!"              // Swift-style
+var message = "User ${user.id} has ${user.points} points"  // JS/TS/Kotlin-style
+var status = "Status: {isActive}"             // Natural style
+
+// All interpolation styles are equivalent - use what feels natural
+var mixed = "Hello \(firstName), you have ${points} points"
 
 // Multiline strings
 var paragraph = """
@@ -341,7 +383,7 @@ if (age >= 18 && hasLicense) || isSupervised {
 
 ## See Also
 
-- [Control Flow](02-control-flow.md) - Using operators in conditionals
-- [Functions](03-functions.md) - Operators in function logic
+- [Control Flow](03-control-flow.md) - Using operators in conditionals
+- [Functions](04-functions.md) - Operators in function logic
 - [Types](01-types.md) - Type system and optionals
-- [Error Handling](05-error-handling.md) - Handling null and error cases
+- [Error Handling](06-error-handling.md) - Handling null and error cases

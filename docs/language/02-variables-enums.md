@@ -392,5 +392,5 @@ enum LoadingState {
 ## See Also
 
 - [Types](01-types.md) - Type system and collections
-- [Control Flow](02-control-flow.md) - Using enums in switch statements
-- [Functions](03-functions.md) - Function parameters and return types
+- [Control Flow](03-control-flow.md) - Using enums in switch statements
+- [Functions](04-functions.md) - Function parameters and return types

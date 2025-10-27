@@ -4,7 +4,7 @@ Functions in Weft can be declared using multiple keywords to accommodate differe
 
 ## Function Declaration
 
-Weft supports several function declaration keywords:
+Weft supports several function declaration keywords and return type syntaxes:
 
 ```weft
 // Various function keywords (all equivalent)
@@ -12,6 +12,12 @@ func fetchData() => Result { }
 function fetchData() => Result { }
 fn fetchData() => Result { }
 def fetchData() => Result { }
+
+// Various return type syntaxes (all equivalent)
+func getName() => string { }        // Arrow style
+func getName(): string { }          // Colon style
+func getName() -> string { }        // Swift arrow style
+func getName() returns string { }   // Natural language style
 ```
 
 Use whichever feels most natural to you—they all mean the same thing.
@@ -98,12 +104,20 @@ async func loadUserProfile(id: string) => User? {
     }
 }
 
-// Calling async functions
+// Calling async functions (must be in async context)
 async func loadData() {
     var articles = await fetchArticles()
     var user = await loadUserProfile("123")
 }
+
+// Or wrap in Task for async context
+Task {
+    var articles = await fetchArticles()
+    displayArticles(articles)
+}
 ```
+
+**Important:** Async functions must be called from an async context (another async function or a Task block).
 
 ## Function Shortcuts
 
@@ -125,6 +139,15 @@ var isEven = (x: int) => x % 2 == 0
 // Closure syntax
 var numbers = [1, 2, 3, 4, 5]
 var doubled = numbers.map(n => n * 2)
+
+// Closure with 'in' keyword
+var doubled = numbers.map { n in
+    return n * 2
+}
+
+var filtered = items.filter { item in
+    item.isActive && item.score > 50
+}
 
 // Multi-line closure
 var filtered = numbers.filter(n => {
@@ -217,6 +240,44 @@ var doubled = applyOperation([1, 2, 3], n => n * 2)
 var squared = applyOperation([1, 2, 3], n => n * n)
 ```
 
+## Throwing Functions
+
+Mark functions that can throw errors with the `throws` keyword:
+
+```weft
+// Function that can throw
+func loadUser(id: string) throws => User {
+    if id.isEmpty {
+        throw ValidationError("User ID cannot be empty")
+    }
+    
+    var user = await database.getUser(id)
+    
+    if user == null {
+        throw NotFoundError("User not found")
+    }
+    
+    return user
+}
+
+// Caller must handle errors
+func displayUser(id: string) {
+    try {
+        var user = loadUser(id)
+        showProfile(user)
+    } catch error {
+        showError(error.message)
+    }
+}
+
+// Or propagate errors up
+func getAndValidateUser(id: string) throws => User {
+    var user = loadUser(id)  // Propagates throw
+    validateUser(user)
+    return user
+}
+```
+
 ## Access Modifiers
 
 Functions can have access modifiers to control visibility:
@@ -290,7 +351,8 @@ async func loadUserData(id: string) => User {
 
 ## See Also
 
-- [Control Flow](02-control-flow.md) - Conditionals and loops
-- [Error Handling](05-error-handling.md) - Try/catch/throw
-- [Operators](04-operators.md) - Operators used in functions
+- [Control Flow](03-control-flow.md) - Conditionals and loops
+- [Error Handling](06-error-handling.md) - Try/catch/throw and throws keyword
+- [Operators](05-operators.md) - Operators used in functions
 - [Types](01-types.md) - Parameter and return types
+- [Variables & Enums](02-variables-enums.md) - Variable declarations

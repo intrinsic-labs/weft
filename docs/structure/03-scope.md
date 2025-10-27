@@ -285,5 +285,5 @@ func functionTwo():
 ## See Also
 
 - [Definitions](01-definitions.md) - Type and structure definitions
-- [Control Flow](../language/02-control-flow.md) - Conditionals and loops
-- [Functions](../language/03-functions.md) - Function declarations
+- [Control Flow](../language/03-control-flow.md) - Conditionals and loops
+- [Functions](../language/04-functions.md) - Function declarations

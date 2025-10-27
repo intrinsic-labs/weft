@@ -2,6 +2,37 @@
 
 Weft provides familiar error handling patterns that translate cleanly to try/catch mechanisms in all target platforms. Handle errors gracefully to build robust applications.
 
+## Syntax Overview
+
+Weft supports standard error handling syntax:
+
+```weft
+// Throwing errors
+throw ErrorType("message")
+throw ValidationError("Invalid input")
+
+// Marking throwing functions
+func riskyOperation() throws => Result {
+    if problem {
+        throw SomeError("details")
+    }
+    return result
+}
+
+// Try-catch blocks
+try {
+    // code that might throw
+} catch error {
+    // handle error
+} catch error: SpecificError {
+    // handle specific type
+} finally {
+    // always runs
+}
+```
+
+The `throws` keyword explicitly marks functions that can throw errors, helping the LSP warn when errors aren't properly handled.
+
 ## Try-Catch-Finally
 
 The standard error handling pattern in Weft:
@@ -81,7 +112,7 @@ try {
 
 ## Error Propagation
 
-Functions that can throw errors should indicate this clearly:
+Functions that can throw errors should be marked with the `throws` keyword:
 
 ```weft
 // Function that throws
@@ -371,6 +402,6 @@ try {
 
 ## See Also
 
-- [Functions](03-functions.md) - Async functions and error propagation
-- [Control Flow](02-control-flow.md) - Conditional error handling
+- [Functions](04-functions.md) - Async functions and error propagation
+- [Control Flow](03-control-flow.md) - Conditional error handling
 - [Types](01-types.md) - Optional types as error alternatives

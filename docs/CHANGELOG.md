@@ -28,12 +28,18 @@ docs/
 - `architecture/04-lifecycle-scope.md` - `@Singleton`, `@ViewScoped`, `@FeatureScoped`, `@SessionScoped`
 
 **Language Section (Refactored & Expanded)**
-- Split `03-control-flow.md` into focused documents:
-  - `language/02-control-flow.md` - Conditionals, loops, switch
-  - `language/03-functions.md` - Functions, async/await, closures
-  - `language/04-operators.md` - All operators with examples
-  - `language/05-error-handling.md` - Try/catch, throwing, Result types
-- `language/06-variables-enums.md` - Variable declarations and enums
+- Reordered for better learning flow:
+  - `language/01-types.md` - Type system (moved from old structure)
+  - `language/02-variables-enums.md` - Variable declarations and enums (moved up - foundational)
+  - `language/03-control-flow.md` - Conditionals, loops, switch (added supported keywords section)
+  - `language/04-functions.md` - Functions, async/await, closures (added return type variants, throws keyword, closure in keyword)
+  - `language/05-operators.md` - All operators (added natural language variants for comparison and arithmetic)
+  - `language/06-error-handling.md` - Try/catch, throwing, Result types (added syntax overview section)
+- Added multiple string interpolation styles: `\()`, `${}`, `{}`
+- Added `throws` keyword for marking functions that can throw errors
+- Added natural language operators: "is less than", "plus", "divided by", etc.
+- Added closure `in` keyword support
+- Clarified async context requirements (Task blocks)
 
 **Structure Section (NEW)**
 - `structure/01-definitions.md` - type, class, struct, data, object keywords
@@ -50,6 +56,14 @@ docs/
 - Removed `@Inject` (dependencies inferred from context)
 - Added lifecycle annotations: `@Singleton`, `@ViewScoped`, `@FeatureScoped`, `@SessionScoped`
 - Added semantic annotations: `@Repository`, `@ViewModel`, `@Service`
+
+**Language Features**
+- Multiple return type syntaxes: `=>`, `:`, `->`, `returns`
+- Multiple function keywords: `func`, `function`, `fn`, `def`
+- Natural language operators for readability
+- Multiple string interpolation styles
+- `throws` keyword for error propagation
+- Closure `in` keyword support
 
 **Dependency Injection**
 - Dependencies are declared as properties without annotation
@@ -72,8 +86,8 @@ docs/
 **Old locations → New locations**
 - `01-introduction.md` → `getting-started/01-introduction.md`
 - `02-types.md` → `language/01-types.md`
-- `03-control-flow.md` → Split across `language/02-05-*.md`
-- `04-syntax.md` → Split into `language/06-*.md` and `structure/01-*.md`
+- `03-control-flow.md` → Split across `language/03-06-*.md`
+- `04-syntax.md` → Split into `language/02-variables-enums.md` and `structure/01-*.md`
 - `05-annotations.md` → To be split across architecture, data, reference sections
 - `06-user-interface.md` → To be split across `ui/` and `architecture/03-*.md`
 

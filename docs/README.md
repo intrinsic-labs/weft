@@ -27,11 +27,11 @@ Want to see Weft in action? Check out [Clearly Reformed in Weft](https://github.
 Learn the core language features:
 
 - [Types & Collections](language/01-types.md) - Primitives, arrays, dictionaries, optionals
-- [Control Flow](language/02-control-flow.md) - Conditionals, loops, switch statements
-- [Functions](language/03-functions.md) - Function declarations, async/await, closures
-- [Operators](language/04-operators.md) - Boolean, comparison, null safety operators
-- [Error Handling](language/05-error-handling.md) - Try/catch, throwing errors, Result types
-- [Variables & Enums](language/06-variables-enums.md) - Variable declarations, enum definitions
+- [Variables & Enums](language/02-variables-enums.md) - Variable declarations, enum definitions
+- [Control Flow](language/03-control-flow.md) - Conditionals, loops, switch statements
+- [Functions](language/04-functions.md) - Function declarations, async/await, closures
+- [Operators](language/05-operators.md) - Boolean, comparison, null safety operators
+- [Error Handling](language/06-error-handling.md) - Try/catch, throwing errors, Result types
 
 ### Code Organization
 
