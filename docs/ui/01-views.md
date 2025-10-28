@@ -199,7 +199,7 @@ view ArticleView {
             Text(article.title)
         }
     }
-    
+
     onAppear {
         await viewModel.loadArticle(articleId)
     }
@@ -231,7 +231,7 @@ view SearchView {
     var viewModel: SearchViewModel
 
     TextField(binding: $query)
-    
+
     onChange(query) {
         await viewModel.search(query)
     }
@@ -276,7 +276,7 @@ view TodoItem {
         => validate todo fields
         => save changes to backend
         => exit edit mode
-        
+
         isEditing = false
     }
 
@@ -323,7 +323,7 @@ view UserCard {
         Text(user.name) { font: h3 }
         Badge(text: user.role, color: theme.accent)
     }
-    
+
     // Kotlin-style alternative
     Row(spacing = 12) {
         Text(text = user.name, style = TextStyle.h3)
@@ -425,12 +425,12 @@ view ArticleDetailView {
 ```weft
 view ComplexAnimation {
     @Instruction('''
-    Animate with a spring effect when tapped - 
+    Animate with a spring effect when tapped -
     card should bounce slightly and scale up 5%
     ''')
-    
+
     @State var isBouncing = false
-    
+
     Column(onTap: { isBouncing = true }) {
         // content
     }
