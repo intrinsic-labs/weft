@@ -1,4 +1,4 @@
-# Phase 1 Refactor: COMPLETE ✓
+# Phase 1 Refactor: COMPLETE
 
 ## Summary
 
@@ -10,50 +10,27 @@ Phase 1 of the Weft documentation refactor is complete. We've transformed the do
 
 Created organized documentation hierarchy:
 
-```
-docs/
-├── README.md (completely rewritten)
-├── CHANGELOG.md (new)
-├── getting-started/
-│   └── 01-introduction.md
-├── language/
-│   ├── 01-types.md
-│   ├── 02-control-flow.md
-│   ├── 03-functions.md
-│   ├── 04-operators.md
-│   ├── 05-error-handling.md
-│   └── 06-variables-enums.md
-├── structure/
-│   ├── 01-definitions.md
-│   ├── 02-access-control.md
-│   ├── 03-scope.md
-│   └── 04-imports.md
-├── architecture/
-│   ├── 01-overview.md
-│   ├── 02-observability.md
-│   └── 04-lifecycle-scope.md
-├── ui/ (created, to be populated)
-├── data/ (created, to be populated)
-├── reference/ (created, to be populated)
-└── examples/ (created, to be populated)
-```
+[View New Structure](new-structure.md)
 
 ### 2. Content Created/Refactored
 
 **16 markdown files** created or refactored:
 
-**New Architecture Section (3 docs)**
+**New Architecture Section (8 docs)**
 - Architecture overview and philosophy
-- Observability pattern with @Observable
 - Lifecycle & scope with @Singleton, @ViewScoped, @FeatureScoped, @SessionScoped
+- Observability pattern with @Observable
+- State ownership for stateful design
+- Design patterns for repositories, viewmodels, and services (an overview document and close up for each)
 
-**Expanded Language Section (6 docs)**
+**Expanded Language Section (7 docs)**
 - Types & Collections (moved from old structure)
+- Variables & Enums (new, declaration syntax)
 - Control Flow (refactored, focused on conditionals/loops)
 - Functions (new, comprehensive coverage)
 - Operators (new, all operators with examples)
 - Error Handling (new, try/catch/throw patterns)
-- Variables & Enums (new, declaration syntax)
+- Language level annotations (@Instruction, @SumFunc, @Main, etc)
 
 **New Structure Section (4 docs)**
 - Definitions (type, class, struct, data, object keywords)
@@ -100,12 +77,8 @@ docs/
 ## What's Next (Phase 2)
 
 ### Architecture Section
-- [ ] State Ownership (03-state-ownership.md) - @State, @Binding, @Environment
-- [ ] Repositories (05-repositories.md) - Repository pattern in depth
-- [ ] ViewModels (06-viewmodels.md) - ViewModel pattern in depth
-- [ ] Services (07-services.md) - Service pattern in depth
-- [ ] Dependency Flow (08-dependency-flow.md) - How dependencies wire together
-- [ ] Complete Example (09-complete-example.md) - Full app architecture walkthrough
+- [ ] Dependency Flow (09-dependency-flow.md) - How dependencies wire together
+- [ ] Complete Example (10-complete-example.md) - Full app architecture walkthrough
 
 ### UI Section
 - [ ] Views basics and state management
@@ -137,58 +110,6 @@ docs/
 - [ ] Philosophy document
 - [ ] Translation guide for implementers
 - [ ] Project structure guide
-
-## Statistics
-
-- **Files created/refactored:** 16
-- **Folders created:** 8
-- **Old files removed:** 6
-- **Lines of documentation:** ~7,500+
-- **Code examples:** 150+
-
-## Impact
-
-This refactor provides:
-
-1. **Scalability** - Structure supports hundreds of docs without clutter
-2. **Discoverability** - Clear organization makes content easy to find
-3. **Learning Path** - Progressive structure from beginner to advanced
-4. **Professional Quality** - Consistent, polished documentation
-5. **Foundation for Growth** - Clear path for Phase 2 content
-
-## Migration Path
-
-Old documentation structure → New structure:
-
-```
-01-introduction.md → getting-started/01-introduction.md
-02-types.md → language/01-types.md
-03-control-flow.md → language/02-control-flow.md + 03-functions.md + 04-operators.md + 05-error-handling.md
-04-syntax.md → language/06-variables-enums.md + structure/01-definitions.md
-05-annotations.md → To be split across architecture/, data/, reference/ (Phase 2)
-06-user-interface.md → To be split across ui/ and architecture/03-state-ownership.md (Phase 2)
-```
-
-## Breaking Changes
-
-**For Weft Users:**
-- `@Observed` → `@Observable` (rename required)
-- Apply `@Observable` to class definition, not properties
-- Remove any `@Inject` annotations (now implicit)
-
-**For Documentation:**
-- All old file paths are obsolete
-- Use new folder structure for all references
-
-## Feedback Welcome
-
-This is the foundation for Weft documentation going forward. The structure is designed to be:
-- Intuitive for developers from any background
-- Easy to navigate and search
-- Comprehensive without overwhelming
-- Clear about what's implemented vs planned
-
-Phase 1 complete. Ready for Phase 2!
 
 ---
 

@@ -21,7 +21,7 @@ Local state owned and managed by the current scope (typically a view or ViewMode
 view CounterView {
     @State var count: int = 0
     @State var isExpanded: bool = false
-    
+
     Button(action: { count += 1 }) {
         text: "Count: \(count)"
     }
@@ -41,13 +41,13 @@ Two-way connection to state owned by a parent. Allows reading and writing parent
 ```weft
 view ParentView {
     @State var searchText: string = ""
-    
+
     SearchBar(searchText: $searchText)  // Pass binding with $
 }
 
 view SearchBar {
     @Binding var searchText: string  // Two-way connection
-    
+
     TextField(binding: $searchText) {
         placeholder: "Search..."
     }
@@ -69,7 +69,7 @@ Access to app-wide or feature-wide shared state from context.
 view ArticleView {
     @Environment var theme: Theme
     @Environment var authService: AuthService
-    
+
     Column {
         Text(article.title) {
             textColor: theme.primaryColor
@@ -107,13 +107,13 @@ Pass values down for read-only access:
 ```weft
 view ParentView {
     @State var userName: string = "Alice"
-    
+
     ChildView(userName: userName)  // Pass value
 }
 
 view ChildView {
     var userName: string  // Read-only property
-    
+
     Text("Hello, \(userName)")
 }
 ```
@@ -125,7 +125,7 @@ Use @Binding for bidirectional communication:
 ```weft
 view SettingsView {
     @State var isDarkMode: bool = false
-    
+
     ToggleControl(
         label: "Dark Mode",
         isOn: $isDarkMode  // Pass binding
@@ -135,7 +135,7 @@ view SettingsView {
 view ToggleControl {
     var label: string
     @Binding var isOn: bool  // Can read and write
-    
+
     Button(action: { isOn = !isOn }) {
         text: "\(label): \(isOn ? 'On' : 'Off')"
     }
@@ -155,13 +155,13 @@ class UserRepository {
 
 view ProfileView {
     var userRepository: UserRepository
-    
+
     Text(userRepository.currentUser?.name ?? "Guest")
 }
 
 view NavBarView {
     var userRepository: UserRepository
-    
+
     if userRepository.currentUser != null {
         UserAvatar(user: userRepository.currentUser)
     }
@@ -177,7 +177,7 @@ Provide environment values at the root of your view hierarchy:
 class MyApp: App {
     @State var theme = Theme()
     @State var authService = AuthService()
-    
+
     var content: View {
         MainView() {
             environment: [theme, authService]
@@ -191,7 +191,7 @@ Child views automatically have access via @Environment:
 ```weft
 view SettingsView {
     @Environment var theme: Theme
-    
+
     ColorPicker(
         selectedColor: $theme.primaryColor
     )
@@ -208,7 +208,7 @@ view SettingsView {
 class ArticleRepository {
     private(set) var articles: [Article] = []
     private(set) var isLoading: bool = false
-    
+
     func fetchArticles() async {
         @SumFunc
         => set loading state to true
@@ -224,10 +224,10 @@ class ArticleRepository {
 @ViewScoped
 class ArticleListViewModel {
     private var repository: ArticleRepository
-    
+
     @State var searchQuery: string = ""
     @State var selectedFilter: Filter = Filter.ALL
-    
+
     var articles: [Article] {
         @SumFunc
         => get articles from repository
@@ -235,11 +235,11 @@ class ArticleListViewModel {
         => filter by selected filter
         => return filtered results
     }
-    
+
     var isLoading: bool {
         return repository.isLoading
     }
-    
+
     func refresh() async {
         await repository.fetchArticles()
     }
@@ -249,23 +249,23 @@ class ArticleListViewModel {
 view ArticleListView {
     var viewModel: ArticleListViewModel
     @Environment var theme: Theme
-    
+
     @State var showFilters: bool = false
-    
+
     Column {
         SearchBar(searchQuery: $viewModel.searchQuery)
-        
+
         Button(action: { showFilters = !showFilters }) {
             text: "Filters"
         }
-        
+
         if showFilters {
             FilterSheet(
                 selectedFilter: $viewModel.selectedFilter,
                 onDismiss: { showFilters = false }
             )
         }
-        
+
         if viewModel.isLoading {
             LoadingSpinner()
         } else {
@@ -278,7 +278,7 @@ view ArticleListView {
 
 view SearchBar {
     @Binding var searchQuery: string
-    
+
     TextField(binding: $searchQuery) {
         placeholder: "Search articles..."
     }
@@ -287,10 +287,10 @@ view SearchBar {
 view FilterSheet {
     @Binding var selectedFilter: Filter
     var onDismiss: () => void
-    
+
     Column {
         for filter in Filter.allCases {
-            Button(action: { 
+            Button(action: {
                 selectedFilter = filter
                 onDismiss()
             }) {
@@ -312,7 +312,7 @@ struct CounterView: View {
     @Binding var parentValue: String
     @Environment(\.theme) var theme
     @StateObject var viewModel: ArticleListViewModel
-    
+
     var body: some View {
         // ...
     }
@@ -328,7 +328,7 @@ fun CounterView(
     viewModel: ArticleListViewModel = viewModel()
 ) {
     var count by remember { mutableStateOf(0) }
-    
+
     // ...
 }
 ```
@@ -339,7 +339,7 @@ function CounterView({ parentValue, setParentValue }) {
     const [count, setCount] = useState(0);
     const theme = useContext(ThemeContext);
     const viewModel = useViewModel(ArticleListViewModel);
-    
+
     // ...
 }
 ```
@@ -352,14 +352,14 @@ function CounterView({ parentValue, setParentValue }) {
 view ArticleCard {
     var article: Article
     @State var isExpanded: bool = false  // UI state only
-    
+
     Column {
         Text(article.title)
-        
+
         if isExpanded {
             Text(article.content)
         }
-        
+
         Button(action: { isExpanded = !isExpanded }) {
             text: isExpanded ? "Show Less" : "Show More"
         }
@@ -373,14 +373,14 @@ view ArticleCard {
 view TextField {
     @Binding var text: string
     var placeholder: string
-    
+
     // Reusable text input that modifies parent state
 }
 
 view Form {
     @State var email: string = ""
     @State var password: string = ""
-    
+
     TextField(text: $email, placeholder: "Email")
     TextField(text: $password, placeholder: "Password")
 }
@@ -405,7 +405,7 @@ view Form {
 view TodoItem {
     var todo: Todo
     @State var isEditing: bool = false
-    
+
     if isEditing {
         TextField(text: $todo.title)
     } else {
@@ -429,18 +429,18 @@ view RegistrationForm {
     @State var password: string = ""
     @State var agreeToTerms: bool = false
     @State var isSubmitting: bool = false
-    
+
     Column {
         TextField(text: $email, placeholder: "Email")
         TextField(text: $password, placeholder: "Password")
         Checkbox(isChecked: $agreeToTerms, label: "I agree to terms")
-        
+
         Button(action: submitForm) {
             text: isSubmitting ? "Submitting..." : "Register"
             isDisabled: isSubmitting
         }
     }
-    
+
     func submitForm() async {
         @SumFunc
         => validate form fields
@@ -458,7 +458,7 @@ view RegistrationForm {
 view ArticleListView {
     @State var selectedArticleId: string? = null
     var articles: [Article]
-    
+
     Row {
         // Master list
         Column {
@@ -470,7 +470,7 @@ view ArticleListView {
                 )
             }
         }
-        
+
         // Detail view
         if let articleId = selectedArticleId {
             ArticleDetailView(articleId: articleId)
@@ -485,7 +485,7 @@ view ArticleListView {
 view AppTabView {
     @State var shoppingCart = ShoppingCart()
     @State var selectedTab: Tab = Tab.HOME
-    
+
     TabView(selected: $selectedTab) {
         HomeView(cart: shoppingCart)
         ShopView(cart: shoppingCart)
@@ -499,4 +499,4 @@ view AppTabView {
 - [Lifecycle & Scope](02-lifecycle-scope.md) - Object lifetimes and scoping
 - [Observability](03-observability.md) - @Observable pattern
 - [Views](../ui/01-views.md) - View basics and composition
-- [ViewModels](05-patterns-in-practice.md) - ViewModel pattern
+- [ViewModels](07-viewmodels.md) - ViewModel pattern

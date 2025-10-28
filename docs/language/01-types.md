@@ -140,3 +140,10 @@ async func fetchUser(id: string) => User? {
     // may return User or null
 }
 ```
+
+
+## See Also
+
+- [Variable & Enums](02-variables-enums.md) - Defining variables and enumerations
+- [Control Flow](03-control-flow.md) - Using enums in switch statements
+- [Functions](04-functions.md) - Function parameters and return types

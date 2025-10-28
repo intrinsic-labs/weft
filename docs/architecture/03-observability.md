@@ -11,7 +11,7 @@ Mark classes as observable to indicate they contain state that changes over time
 class ArticleRepository {
     private(set) var articles: [Article] = []
     private(set) var isLoading: bool = false
-    
+
     func fetchArticles() async {
         isLoading = true
         articles = await api.fetchArticles()
@@ -72,12 +72,12 @@ ViewModels can depend on observable repositories:
 @ViewScoped
 class ArticleListViewModel {
     private var repository: ArticleRepository  // Observable repository
-    
+
     // This computed property automatically updates when repository.articles changes
     var articles: [Article] {
         return repository.articles
     }
-    
+
     var isLoading: bool {
         return repository.isLoading
     }
@@ -91,7 +91,7 @@ Views automatically re-render when observable properties change:
 ```weft
 view ArticleListView {
     var viewModel: ArticleListViewModel  // Observable ViewModel
-    
+
     Column {
         if viewModel.isLoading {
             LoadingSpinner()  // Shows when isLoading becomes true
@@ -115,7 +115,7 @@ class ShoppingCart {
     private(set) var items: [Item] = []
     private(set) var total: float = 0.0
     private(set) var itemCount: int = 0
-    
+
     func addItem(item: Item) {
         items.append(item)       // Change tracked
         total += item.price      // Change tracked
@@ -135,7 +135,7 @@ class ArticleRepository {
     // Readable everywhere, writable only in this class
     private(set) var articles: [Article] = []
     private(set) var isLoading: bool = false
-    
+
     public func fetchArticles() async {
         isLoading = true  // Only this class can change isLoading
         articles = await api.fetchArticles()
@@ -154,16 +154,16 @@ Computed properties automatically update when their dependencies change:
 @Observable
 class ShoppingCart {
     private(set) var items: [Item] = []
-    
+
     // Automatically recomputes when items changes
     var total: float {
         return items.reduce(0, (sum, item) => sum + item.price)
     }
-    
+
     var itemCount: int {
         return items.count
     }
-    
+
     var isEmpty: bool {
         return items.isEmpty
     }
@@ -185,7 +185,7 @@ class UserRepository {
 @ViewModel
 class ProfileViewModel {
     private var userRepository: UserRepository
-    
+
     var userName: string? {
         return userRepository.currentUser?.name
     }
@@ -194,7 +194,7 @@ class ProfileViewModel {
 @ViewModel
 class SettingsViewModel {
     private var userRepository: UserRepository
-    
+
     var userEmail: string? {
         return userRepository.currentUser?.email
     }
@@ -203,7 +203,7 @@ class SettingsViewModel {
 @ViewModel
 class NavBarViewModel {
     private var userRepository: UserRepository
-    
+
     var isLoggedIn: bool {
         return userRepository.currentUser != null
     }
@@ -245,10 +245,10 @@ class ArticleRepository {
     private _articles: Article[] = [];
     private _isLoading: boolean = false;
     private listeners: Set<() => void> = new Set();
-    
+
     get articles() { return this._articles; }
     get isLoading() { return this._isLoading; }
-    
+
     // Notifies listeners on changes
 }
 
@@ -265,7 +265,7 @@ class ArticleRepository {
 @Repository
 class ArticleRepository {
     private(set) var articles: [Article] = []
-    
+
     func fetchArticles() async {
         articles = await api.fetchArticles()
     }
@@ -275,7 +275,7 @@ class ArticleRepository {
 @ViewModel
 class ArticleListViewModel {
     private var repository: ArticleRepository
-    
+
     var articles: [Article] {
         return repository.articles
     }
@@ -288,7 +288,7 @@ class ArticleListViewModel {
 @Observable
 class DataStore {
     private(set) var data: [Item] = []
-    
+
     // Controlled mutation through methods
     func loadData() async {
         data = await fetchData()
@@ -303,7 +303,7 @@ class DataStore {
 @Observable
 class UserRepository {
     private(set) var users: [User] = []
-    
+
     func setUsers(users: [User]) {
         self.users = users
     }
@@ -352,15 +352,15 @@ class ArticleRepository {
 class ArticleRepository {
     private var api: APIClient
     private var database: Database
-    
+
     private(set) var articles: [Article] = []
     private(set) var isLoading: bool = false
     private(set) var lastError: Error? = null
-    
+
     func fetchArticles() async {
         isLoading = true
         lastError = null
-        
+
         try {
             var fresh = await api.fetchArticles()
             await database.saveArticles(fresh)
@@ -382,10 +382,10 @@ class ArticleRepository {
 @ViewScoped
 class ArticleListViewModel {
     private var repository: ArticleRepository
-    
+
     @State var selectedArticle: Article? = null
     @State var searchQuery: string = ""
-    
+
     var articles: [Article] {
         var all = repository.articles
         if searchQuery.isEmpty {
@@ -393,7 +393,7 @@ class ArticleListViewModel {
         }
         return all.filter(a => a.title.contains(searchQuery))
     }
-    
+
     var isLoading: bool {
         return repository.isLoading
     }
@@ -409,13 +409,13 @@ class ArticleListViewModel {
 class AuthService {
     private(set) var currentUser: User? = null
     private(set) var isAuthenticated: bool = false
-    
+
     func login(credentials: Credentials) async {
         var user = await api.login(credentials)
         currentUser = user
         isAuthenticated = true
     }
-    
+
     func logout() {
         currentUser = null
         isAuthenticated = false
@@ -427,5 +427,5 @@ class AuthService {
 
 - [Lifecycle & Scope](02-lifecycle-scope.md) - Controlling object lifetimes
 - [State Ownership](04-state-ownership.md) - Managing local vs shared state
-- [Repositories](05-repositories.md) - Repository pattern in depth
-- [ViewModels](06-viewmodels.md) - ViewModel pattern in depth
+- [Repositories](06-repositories.md) - Repository pattern in depth
+- [ViewModels](07-viewmodels.md) - ViewModel pattern in depth
