@@ -75,7 +75,7 @@ Define architectural layer and responsibility:
 │ │ │ @Role(usecase)              │ │ │
 │ │ │ ┌─────────────────────────┐ │ │ │
 │ │ │ │ Entities                │ │ │ │
-│ │ │ │ @Role(entity)          │ │ │ │
+│ │ │ │ @Role(entity)           │ │ │ │
 │ │ │ └─────────────────────────┘ │ │ │
 │ │ └─────────────────────────────┘ │ │
 │ └─────────────────────────────────┘ │
@@ -196,7 +196,7 @@ Ephemeral UI state (views only):
 ```weft
 view ArticleListView {
     @Subscriber var viewModel: ArticleListViewModel
-    
+
     @LocalState var showFilters: bool = false  // View-only state
     @LocalState var selectedTab: int = 0
 }
@@ -230,7 +230,7 @@ Application entry point:
 @Main
 class MyApp: App {
     @LocalState var theme = Theme()
-    
+
     var content: View {
         MainView() {
             environment: [theme]
@@ -263,7 +263,7 @@ class LocalDatabaseAdapter: Database
 func fetchAll() -> [Article]
 ```
 
-**Use sparingly**: Platform-specific choices, API ambiguities, edge cases  
+**Use sparingly**: Platform-specific choices, API ambiguities, edge cases
 **Don't use**: Regular documentation (use comments instead)
 
 ---
@@ -378,7 +378,7 @@ data Article {
     var title: string
     var content: string
     var publishedAt: DateTime
-    
+
     func isPublished() -> bool {
         return publishedAt <= DateTime.now()
     }
@@ -400,7 +400,7 @@ data Article {
 class FetchArticlesUseCase {
     private var repository: ArticleRepository  // Interface!
     private var cache: CacheService
-    
+
     func execute(filter: ArticleFilter?) async -> [Article] {
         @SumFunc
         => Check cache for articles first
@@ -437,9 +437,9 @@ protocol ArticleRepository {
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private var database: Database
-    
+
     var cachedArticles: [Article] = []  // Observable
-    
+
     func fetchAll() async -> [Article] {
         cachedArticles = await database.query(ArticleSchema.self)
             .map { $0.toEntity() }
@@ -464,11 +464,11 @@ class ArticleRepositoryImpl: ArticleRepository {
 class ArticleListViewModel {
     private var fetchUseCase: FetchArticlesUseCase
     @Subscriber private var repository: ArticleRepository
-    
+
     var articles: [Article] = []
     var isLoading: bool = false
     private(set) var errorMessage: string? = nil
-    
+
     func loadArticles() async {
         isLoading = true
         articles = await fetchUseCase.execute(filter: nil)
@@ -490,12 +490,12 @@ class ArticleListViewModel {
 view ArticleListView {
     @Subscriber var viewModel: ArticleListViewModel
     @LocalState var showFilters: bool = false
-    
+
     Column(isScrollable: true) {
         if showFilters {
             FilterPanel()
         }
-        
+
         if viewModel.isLoading {
             LoadingSpinner()
         } else {
@@ -669,7 +669,7 @@ data Article {
 @LifeCycle(singleton)
 class FetchArticlesUseCase {
     private var repository: ArticleRepository
-    
+
     func execute() async -> [Article] {
         return await repository.fetchAll()
     }
@@ -687,9 +687,9 @@ protocol ArticleRepository {
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private var database: Database
-    
+
     var cachedArticles: [Article] = []
-    
+
     func fetchAll() async -> [Article] {
         cachedArticles = await database.query(ArticleSchema.self)
             .map { $0.toEntity() }
@@ -703,7 +703,7 @@ struct ArticleSchema {
     @Id(generated) var id: string
     var title: string
     var content: string
-    
+
     func toEntity() -> Article {
         return Article(id: id, title: title, content: content)
     }
@@ -715,10 +715,10 @@ struct ArticleSchema {
 @Publisher
 class ArticleListViewModel {
     private var fetchUseCase: FetchArticlesUseCase
-    
+
     var articles: [Article] = []
     var isLoading: bool = false
-    
+
     func loadArticles() async {
         isLoading = true
         articles = await fetchUseCase.execute()
@@ -730,7 +730,7 @@ class ArticleListViewModel {
 view ArticleListView {
     @Subscriber var viewModel: ArticleListViewModel
     @LocalState var showFilters: bool = false
-    
+
     Column {
         for article in viewModel.articles {
             Text(article.title)
@@ -752,5 +752,5 @@ view ArticleListView {
 
 ---
 
-**Version:** 0.3.0  
+**Version:** 0.3.0
 **Last Updated:** January 2025

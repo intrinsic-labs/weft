@@ -22,21 +22,21 @@ Weft's role annotations map directly to Clean Architecture layers:
 
 ```
 ┌─────────────────────────────────────────────┐
-│  Frameworks & Drivers (Outermost)          │
-│  @Role(adapter), @Schema, views            │
-│  ┌───────────────────────────────────────┐ │
-│  │  Interface Adapters                   │ │
-│  │  @Role(repository), @Role(service),   │ │
-│  │  @Role(viewmodel), @Role(gateway)     │ │
-│  │  ┌─────────────────────────────────┐ │ │
-│  │  │  Application Business Rules     │ │ │
-│  │  │  @Role(usecase)                 │ │ │
-│  │  │  ┌───────────────────────────┐ │ │ │
-│  │  │  │  Enterprise Business Rules│ │ │ │
-│  │  │  │  @Role(entity)           │ │ │ │
-│  │  │  └───────────────────────────┘ │ │ │
-│  │  └─────────────────────────────────┘ │ │
-│  └───────────────────────────────────────┘ │
+│  Frameworks & Drivers (Outermost)           │
+│  @Role(adapter), @Schema, views             │
+│  ┌────────────────────────────────────────┐ │
+│  │  Interface Adapters                    │ │
+│  │  @Role(repository), @Role(service),    │ │
+│  │  @Role(viewmodel), @Role(gateway)      │ │
+│  │  ┌─────────────────────────────────┐   │ │
+│  │  │  Application Business Rules     │   │ │
+│  │  │  @Role(usecase)                 │   │ │
+│  │  │  ┌───────────────────────────┐  │   │ │
+│  │  │  │  Enterprise Business Rules│  │   │ │
+│  │  │  │  @Role(entity)            │  │   │ │
+│  │  │  └───────────────────────────┘  │   │ │
+│  │  └─────────────────────────────────┘   │ │
+│  └────────────────────────────────────────┘ │
 └─────────────────────────────────────────────┘
 ```
 
@@ -145,8 +145,8 @@ Define the architectural layer and responsibility of a type.
 
 ### `@Role(entity)`
 
-**Layer**: Enterprise Business Rules (innermost)  
-**Purpose**: Pure business objects with core domain logic  
+**Layer**: Enterprise Business Rules (innermost)
+**Purpose**: Pure business objects with core domain logic
 **Dependencies**: None - cannot depend on any other layer
 
 ```weft
@@ -157,7 +157,7 @@ data Article {
     var content: string
     var publishedAt: DateTime
     var author: Author
-    
+
     func isPublished() -> bool {
         return publishedAt <= DateTime.now()
     }
@@ -182,8 +182,8 @@ data Author {
 
 ### `@Role(usecase)`
 
-**Layer**: Application Business Rules  
-**Purpose**: Orchestrate business logic and coordinate between entities and interfaces  
+**Layer**: Application Business Rules
+**Purpose**: Orchestrate business logic and coordinate between entities and interfaces
 **Dependencies**: Can depend on entities and repository/service/gateway **interfaces**
 
 ```weft
@@ -192,7 +192,7 @@ data Author {
 class FetchArticlesUseCase {
     private var repository: ArticleRepository  // Interface!
     private var cache: CacheService  // Interface!
-    
+
     func execute(filter: ArticleFilter?) async throws -> [Article] {
         @SumFunc
         => Check cache for articles first
@@ -207,15 +207,15 @@ class FetchArticlesUseCase {
 class PublishArticleUseCase {
     private var repository: ArticleRepository
     private var notificationService: NotificationService
-    
+
     func execute(articleId: string) async throws {
         let article = await repository.findById(articleId)
-        
+
         // Business rule: can't publish without title
         if article.title.isEmpty {
             throw ValidationError("Article must have a title")
         }
-        
+
         article.markAsPublished()
         await repository.save(article)
         await notificationService.notifySubscribers(article)
@@ -233,9 +233,9 @@ class PublishArticleUseCase {
 
 ### `@Role(repository)`
 
-**Layer**: Interface Adapters  
-**Purpose**: Abstract interface for data access  
-**Dependencies**: Can depend on entities and use cases  
+**Layer**: Interface Adapters
+**Purpose**: Abstract interface for data access
+**Dependencies**: Can depend on entities and use cases
 **Note**: This is the **interface/protocol**, not the implementation
 
 ```weft
@@ -266,8 +266,8 @@ protocol UserRepository {
 
 ### `@Role(service)`
 
-**Layer**: Interface Adapters  
-**Purpose**: Abstract interface for business logic utilities  
+**Layer**: Interface Adapters
+**Purpose**: Abstract interface for business logic utilities
 **Dependencies**: Can depend on entities and use cases
 
 ```weft
@@ -300,8 +300,8 @@ protocol ValidationService {
 
 ### `@Role(viewmodel)`
 
-**Layer**: Interface Adapters  
-**Purpose**: Presentation logic and view state management  
+**Layer**: Interface Adapters
+**Purpose**: Presentation logic and view state management
 **Dependencies**: Can depend on entities, use cases, repositories, services
 
 ```weft
@@ -311,24 +311,24 @@ protocol ValidationService {
 class ArticleListViewModel {
     private var fetchUseCase: FetchArticlesUseCase
     private var repository: ArticleRepository
-    
+
     var articles: [Article] = []
     var isLoading: bool = false
     private(set) var errorMessage: string? = nil
-    
+
     func loadArticles() async {
         isLoading = true
         errorMessage = nil
-        
+
         try {
             articles = await fetchUseCase.execute(filter: nil)
         } catch error {
             errorMessage = error.localizedDescription
         }
-        
+
         isLoading = false
     }
-    
+
     func refresh() async {
         await loadArticles()
     }
@@ -346,8 +346,8 @@ class ArticleListViewModel {
 
 ### `@Role(gateway)`
 
-**Layer**: Interface Adapters  
-**Purpose**: Abstract interface for external services (non-data)  
+**Layer**: Interface Adapters
+**Purpose**: Abstract interface for external services (non-data)
 **Dependencies**: Can depend on entities
 
 ```weft
@@ -377,8 +377,8 @@ protocol PushNotificationGateway {
 
 ### `@Role(dto)`
 
-**Layer**: Interface Adapters / Frameworks  
-**Purpose**: Data Transfer Objects that cross boundaries (API, database)  
+**Layer**: Interface Adapters / Frameworks
+**Purpose**: Data Transfer Objects that cross boundaries (API, database)
 **Dependencies**: Minimal - often just primitives
 
 ```weft
@@ -389,7 +389,7 @@ struct ArticleDTO {
     @JSONKey("article_title") var title: string
     var content: string
     @JSONKey("published_date") var publishedAt: string
-    
+
     // Converts API response to domain entity
     func toEntity() -> Article {
         return Article(
@@ -406,7 +406,7 @@ struct CreateArticleRequest {
     var title: string
     var content: string
     var authorId: string
-    
+
     static func fromEntity(article: Article) -> CreateArticleRequest {
         return CreateArticleRequest(
             title: article.title,
@@ -427,8 +427,8 @@ struct CreateArticleRequest {
 
 ### `@Role(adapter)`
 
-**Layer**: Frameworks & Drivers (outermost)  
-**Purpose**: Concrete implementations of interfaces (repositories, services, gateways)  
+**Layer**: Frameworks & Drivers (outermost)
+**Purpose**: Concrete implementations of interfaces (repositories, services, gateways)
 **Dependencies**: Can depend on anything - this is the outermost layer
 
 ```weft
@@ -437,24 +437,24 @@ struct CreateArticleRequest {
 class ArticleRepositoryImpl: ArticleRepository {
     private var database: Database
     private var apiClient: APIClient
-    
+
     func fetchAll() async throws -> [Article] {
         // Try local database first
         let schemas = await database.query(ArticleSchema.self)
         if !schemas.isEmpty {
             return schemas.map { $0.toEntity() }
         }
-        
+
         // Fallback to API
         let dtos = await apiClient.get("/articles")
         let entities = dtos.map { $0.toEntity() }
-        
+
         // Save to database
         await database.save(entities.map { ArticleSchema.from($0) })
-        
+
         return entities
     }
-    
+
     func save(article: Article) async throws {
         let schema = ArticleSchema.from(article)
         await database.save(schema)
@@ -465,7 +465,7 @@ class ArticleRepositoryImpl: ArticleRepository {
 @LifeCycle(singleton)
 class StripePaymentAdapter: PaymentGateway {
     private var apiKey: string
-    
+
     func processPayment(amount: decimal, token: string) async throws -> PaymentResult {
         // Stripe-specific implementation
         let response = await Stripe.charge(amount: amount, token: token, apiKey: apiKey)
@@ -498,7 +498,7 @@ Control how data flows through your application and what triggers UI updates.
 
 ### `@Publisher`
 
-**Applied to**: Classes  
+**Applied to**: Classes
 **Purpose**: Marks a class as having observable state that others can subscribe to
 
 ```weft
@@ -509,10 +509,10 @@ class ArticleListViewModel {
     // Public properties are observable
     var articles: [Article] = []
     var isLoading: bool = false
-    
+
     // Readable externally but only writable internally (still observable)
     private(set) var errorMessage: string? = nil
-    
+
     // Private properties are NOT observable
     private var cache: [string: Article] = [:]
 }
@@ -530,13 +530,13 @@ class ArticleListViewModel {
 
 ### `@Subscriber`
 
-**Applied to**: Properties  
+**Applied to**: Properties
 **Purpose**: Explicitly marks a property as subscribing to a `@Publisher`
 
 ```weft
 view ArticleListView {
     @Subscriber var viewModel: ArticleListViewModel  // Observes changes
-    
+
     Column {
         for article in viewModel.articles {
             ArticleCard(article: article)
@@ -572,19 +572,19 @@ view ChildView {
 
 ### `@Binding`
 
-**Applied to**: Properties  
+**Applied to**: Properties
 **Purpose**: Syntactic sugar for two-way binding between parent and child
 
 ```weft
 view ParentView {
     @LocalState var searchText = ""
-    
+
     SearchBar(query: $searchText)  // Pass binding with $
 }
 
 view SearchBar {
     @Binding var query: string  // Two-way binding
-    
+
     TextField(binding: $query)
 }
 ```
@@ -601,19 +601,19 @@ view SearchBar {
 
 ### `@LocalState`
 
-**Applied to**: Properties  
-**Purpose**: Marks ephemeral UI state that's local to a view  
+**Applied to**: Properties
+**Purpose**: Marks ephemeral UI state that's local to a view
 **Restriction**: UI layer only (views)
 
 ```weft
 view ArticleListView {
     @Subscriber var viewModel: ArticleListViewModel
-    
+
     // Ephemeral UI state - not part of app state
     @LocalState var showFilters: bool = false
     @LocalState var selectedTab: int = 0
     @LocalState var searchText: string = ""
-    
+
     Column {
         if showFilters {
             FilterPanel()
@@ -661,7 +661,7 @@ struct ArticleSchema {
     var content: string
     var publishedAt: DateTime
     @ForeignKey("authors") var authorId: string
-    
+
     func toEntity(author: Author) -> Article {
         return Article(
             id: id,
@@ -780,7 +780,7 @@ Excludes a field from the database (all interchangeable).
 struct Article {
     @Id(generated) var id: string
     var title: string
-    
+
     @Transient var isSelected: bool = false  // UI state only, not in DB
     @Ignore var cachedContent: string?  // Not persisted
 }
@@ -865,7 +865,7 @@ Marks the application entry point.
 @Main
 class MyApp: App {
     @LocalState var theme = Theme()
-    
+
     var content: View {
         MainView() {
             environment: [theme]
@@ -940,7 +940,7 @@ func calculateTotal(items: [CartItem]) -> decimal {
     @SumFunc
     => Sum item prices
     => Apply tax
-    
+
     var total = 0.0
     for item in items {
         total += item.price
@@ -1030,10 +1030,10 @@ protocol ArticleRepository {
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private var database: Database
-    
+
     var cachedArticles: [Article] = []  // Observable
     private var lastFetchTime: DateTime? = nil  // Not observable
-    
+
     func fetchAll() async throws -> [Article] {
         cachedArticles = await database.query(ArticleSchema.self).map { $0.toEntity() }
         lastFetchTime = DateTime.now()
@@ -1053,7 +1053,7 @@ class PublishArticleUseCase {
     private var articleRepository: ArticleRepository
     private var notificationGateway: NotificationGateway
     private var analyticsService: AnalyticsService
-    
+
     // Validates article before publishing and notifies subscribers
     func execute(articleId: string) async throws {
         @SumFunc
@@ -1078,21 +1078,21 @@ class PublishArticleUseCase {
 class ArticleListViewModel {
     private var fetchUseCase: FetchArticlesUseCase
     @Subscriber private var repository: ArticleRepository
-    
+
     var articles: [Article] = []
     var isLoading: bool = false
     private(set) var errorMessage: string? = nil
-    
+
     func loadArticles() async {
         isLoading = true
         errorMessage = nil
-        
+
         try {
             articles = await fetchUseCase.execute(filter: nil)
         } catch error {
             errorMessage = error.localizedDescription
         }
-        
+
         isLoading = false
     }
 }
@@ -1107,7 +1107,7 @@ view ArticleListView {
     @Subscriber var viewModel: ArticleListViewModel
     @LocalState var showFilters: bool = false
     @LocalState var selectedSortOption: SortOption = .newest
-    
+
     Column(isScrollable: true) {
         Row {
             Button("Filters") {
@@ -1116,11 +1116,11 @@ view ArticleListView {
             Spacer()
             SortPicker(selection: $selectedSortOption)
         }
-        
+
         if showFilters {
             FilterPanel()
         }
-        
+
         if viewModel.isLoading {
             LoadingSpinner()
         } else {
@@ -1268,7 +1268,7 @@ class ArticleListViewModel {
 }
 
 view ArticleListView {
-    
+
     var viewModel: ArticleListViewModel
     @State var showFilters: bool = false
 }
@@ -1355,5 +1355,5 @@ view ArticleListView {
 
 ---
 
-**Version:** 0.3.0  
+**Version:** 0.3.0
 **Last Updated:** January 2025
