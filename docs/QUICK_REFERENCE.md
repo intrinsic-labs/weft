@@ -243,32 +243,58 @@ class MyApp: App {
 
 ### `@Instruction`
 
-Guidance for translators:
+**Clarifies translation ambiguity** - not a regular comment!
+
+Use only when you need to specify how to translate Weft to target language in a non-obvious way.
 
 ```weft
 @Instruction('''
-The API returns both featured_image and featured_image_full.
-Please map the plain featured_image value.
+The API returns both featured_image and featured_image_full fields.
+During translation, map the plain featured_image value (not featured_image_full).
 ''')
 func fetchArticle(id: string) async -> Article
+
+@Role(adapter)
+@Instruction("Use Realm for iOS, Room for Android")
+class LocalDatabaseAdapter: Database
+
+// ✅ Use regular comments for code documentation
+// Fetches all articles from the repository
+func fetchAll() -> [Article]
 ```
+
+**Use sparingly**: Platform-specific choices, API ambiguities, edge cases  
+**Don't use**: Regular documentation (use comments instead)
 
 ---
 
 ### `@SumFunc`
 
-Summarize function logic:
+**Replaces function implementation** - write logic in English instead of code!
+
+The translator converts English directly to target language. Don't write code underneath.
 
 ```weft
-func processPayment() async {
+func processPayment(cart: ShoppingCart) async throws -> Receipt {
     @SumFunc
-    => Validate cart items
-    => Calculate total with tax
-    => Process payment
-    => Create order record
+    => Validate cart items are still available
+    => Calculate total with tax and shipping
+    => Process payment through gateway
+    => Create order record in database
     => Send confirmation email
+    => Return receipt with transaction details
+}
+// ✅ No code implementation - @SumFunc IS the implementation
+
+func calculateTotal(items: [CartItem]) -> decimal {
+    @SumFunc
+    => Sum all item prices
+    => Apply tax rate based on location
+    => Return final total
 }
 ```
+
+**Use when**: Complex logic described clearly in English, rapid prototyping
 
 ---
 
@@ -373,10 +399,15 @@ data Article {
 @LifeCycle(singleton)
 class FetchArticlesUseCase {
     private var repository: ArticleRepository  // Interface!
+    private var cache: CacheService
     
     func execute(filter: ArticleFilter?) async -> [Article] {
-        let articles = await repository.fetchAll()
-        return filter ? articles.filter(filter.matches) : articles
+        @SumFunc
+        => Check cache for articles first
+        => If not cached, fetch from repository
+        => Apply business filter if provided
+        => Cache the filtered results
+        => Return filtered articles
     }
 }
 ```

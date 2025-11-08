@@ -193,23 +193,13 @@ class FetchArticlesUseCase {
     private var repository: ArticleRepository  // Interface!
     private var cache: CacheService  // Interface!
     
-    @Instruction("Fetches articles with business-specific filtering and caching")
     func execute(filter: ArticleFilter?) async throws -> [Article] {
-        // Check cache first
-        if let cached = cache.get("articles") {
-            return cached
-        }
-        
-        // Fetch from repository
-        let articles = await repository.fetchAll()
-        
-        // Apply business rules
-        let filtered = filter ? articles.filter(filter.matches) : articles
-        
-        // Cache results
-        cache.set("articles", filtered)
-        
-        return filtered
+        @SumFunc
+        => Check cache for articles first
+        => If not cached, fetch from repository
+        => Apply business filter if provided
+        => Cache the filtered results
+        => Return filtered articles
     }
 }
 
@@ -400,7 +390,7 @@ struct ArticleDTO {
     var content: string
     @JSONKey("published_date") var publishedAt: string
     
-    @Instruction("Converts API response to domain entity")
+    // Converts API response to domain entity
     func toEntity() -> Article {
         return Article(
             id: id,
@@ -890,31 +880,48 @@ class MyApp: App {
 
 ### `@Instruction(message)`
 
-Provides specific guidance to translators about implementation details.
+**Purpose**: Provides specific guidance to translators about **translation ambiguity** that cannot be resolved from the code alone.
+
+**This is NOT a regular code comment.** Use `@Instruction` only when you need to clarify how to translate Weft to a target language in a specific way that wouldn't be obvious from the code structure itself.
 
 ```weft
 @Instruction('''
-The API returns both featured_image and featured_image_full.
-Please map the plain featured_image value during translation.
+The API returns both featured_image and featured_image_full fields.
+During translation, map the plain featured_image value (not featured_image_full).
 ''')
-func fetchArticle(id: string) async -> Article {
-    // Implementation
-}
+func fetchArticle(id: string) async -> Article
 
 @Role(adapter)
-@Instruction("Use Realm for local persistence, Room for Android")
-class LocalDatabaseAdapter: Database {
-    // Implementation
-}
+@Instruction("Use Realm for iOS, Room for Android - both should implement the same Database protocol")
+class LocalDatabaseAdapter: Database
+
+// ❌ BAD - this should be a regular comment
+@Instruction("This fetches all articles")
+func fetchAll() -> [Article]
+
+// ✅ GOOD - use a regular comment for code documentation
+// Fetches all articles from the repository
+func fetchAll() -> [Article]
 ```
 
-**Use for**: Clarifying ambiguity, platform-specific notes, API quirks, edge cases.
+**Use sparingly for**:
+- Platform-specific translation choices (iOS vs Android)
+- API response ambiguities that affect mapping
+- Non-obvious translation decisions
+- Edge cases in translation logic
+
+**DO NOT use for**:
+- Regular code documentation (use comments)
+- Explaining what code does (use comments)
+- General notes (use comments)
 
 ---
 
 ### `@SumFunc`
 
-Summarizes function logic in plain English (useful for complex functions).
+**Purpose**: Write function logic in plain English **instead of implementing the function in code**. The translator converts the English description directly to the target language.
+
+**This REPLACES the function body** - you don't write code underneath it.
 
 ```weft
 func processPayment(cart: ShoppingCart) async throws -> Receipt {
@@ -924,13 +931,41 @@ func processPayment(cart: ShoppingCart) async throws -> Receipt {
     => Process payment through gateway
     => Create order record in database
     => Send confirmation email
-    => Return receipt
+    => Return receipt with transaction details
+}
+// ✅ No implementation code - @SumFunc IS the implementation
+
+func calculateTotal(items: [CartItem]) -> decimal {
+    // ❌ WRONG - don't mix @SumFunc with actual implementation
+    @SumFunc
+    => Sum item prices
+    => Apply tax
     
-    // Actual implementation...
+    var total = 0.0
+    for item in items {
+        total += item.price
+    }
+    return total
+}
+
+func calculateTotal(items: [CartItem]) -> decimal {
+    // ✅ CORRECT - either use @SumFunc OR write the code
+    @SumFunc
+    => Sum all item prices
+    => Apply tax rate based on location
+    => Return final total
 }
 ```
 
-**Use for**: Complex workflows, multi-step processes, unclear logic.
+**Use when**:
+- Function logic is complex but can be described clearly in English
+- You want to prototype quickly without writing detailed code
+- The translation to target language is straightforward from the English description
+
+**Benefits**:
+- Write functions faster in natural language
+- Translator handles converting English → target language
+- Still provides clear implementation intent
 
 ---
 
@@ -1019,26 +1054,15 @@ class PublishArticleUseCase {
     private var notificationGateway: NotificationGateway
     private var analyticsService: AnalyticsService
     
-    @Instruction("Validates article before publishing and notifies subscribers")
+    // Validates article before publishing and notifies subscribers
     func execute(articleId: string) async throws {
         @SumFunc
         => Fetch article from repository
-        => Validate article has required fields
+        => Validate article has required fields (title cannot be empty)
         => Mark article as published
         => Save to repository
-        => Send notifications to subscribers
-        => Track analytics event
-        
-        let article = await articleRepository.findById(articleId)
-        
-        guard !article.title.isEmpty else {
-            throw ValidationError("Article must have a title")
-        }
-        
-        article.markAsPublished()
-        await articleRepository.save(article)
-        await notificationGateway.notifySubscribers(article)
-        analyticsService.trackEvent("article_published", properties: ["id": article.id])
+        => Send notifications to subscribers via gateway
+        => Track analytics event with article ID
     }
 }
 ```
@@ -1313,8 +1337,8 @@ view ArticleListView {
 | `@JSONFormat("format")` | Serialization | Date format | `@JSONFormat("yyyy-MM-dd") var date` |
 | **Documentation** |
 | `@Main` | Meta | App entry point | `@Main class MyApp: App` |
-| `@Instruction(msg)` | Meta | Translator guidance | `@Instruction("Use Firebase")` |
-| `@SumFunc` | Meta | Function summary | `@SumFunc => step 1 => step 2` |
+| `@Instruction(msg)` | Meta | Translation ambiguity clarification | `@Instruction("Use Realm for iOS, Room for Android")` |
+| `@SumFunc` | Meta | Function implementation in English | `@SumFunc => step 1 => step 2` |
 | `@Index` | Meta | Directory docs | `@Index('''contents''')` |
 | `@Deprecated(msg)` | Meta | Deprecated code | `@Deprecated("Use X instead")` |
 
