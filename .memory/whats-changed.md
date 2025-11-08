@@ -69,7 +69,7 @@ CLARIFIED: @SumFunc - REPLACES implementation, no code underneath
 │ │ │ @Role(usecase)              │ │ │
 │ │ │ ┌─────────────────────────┐ │ │ │
 │ │ │ │ ENTITIES                │ │ │ │  ← Innermost
-│ │ │ │ @Role(entity)          │ │ │ │
+│ │ │ │ @Role(entity)           │ │ │ │
 │ │ │ └─────────────────────────┘ │ │ │
 │ │ └─────────────────────────────┘ │ │
 │ └─────────────────────────────────┘ │
