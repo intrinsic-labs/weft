@@ -160,6 +160,83 @@ class ArticleRepositoryImpl: ArticleRepository {
 
 ## Implementing These Core Patterns
 
+### Entity Pattern
+
+**Purpose:** Represent core business objects with domain logic.
+
+**Key responsibilities:**
+- Define business data structures
+- Contain domain business rules
+- No dependencies on outer layers
+- Pure, testable logic
+
+**Typical scope:** No lifecycle annotation (plain data/logic)
+
+**Pattern:**
+- Use `@Role(entity)` only
+- Keep dependencies minimal (other entities only)
+- Add domain methods (validation, computed properties)
+- No framework or infrastructure concerns
+
+**Example:**
+```weft
+@Role(entity)
+data Article {
+    var id: string
+    var title: string
+    var content: string
+    var authorId: string
+    var publishedAt: datetime?
+    var createdAt: datetime
+
+    func isPublished() -> bool {
+        return publishedAt != nil && publishedAt! <= datetime.now()
+    }
+
+    func canBeEditedBy(userId: string) -> bool {
+        return authorId == userId && !isPublished()
+    }
+}
+```
+
+
+### UseCase Pattern
+
+**Purpose:** Implement application-specific business rules and orchestrate workflows.
+
+**Key responsibilities:**
+- Coordinate between repositories and services
+- Execute multi-step business operations
+- Enforce business rules
+- Keep ViewModels thin
+
+**Typical scope:** No lifecycle annotation (instantiated by ViewModels or other use cases)
+
+**Pattern:**
+- Use `@Role(usecase)` only
+- Inject interfaces (repositories, services, gateways)
+- Return entities or simple types
+
+**Example:**
+```weft
+@Role(usecase)
+class PublishArticleUseCase {
+    private var articleRepository: ArticleRepository
+    private var notificationService: NotificationService
+
+    func execute(articleId: string) async throws {
+        @SumFunc
+        => fetch article from repository
+        => validate article has title and content
+        => validate article is not already published
+        => set published date to now
+        => save article to repository
+        => send notification to subscribers
+    }
+}
+```
+
+
 ### Repository Pattern
 
 **Purpose:** Abstract data sources and provide a clean API for data access.
@@ -178,7 +255,74 @@ class ArticleRepositoryImpl: ArticleRepository {
 - Use `@Role(dto)` for API/DB boundary objects
 - Return `@Role(entity)` objects to consumers
 
-**Learn more:** [Repository Pattern](06-repositories.md)
+**Example:**
+```weft
+@Role(repository)
+protocol ArticleRepository {
+    var articles: [Article] { get }
+    func fetchArticles() async throws
+    func getArticle(id: string) -> Article?
+    func save(article: Article) async throws
+}
+
+@Role(adapter)
+@Lifecycle(singleton)
+@Publisher
+class ArticleRepositoryImpl: ArticleRepository {
+    private var api: APIClient
+    private var database: Database
+
+    private(set) var articles: [Article] = []
+
+    func fetchArticles() async throws {
+        var dtos: [ArticleDTO] = await api.fetchArticles()
+        articles = dtos.map(dto => dto.toEntity())
+        await database.saveArticles(articles)
+    }
+}
+```
+
+
+### Service Pattern
+
+**Purpose:** Provide business logic, utilities, and cross-cutting concerns.
+
+**Key responsibilities:**
+- Implement business rules
+- Provide stateless operations
+- Handle integrations (analytics, logging, etc.)
+- Coordinate app-wide concerns
+
+**Typical scope:** `@Lifecycle(singleton)` (app-wide, shared)
+
+**Pattern:**
+- Define interface with `@Role(service)`
+- Implement with `@Role(adapter)` + `@Lifecycle(singleton)`
+- No observable state for stateless services
+- Use `@Publisher` if service maintains state
+
+**Example:**
+```weft
+@Role(service)
+protocol AnalyticsService {
+    func trackEvent(name: string, properties: [string: any])
+    func trackScreen(name: string)
+}
+
+@Role(adapter)
+@Lifecycle(singleton)
+class AnalyticsServiceImpl: AnalyticsService {
+    private var backend: AnalyticsBackend
+
+    func trackEvent(name: string, properties: [string: any]) {
+        @SumFunc
+        => format event with timestamp and properties
+        => send to analytics backend
+        => log locally for debugging
+    }
+}
+```
+
 
 ### ViewModel Pattern
 
@@ -198,27 +342,186 @@ class ArticleRepositoryImpl: ArticleRepository {
 - Expose computed properties for UI
 - Keep business logic in use cases or services
 
-**Learn more:** [ViewModel Pattern](07-viewmodels.md)
+**Example:**
+```weft
+@Role(viewmodel)
+@Lifecycle(view)
+@Publisher
+class ArticleListViewModel {
+    @Subscriber private var repository: ArticleRepository
+    private var publishUseCase: PublishArticleUseCase
 
-### Service Pattern
+    var searchQuery: string = ""
+    var selectedCategory: string? = nil
 
-**Purpose:** Provide business logic, utilities, and cross-cutting concerns.
+    var filteredArticles: [Article] {
+        return repository.articles
+            .filter(a => a.title.contains(searchQuery))
+            .filter(a => selectedCategory == nil || a.category == selectedCategory)
+    }
+
+    func publishArticle(id: string) async {
+        try {
+            await publishUseCase.execute(id)
+        } catch error {
+            // Handle error
+        }
+    }
+}
+```
+
+
+### Gateway Pattern
+
+**Purpose:** Define interfaces for external services (payment, email, SMS, etc.).
 
 **Key responsibilities:**
-- Implement business rules
-- Provide stateless operations
-- Handle integrations (analytics, logging, etc.)
-- Coordinate app-wide concerns
+- Abstract third-party service APIs
+- Provide domain-friendly interfaces
+- Allow swapping implementations
+- Isolate external dependencies
 
 **Typical scope:** `@Lifecycle(singleton)` (app-wide, shared)
 
 **Pattern:**
-- Define interface with `@Role(service)` or `@Role(gateway)`
+- Define interface with `@Role(gateway)`
 - Implement with `@Role(adapter)` + `@Lifecycle(singleton)`
-- No observable state for stateless services
-- Use `@Publisher` if service maintains state
+- Use domain types, not external types
+- Handle external API quirks in adapter
 
-**Learn more:** [Service Pattern](08-services.md)
+**Example:**
+```weft
+@Role(gateway)
+protocol PaymentGateway {
+    func processPayment(amount: float, currency: string, method: PaymentMethod) async throws -> Receipt
+    func refundPayment(receiptId: string) async throws
+}
+
+@Role(adapter)
+@Lifecycle(singleton)
+class StripePaymentGateway: PaymentGateway {
+    private var stripeClient: StripeAPI
+
+    func processPayment(amount: float, currency: string, method: PaymentMethod) async throws -> Receipt {
+        @SumFunc
+        => convert amount to cents (Stripe uses integer cents)
+        => map PaymentMethod to Stripe payment method
+        => create Stripe payment intent
+        => process payment with Stripe API
+        => convert Stripe response to Receipt entity
+        => return receipt
+    }
+}
+```
+
+
+### DTO Pattern
+
+**Purpose:** Transfer data across architectural boundaries (API ↔ domain, database ↔ domain).
+
+**Key responsibilities:**
+- Match external data formats exactly
+- Convert to/from entities
+- Handle format differences (snake_case, dates, etc.)
+- Validate external data
+
+**Typical scope:** No lifecycle annotation (plain data structures)
+
+**Pattern:**
+- Use `@Role(dto)` only
+- Mirror external API/database structure
+- Provide `toEntity()` and `fromEntity()` methods
+- Keep conversion logic simple
+
+**Example:**
+```weft
+@Role(dto)
+data ArticleDTO {
+    var id: string
+    var title: string
+    var content: string
+    var author_id: string           // API uses snake_case
+    var published_at: string?       // API returns ISO8601 string
+    var created_at: string
+
+    func toEntity() -> Article {
+        return Article(
+            id: id,
+            title: title,
+            content: content,
+            authorId: author_id,
+            publishedAt: published_at?.toDatetime(),
+            createdAt: created_at.toDatetime()
+        )
+    }
+
+    static func fromEntity(article: Article) -> ArticleDTO {
+        return ArticleDTO(
+            id: article.id,
+            title: article.title,
+            content: article.content,
+            author_id: article.authorId,
+            published_at: article.publishedAt?.toISO8601(),
+            created_at: article.createdAt.toISO8601()
+        )
+    }
+}
+```
+
+
+### Adapter Pattern
+
+**Purpose:** Implement interfaces defined by inner layers using framework/infrastructure code.
+
+**Key responsibilities:**
+- Provide concrete implementations
+- Handle framework-specific details
+- Coordinate external dependencies
+- Bridge inner layers to outer infrastructure
+
+**Typical scope:** Usually `@Lifecycle(singleton)`, sometimes `@Lifecycle(session)`
+
+**Pattern:**
+- Use `@Role(adapter)` + `@Lifecycle(...)`
+- Implement interfaces from inner layers
+- Inject framework dependencies
+- Use `@Publisher` if maintaining observable state
+
+**Example:**
+```weft
+@Role(adapter)
+@Lifecycle(singleton)
+@Publisher
+class ArticleRepositoryImpl: ArticleRepository {
+    private var api: APIClient
+    private var database: RealmDatabase
+    private var cache: CacheManager
+
+    private(set) var articles: [Article] = []
+    private(set) var isLoading: bool = false
+
+    func fetchArticles() async throws {
+        isLoading = true
+
+        // Try cache first
+        if let cached = cache.get("articles") as? [Article] {
+            articles = cached
+            isLoading = false
+            return
+        }
+
+        // Fetch from API
+        var dtos: [ArticleDTO] = await api.fetchArticles()
+        articles = dtos.map(dto => dto.toEntity())
+
+        // Save to database and cache
+        await database.saveArticles(articles)
+        cache.set("articles", articles, ttl: 300)
+
+        isLoading = false
+    }
+}
+```
 
 ## Architecture Layers
 
@@ -263,251 +566,6 @@ class ArticleRepositoryImpl: ArticleRepository {
 └─────────────────────────────────────┘
 ```
 
-## Putting It All Together
-
-Here's how the patterns work together in a complete feature:
-
-```weft
-// ============================================
-// ENTITIES LAYER - Core business objects
-// ============================================
-
-@Role(entity)
-data Task {
-    var id: string
-    var title: string
-    var completed: bool
-    var dueDate: datetime?
-    var createdAt: datetime
-
-    func isOverdue() -> bool {
-        if let due = dueDate {
-            return !completed && due < datetime.now()
-        }
-        return false
-    }
-}
-
-// ============================================
-// DATA LAYER - DTOs & Repository
-// ============================================
-
-@Role(dto)
-data TaskDTO {
-    var id: string
-    var title: string
-    var is_completed: bool  // API uses snake_case
-    var due_date: string?
-    var created_at: string
-
-    func toEntity() -> Task {
-        @SumFunc
-        => create Task from DTO fields
-        => convert is_completed to completed
-        => parse due_date string to datetime
-        => parse created_at string to datetime
-        => return entity
-    }
-}
-
-@Role(repository)
-protocol TaskRepository {
-    var tasks: [Task] { get }
-    var isLoading: bool { get }
-    func fetchTasks() async throws
-    func addTask(title: string, dueDate: datetime?) async throws
-    func toggleComplete(taskId: string) async throws
-}
-
-@Role(adapter)
-@Lifecycle(singleton)
-@Publisher
-class TaskRepositoryImpl: TaskRepository {
-    private var api: APIClient
-    private var database: Database
-
-    private(set) var tasks: [Task] = []
-    private(set) var isLoading: bool = false
-
-    func fetchTasks() async throws {
-        isLoading = true
-
-        var dtos: [TaskDTO] = await api.fetchTasks()
-        tasks = dtos.map(dto => dto.toEntity())
-        await database.saveTasks(tasks)
-
-        isLoading = false
-    }
-
-    func addTask(title: string, dueDate: datetime?) async throws {
-        @SumFunc
-        => create new Task entity
-        => save to database
-        => sync to API in background
-        => add to tasks array
-    }
-
-    func toggleComplete(taskId: string) async throws {
-        @SumFunc
-        => find task by id in tasks array
-        => toggle completed state
-        => update in database
-        => sync to API
-        => update tasks array
-    }
-}
-
-// ============================================
-// BUSINESS LOGIC - Services & Use Cases
-// ============================================
-
-@Role(service)
-protocol AnalyticsService {
-    func trackEvent(name: string, properties: [string: any])
-}
-
-@Role(adapter)
-@Lifecycle(singleton)
-class AnalyticsServiceImpl: AnalyticsService {
-    func trackEvent(name: string, properties: [string: any]) {
-        @SumFunc
-        => format event with properties
-        => send to analytics backend
-        => log event locally for debugging
-    }
-}
-
-@Role(usecase)
-class CompleteTaskUseCase {
-    private var repository: TaskRepository
-    private var analytics: AnalyticsService
-
-    func execute(taskId: string) async throws {
-        @SumFunc
-        => toggle task completion in repository
-        => get completed task from repository
-        => calculate time to complete
-        => track completion event with analytics
-    }
-}
-
-// ============================================
-// PRESENTATION LAYER - ViewModel
-// ============================================
-
-@Role(viewmodel)
-@Lifecycle(view)
-@Publisher
-class TaskListViewModel {
-    @Subscriber private var repository: TaskRepository
-    private var completeTaskUseCase: CompleteTaskUseCase
-
-    var filterType: TaskFilter = TaskFilter.ALL
-    var newTaskTitle: string = ""
-    var showCompleted: bool = true
-
-    var filteredTasks: [Task] {
-        @SumFunc
-        => get all tasks from repository
-        => filter by completion status based on showCompleted
-        => filter by filter type (all, today, week, overdue)
-        => sort by due date
-        => return filtered and sorted tasks
-    }
-
-    var isLoading: bool {
-        return repository.isLoading
-    }
-
-    var overdueCount: int {
-        return repository.tasks.filter(t => t.isOverdue()).count
-    }
-
-    func addTask() async {
-        @SumFunc
-        => return early if title is empty
-        => call repository to add task
-        => clear new task title input
-    }
-
-    func toggleTask(taskId: string) async {
-        try {
-            await completeTaskUseCase.execute(taskId)
-        } catch error {
-            // Handle error
-        }
-    }
-
-    func refresh() async {
-        try {
-            await repository.fetchTasks()
-        } catch error {
-            // Handle error
-        }
-    }
-}
-
-// ============================================
-// UI LAYER - View
-// ============================================
-
-view TaskListView {
-    @Subscriber var viewModel: TaskListViewModel
-    @Subscriber(source: environment) var theme: Theme
-
-    @LocalState var showFilters: bool = false
-
-    Column(
-        isScrollable: true
-        onRefresh: viewModel.refresh()
-    ) {
-        // Add task input
-        Row(padding: 16) {
-            TextField(text: $viewModel.newTaskTitle) {
-                placeholder: "New task..."
-            }
-
-            Button(action: { viewModel.addTask() }) {
-                text: "Add"
-                isDisabled: viewModel.newTaskTitle.isEmpty
-            }
-        }
-
-        // Filter controls
-        Row(padding: 16) {
-            SegmentedControl(
-                selected: $viewModel.filterType,
-                options: [TaskFilter.ALL, TaskFilter.TODAY, TaskFilter.WEEK]
-            )
-
-            Toggle(
-                isOn: $viewModel.showCompleted,
-                label: "Show Completed"
-            )
-
-            if viewModel.overdueCount > 0 {
-                Badge(count: viewModel.overdueCount) {
-                    text: "Overdue"
-                    color: theme.errorColor
-                }
-            }
-        }
-
-        // Task list
-        if viewModel.isLoading {
-            LoadingSpinner()
-        } else {
-            for task in viewModel.filteredTasks {
-                TaskRow(
-                    task: task,
-                    onToggle: { viewModel.toggleTask(task.id) }
-                )
-            }
-        }
-    }
-}
-```
-
 ## Data Flow
 
 **Unidirectional flow:**
@@ -537,53 +595,6 @@ Entity         │
 Database/API   │
     ↓          │
     └──────────┘
-```
-
-## Dependency Examples
-
-### ✅ Valid Dependencies (Following Dependency Rule)
-
-```weft
-// ViewModel depends on Repository (inner layer)
-@Role(viewmodel)
-class ArticleListViewModel {
-    @Subscriber private var repository: ArticleRepository  // OK
-}
-
-// Use Case depends on Entity (inner layer)
-@Role(usecase)
-class PublishArticleUseCase {
-    func execute(article: Article) { }  // OK - entity is inner layer
-}
-
-// Adapter depends on anything (outermost layer)
-@Role(adapter)
-class ArticleRepositoryImpl: ArticleRepository {
-    private var api: APIClient  // OK
-    private var database: Database  // OK
-}
-```
-
-### ❌ Invalid Dependencies (Violating Dependency Rule)
-
-```weft
-// Repository interface depends on ViewModel (outer layer)
-@Role(repository)
-protocol ArticleRepository {
-    func notify(viewModel: ArticleListViewModel)  // ERROR!
-}
-
-// Entity depends on Repository (outer layer)
-@Role(entity)
-data Article {
-    private var repository: ArticleRepository  // ERROR!
-}
-
-// Use Case depends on ViewModel (outer layer)
-@Role(usecase)
-class PublishArticleUseCase {
-    private var viewModel: ArticleListViewModel  // ERROR!
-}
 ```
 
 ## Best Practices

@@ -37,13 +37,8 @@ All Phase 1 files have been updated with:
 - [x] architecture/02-lifecycle-scope.md - ✅ Complete
 - [x] architecture/03-observability.md - ✅ Complete
 - [x] architecture/04-ui-state-ownership.md - ✅ Complete
-- [ ] architecture/05-roles-and-patterns.md - X Not Complete - needs update (see note below)
+- [x] architecture/05-roles-and-patterns.md - ✅ Complete
 - [x] architecture/01-overview.md - ✅ Complete
-
-Note on roles and patterns doc:
-- It has been updated to reflect all 8 roles
-- But it still cites old architecture docs that highlighted viewmodels, repositories, services. It gives good examples of how and when to use these three patterns. I need the file updated to include such examples for all 8 roles.
-- look for the `## Implementing These Core Patterns` header - you'll see that we need to flesh out the other 5 roles like we have done for viewmodels, services, and repositories
 
 ---
 
@@ -139,7 +134,7 @@ Note on roles and patterns doc:
 ```
 @Publisher         - Class has observable state
 @Subscriber        - Property observes publisher (REQUIRED)
-@Binding           - Two-way binding (sugar for @Subscriber(writable: true))
+@Binding           - Two-way binding in UI (sugar for @Subscriber(writable: true))
 @LocalState        - Ephemeral UI state (views only)
 ```
 
@@ -159,7 +154,7 @@ Note on roles and patterns doc:
 
 3. **State Annotations**:
    - @Subscriber requires target to be @Publisher
-   - @LocalState only allowed in views
+   - @LocalState & @Binding only allowed in views
    - In @Publisher classes, access modifiers control observability
 
 4. **@Instruction vs Comments**:
@@ -181,19 +176,13 @@ Note on roles and patterns doc:
 4. ✅ architecture/05-roles-and-patterns.md - DONE
 5. ✅ architecture/01-overview.md - DONE
 
-### Phase 2: Pattern Details (IN PROGRESS)
-6. architecture/06-repositories.md
-7. architecture/07-viewmodels.md
-8. architecture/08-services.md
-9. architecture/10-clean-architecture.md (NEW)
-
-### Phase 3: Language & Data
+### Phase 2: Language & Data
 10. language/07-annotations.md
 11. data/01-json.md
 12. data/02-databases.md
 13. data/03-api-integration.md
 
-### Phase 4: UI & Polish
+### Phase 3: UI & Polish
 14. ui/01-views.md
 15. README.md (check references)
 16. index.md (update descriptions if needed)
@@ -206,7 +195,7 @@ Note on roles and patterns doc:
 - Use the same sample domain (Article/Author/User) for continuity
 - Always show interface/implementation split for repositories, services, gateways
 - Emphasize @Subscriber requirement in all reactive examples
-- Show @LocalState only in view examples
+- Show @LocalState and @Binding only in view examples
 - Include validation rules and weft.settings.json config where relevant
 
 ---
