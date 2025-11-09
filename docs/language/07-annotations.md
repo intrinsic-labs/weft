@@ -28,9 +28,10 @@ class MyApp: App {
 Provides guidance to translators when translation is ambiguous or platform-specific.
 
 **Use for:**
-- Clarifying ambiguous external data (which API field to use)
+- Clarifying ambiguous external data (e.g. which API field to use)
 - Platform-specific implementation choices
 - Framework selection guidance
+- Etc
 
 **Do not use for:**
 - Regular code comments (use `//` instead)
@@ -56,9 +57,9 @@ func fetchArticles() -> [Article]
 
 ### @SumFunc
 
-Replaces function implementation with a high-level English description. The translator generates the actual code.
+Replaces function implementation with a high-level natural language description. The translator generates the actual code.
 
-**Important:** `@SumFunc` IS the implementation. Do not write code underneath it.
+**Important:** `@SumFunc` IS the implementation. You don't need to write the actual code underneath it.
 
 ```weft
 // ✅ CORRECT: @SumFunc is the implementation
@@ -69,15 +70,15 @@ func fetchAndProcessArticles() async -> [Article] {
     => sort by publication date descending
     => return processed article array
 }
-// No code here!
+// Your work is done!
 
 // ❌ WRONG: Code under @SumFunc
 func processPayment(cart: Cart) async -> Receipt {
     @SumFunc
     => Process the payment
     
-    let total = cart.calculateTotal()  // NO! @SumFunc replaces this
-    return gateway.charge(total)       // NO!
+    let total = cart.calculateTotal()  // @SumFunc replaces this
+    return gateway.charge(total)       // Use regular comments to document regular functions
 }
 ```
 
