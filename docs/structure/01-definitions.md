@@ -32,13 +32,13 @@ type Article {
 - The best implementation truly depends on platform characteristics
 - You need maximum flexibility for the translator to decide
 
-**Prefer specific keywords when possible:** While `type` provides flexibility, using `class`, `struct`, `data`, or `object` communicates clearer intent about how the type should behave. Reach for `type` only when you genuinely want the translator to decide the best implementation approach.
+**Prefer specific keywords:** While `type` provides flexibility, using `class`, `struct`, `data`, or `object` communicates clearer intent about how the type should behave. Reach for `type` only when you genuinely want the translator to decide the best implementation approach.
 
 The translator chooses the best platform-specific implementation based on usage patterns and context.
 
 ## Class Keyword
 
-The `class` keyword indicates complex types with inheritance, state management, and reference semantics.
+The `class` keyword indicates complex types with inheritance, state management, reference semantics, etc.
 
 ```weft
 class ArticleManager {
@@ -182,7 +182,7 @@ object Colors {
 - You need a namespace for immutable values
 - No state will ever change
 
-**Note:** For stateful singletons (like repositories or services), use `@Singleton` with `class`. See [Lifecycle & Scope](../architecture/04-lifecycle-scope.md) for managing object lifetimes with state.
+**Note:** For stateful singletons (like repositories or services), use `@Lifecycle(singleton)` with `class`. See [Lifecycle & Scope](../architecture/04-lifecycle-scope.md) for managing object lifetimes with state.
 
 **Translates to:**
 - **Swift**: `enum` with static properties (no instances)
@@ -269,8 +269,8 @@ object Theme {
 ### Stateful Singleton
 
 ```weft
-@Observable
-@Singleton
+@Publisher
+@Lifecycle(singleton)
 class AppState {
     private(set) var isAuthenticated: bool = false
     private(set) var currentUser: User? = null
@@ -352,19 +352,19 @@ let API_BASE_URL = "https://api.example.com"
 let API_TIMEOUT = 30
 ```
 
-**Use `@Singleton` for stateful singletons**: For mutable shared state.
+**Use `@Lifecycle(singleton)` for stateful singletons**: For mutable shared state.
 
 ```weft
 // Good: Stateful singleton
-@Singleton
-@Repository
+@Lifecycle(singleton)
+@Role(repository)
 class UserRepository {
     private(set) var currentUser: User? = null
 }
 
 // Avoid: Mutable state in object
 object UserData {
-    var currentUser: User? = null  // Don't do this
+    var currentUser: User? = null  // Don't do this - throws error
 }
 ```
 
