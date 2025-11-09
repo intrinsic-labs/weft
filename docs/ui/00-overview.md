@@ -146,7 +146,7 @@ Weft does provide some first-party components and patterns:
 - `Divider` - separator lines
 
 **Patterns**
-- State management: `@State`, `@Binding`, `@Environment`
+- State management: `@LocalState`, `@Binding`, `@Subscriber`
 - Lifecycle hooks: `onAppear`, `onDisappear`, `onChange`
 - Control flow: `if`, `for`, conditionals
 - Navigation: `navigateTo()`, `popView()`, `presentModal()`
@@ -272,7 +272,7 @@ FancyCard(
 ```weft
 view ArticleCard {
     var article: Article
-    @State var isBookmarked = false  // Kotlin-style initialization
+    @LocalState var isBookmarked = false  // Swift-style initialization
 
     Column(onClick: () => navigateTo(DetailView(article))) {  // React-style
         AsyncImage(article.coverImage) {  // Swift-style
