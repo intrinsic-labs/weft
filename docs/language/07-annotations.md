@@ -25,36 +25,63 @@ class MyApp: App {
 
 ### @Instruction
 
-Provides specific guidance to translators to reduce ambiguity during implementation.
+Provides guidance to translators when translation is ambiguous or platform-specific.
+
+**Use for:**
+- Clarifying ambiguous external data (which API field to use)
+- Platform-specific implementation choices
+- Framework selection guidance
+
+**Do not use for:**
+- Regular code comments (use `//` instead)
+- Documenting what code does (code should be self-explanatory)
+- General explanations
 
 ```weft
-@Instruction('''
-API return clarification -
-The API call returns both featured_image and featured_image_full.
-Please map the standard featured_image field and ignore the full size.
-''')
-func parseArticleResponse(json: JSON) => Article {
-    // parsing logic
-}
+// ✅ CORRECT: Resolving ambiguity
+@Instruction("API returns both featured_image and featured_image_full. Map featured_image.")
+func parseArticleResponse(json: JSON) -> Article
+
+// ✅ CORRECT: Platform-specific choice
+@Role(adapter)
+@Instruction("Use Realm for iOS, Room for Android")
+class DatabaseAdapter: Database
+
+// ❌ WRONG: Regular comment
+@Instruction("This function fetches articles")
+func fetchArticles() -> [Article]
 ```
 
-**Usage:** Use when you need to clarify implementation details that aren't obvious from the code structure. Pass a single or multiline string with your instructions.
+**Usage:** Apply to classes, functions, or properties. Pass a string with your clarification.
 
 ### @SumFunc
 
-Summarizes function logic in plain English, replacing implementation details.
+Replaces function implementation with a high-level English description. The translator generates the actual code.
+
+**Important:** `@SumFunc` IS the implementation. Do not write code underneath it.
 
 ```weft
-func fetchAndProcessArticles() async => [Article] {
+// ✅ CORRECT: @SumFunc is the implementation
+func fetchAndProcessArticles() async -> [Article] {
     @SumFunc
     => fetch articles from API endpoint
     => filter out unpublished articles
     => sort by publication date descending
     => return processed article array
 }
+// No code here!
+
+// ❌ WRONG: Code under @SumFunc
+func processPayment(cart: Cart) async -> Receipt {
+    @SumFunc
+    => Process the payment
+    
+    let total = cart.calculateTotal()  // NO! @SumFunc replaces this
+    return gateway.charge(total)       // NO!
+}
 ```
 
-**Usage:** Use inside function bodies to describe logic at a high level. The translator implements the details. This is a key feature of Weft—write what you want, not how to do it.
+**Usage:** Place inside function body. Write what you want done, not how to do it. This is pseudocode's core feature—communicate intent, let the translator handle implementation.
 
 ### @Index
 
@@ -78,7 +105,7 @@ All models follow the naming convention: EntityType + suffix.
 
 ## See Also
 
-- [Architecture Annotations](../architecture/02-lifecycle-scope.md) - `@Singleton`, `@ViewScoped`, lifecycle annotations
-- [State Annotations](../architecture/04-ui-state-ownership.md) - `@State`, `@Binding`, `@Environment`
-- [Pattern Annotations](../architecture/05-roles-and-patterns.md) - `@Repository`, `@ViewModel`, `@Service`
-- [Complete Annotation Index](../reference/annotations.md) - All annotations in one place
+- [Lifecycle Annotations](../architecture/02-lifecycle-scope.md) - `@Lifecycle(singleton|session|feature|view)`
+- [State Annotations](../architecture/04-ui-state-ownership.md) - `@LocalState`, `@Binding`, `@Subscriber`
+- [Role Annotations](../architecture/05-roles-and-patterns.md) - `@Role(entity|usecase|repository|...)`
+- [Complete Annotation Reference](../reference/annotations.md) - All annotations in one place

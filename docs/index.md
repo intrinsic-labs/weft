@@ -30,10 +30,10 @@ weft/docs/
 │
 ├── architecture/                      # Design patterns and architecture
 │   ├── 01-overview.md                 # Architecture philosophy and patterns
-│   ├── 02-lifecycle-scope.md          # @Lifecycle annotations and scope management
-│   ├── 03-observability.md            # Observability with @Publisher & @Subscriber
+│   ├── 02-lifecycle-scope.md          # @Lifecycle(singleton|session|feature|view)
+│   ├── 03-observability.md            # @Publisher, @Subscriber, and reactive state
 │   ├── 04-ui-state-ownership.md       # @LocalState, @Binding, state ownership in UI
-│   ├── 05-roles-and-patterns.md       # Clean Architecture and @Role Annotations
+│   ├── 05-roles-and-patterns.md       # Clean Architecture and @Role annotations
 │   ├── 06-dependency-injection.md     # Implicit dependency injection system
 │   └── 07-full-example.md             # Full example of implementing Weft's architecture
 │
@@ -44,9 +44,9 @@ weft/docs/
 │   └── 03-navigation.md               # Stack navigation, modals, tabs, deep linking
 │
 ├── data/                              # Data and persistence
-│   ├── 01-json.md                     # JSON serialization and @JSON annotation
-│   ├── 02-databases.md                # Database schemas and annotations
-│   └── 03-api-integration.md          # API integration patterns
+│   ├── 01-json.md                     # JSON serialization and @Role(dto)
+│   ├── 02-databases.md                # @Schema and @Role(entity) separation
+│   └── 03-api-integration.md          # Gateway/adapter pattern and async
 │
 └── reference/                         # Reference documentation
     └── annotations.md                 # Complete annotation reference
@@ -114,31 +114,31 @@ weft/docs/
 
 ### Lifecycle & Scope
 - **File**: `architecture/02-lifecycle-scope.md`
-- **Content**: Scope annotations (@Singleton, @ViewScoped, @FeatureScoped, @SessionScoped), lifetime management
+- **Content**: @Lifecycle(singleton|session|feature|view) parameterized annotation, lifetime management
 
 ### Observability
 - **File**: `architecture/03-observability.md`
-- **Content**: @Observable pattern, reactive state, automatic UI updates
+- **Content**: @Publisher and @Subscriber patterns, reactive state, automatic UI updates
 
 ### State Ownership
 - **File**: `architecture/04-ui-state-ownership.md`
-- **Content**: @State (local state), @Binding (two-way state), @Environment (shared context)
+- **Content**: @LocalState (view-only state), @Binding (two-way state), @Subscriber(source: environment)
 
-### Patterns Overview
+### Roles & Patterns
 - **File**: `architecture/05-roles-and-patterns.md`
-- **Content**: How Repositories, ViewModels, and Services work together
+- **Content**: Clean Architecture principles, 8 @Role annotations, interface/adapter patterns
 
 ### Repository Pattern
 - **File**: `architecture/06-repositories.md`
-- **Content**: @Repository annotation, data layer implementation, caching, persistence
+- **Content**: @Role(repository) interface, @Role(adapter) implementation, data layer
 
 ### ViewModel Pattern
 - **File**: `architecture/07-viewmodels.md`
-- **Content**: @ViewModel annotation, presentation logic, state management
+- **Content**: @Role(viewmodel), presentation logic, state management
 
 ### Service Pattern
 - **File**: `architecture/08-services.md`
-- **Content**: @Service annotation, business logic, utilities, shared functionality
+- **Content**: @Role(service) interface, business logic utilities
 
 ### Dependency Injection
 - **File**: `architecture/06-dependency-injection.md`
@@ -152,7 +152,7 @@ weft/docs/
 
 ### Views
 - **File**: `ui/01-views.md`
-- **Content**: View keyword, properties, state management (@State, @Binding, @Environment), lifecycle hooks, computed properties
+- **Content**: View keyword, properties, state management (@LocalState, @Binding, @Subscriber), lifecycle hooks, computed properties
 
 ### Components
 - **File**: `ui/02-components.md`
@@ -166,15 +166,15 @@ weft/docs/
 
 ### JSON
 - **File**: `data/01-json.md`
-- **Content**: @JSON annotation, automatic serialization, custom field names, nested types
+- **Content**: @JSON annotation, @Role(dto) pattern, entity/DTO conversion, automatic serialization
 
 ### Databases
 - **File**: `data/02-databases.md`
-- **Content**: Database schemas, database annotations, entity relationships
+- **Content**: @Schema (database tables), @Role(entity) (domain objects), entity/schema conversion
 
 ### API Integration
 - **File**: `data/03-api-integration.md`
-- **Content**: Async patterns, error handling, DTOs, API client patterns
+- **Content**: @Role(gateway) interfaces, @Role(adapter) implementations, async patterns, DTOs
 
 ## Reference
 
@@ -211,4 +211,5 @@ weft/docs/
 
 ---
 
-**Last Updated**: October 2025
+**Last Updated**: January 2025  
+**Version**: 0.3.0

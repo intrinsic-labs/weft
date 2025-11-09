@@ -1,30 +1,37 @@
 # API Integration
 
-Weft handles network requests with async/await patterns. Use Repositories to manage API calls, caching, and error handling.
+Weft handles network requests with async/await patterns. Use the gateway/adapter pattern to separate interface definitions from concrete implementations.
 
-## Core Principles
+## Gateway Pattern
 
-**Async by default**: All network calls use `async`/`await`.
-
-**Error as state**: Expose errors through observable properties.
-
-**Repository pattern**: Centralize API logic in Repository classes.
-
-## Basic API Call
+Define API interfaces as gateways, implement as adapters.
 
 ```weft
-@Observable
-@Repository
-@Singleton
-class ArticleRepository {
-    private var api: APIClient
-    private(set) var articles: [Article] = []
+// Gateway interface (domain layer)
+@Role(gateway)
+protocol ArticleGateway {
+    func fetchArticles() async throws -> [ArticleDTO]
+    func fetchArticle(id: string) async throws -> ArticleDTO
+}
 
-    func fetchArticles() async {
+// Adapter implementation (framework layer)
+@Role(adapter)
+@Lifecycle(singleton)
+class ArticleGatewayImpl: ArticleGateway {
+    private var api: APIClient
+    
+    func fetchArticles() async throws -> [ArticleDTO] {
         @SumFunc
         => call API endpoint for articles
-        => parse response into Article objects
-        => update articles array
+        => parse response into ArticleDTO array
+        => return DTOs
+    }
+    
+    func fetchArticle(id: string) async throws -> ArticleDTO {
+        @SumFunc
+        => call API endpoint with id
+        => parse response into ArticleDTO
+        => return DTO
     }
 }
 ```
@@ -45,33 +52,40 @@ var user = await loadUser(id: "123")
 ## Error Handling
 
 ```weft
-@Observable
-@Repository
-class UserRepository {
+@Role(adapter)
+@Lifecycle(singleton)
+class UserGatewayImpl: UserGateway {
     private var api: APIClient
-    private(set) var lastError: Error? = null
 
-    func fetchUser(id: string) async => User? {
+    func fetchUser(id: string) async throws -> UserDTO {
         try {
             var response = await api.get("/users/\(id)")
-            var user = User.fromJSON(response)
-            lastError = null
-            return user
+            return UserDTO.fromJSON(response)
         } catch error: NetworkError {
-            lastError = error
-            return null
+            throw error
         }
     }
 }
 ```
 
-## Loading States
+## Repository with Loading States
+
+Repositories coordinate between gateways and the rest of your app, managing loading and error states.
 
 ```weft
-@Observable
-@Repository
-class ArticleRepository {
-    private var api: APIClient
+@Role(repository)
+protocol ArticleRepository {
+    var articles: [Article] { get }
+    var isLoading: bool { get }
+    var lastError: Error? { get }
+    func fetchArticles() async
+}
+
+@Role(adapter)
+@Lifecycle(singleton)
+@Publisher
+class ArticleRepositoryImpl: ArticleRepository {
+    @Subscriber private var gateway: ArticleGateway
 
     private(set) var articles: [Article] = []
     private(set) var isLoading: bool = false
@@ -82,8 +96,8 @@ class ArticleRepository {
         lastError = null
 
         try {
-            var response = await api.get("/articles")
-            articles = [Article].fromJSON(response.data)
+            var dtos = await gateway.fetchArticles()
+            articles = dtos.map(dto => dto.toEntity())
         } catch error {
             lastError = error
         }
@@ -95,36 +109,59 @@ class ArticleRepository {
 
 ## DTOs and Domain Models
 
-This is often unnecessary for small projects, but for projects at scale, separating DTOs that match your backend structure from domain space/client side app models can make a lot of sense.
+Use `@Role(dto)` for API response objects, `@Role(entity)` for domain models.
 
 ```weft
 // API DTO - matches backend
+@Role(dto)
 @JSON
-type ArticleDTO {
+data ArticleDTO {
     var id: string
     @JSONKey("post_title")
     var title: string
     @JSONKey("post_content")
     var content: string
+    @JSONKey("author_id")
+    var authorId: string
+    
+    func toEntity() -> Article {
+        return Article(
+            id: id,
+            title: title,
+            content: content,
+            authorId: authorId
+        )
+    }
 }
 
-// Domain model - app structure
-type Article {
+// Domain entity - app structure
+@Role(entity)
+data Article {
     var id: string
     var title: string
     var content: string
-    var wordCount: int
+    var authorId: string
 }
 
-// Repository converts between them
-@Repository
-class ArticleRepository {
-    func fetchArticles() async => [Article] {
+// Gateway returns DTOs
+@Role(gateway)
+protocol ArticleGateway {
+    func fetchArticles() async throws -> [ArticleDTO]
+}
+
+// Repository converts to entities
+@Role(adapter)
+@Lifecycle(singleton)
+@Publisher
+class ArticleRepositoryImpl: ArticleRepository {
+    @Subscriber private var gateway: ArticleGateway
+    private(set) var articles: [Article] = []
+    
+    func fetchArticles() async {
         @SumFunc
-        => fetch ArticleDTO array from API
-        => map each DTO to domain Article
-        => calculate wordCount for each
-        => return domain models
+        => fetch ArticleDTO array from gateway
+        => map each DTO to domain entity
+        => update articles array
     }
 }
 ```
@@ -132,10 +169,16 @@ class ArticleRepository {
 ## Pagination
 
 ```weft
-@Observable
-@Repository
-class ArticleRepository {
-    private var api: APIClient
+@Role(gateway)
+protocol ArticleGateway {
+    func fetchArticles(page: int) async throws -> [ArticleDTO]
+}
+
+@Role(adapter)
+@Lifecycle(singleton)
+@Publisher
+class ArticleRepositoryImpl: ArticleRepository {
+    @Subscriber private var gateway: ArticleGateway
 
     private(set) var articles: [Article] = []
     private(set) var isLoading: bool = false
@@ -149,8 +192,8 @@ class ArticleRepository {
         currentPage += 1
 
         try {
-            var response = await api.get("/articles?page=\(currentPage)")
-            var newArticles = [Article].fromJSON(response.data)
+            var dtos = await gateway.fetchArticles(page: currentPage)
+            var newArticles = dtos.map(dto => dto.toEntity())
             articles.append(contentsOf: newArticles)
             hasMore = newArticles.count > 0
         } catch error {
@@ -172,23 +215,24 @@ class ArticleRepository {
 ## Caching Strategy
 
 ```weft
-@Observable
-@Repository
-@Singleton
-class ArticleRepository {
-    private var api: APIClient
+@Role(adapter)
+@Lifecycle(singleton)
+@Publisher
+class ArticleRepositoryImpl: ArticleRepository {
+    @Subscriber private var gateway: ArticleGateway
     private var database: Database
     private var cache: [string: Article] = [:]
 
-    func getArticle(id: string) async => Article? {
+    func getArticle(id: string) async -> Article? {
         @SumFunc
         => check memory cache first
         => if cached, return immediately
         => check database second
         => if in database, cache and return
-        => fetch from API as last resort
+        => fetch DTO from gateway
+        => convert to entity
         => save to database and cache
-        => return article or null
+        => return entity or null
     }
 }
 ```
@@ -196,9 +240,11 @@ class ArticleRepository {
 ## Optimistic Updates
 
 ```weft
-@Repository
-class TodoRepository {
-    private var api: APIClient
+@Role(adapter)
+@Lifecycle(singleton)
+@Publisher
+class TodoRepositoryImpl: TodoRepository {
+    @Subscriber private var gateway: TodoGateway
     private var database: Database
     private(set) var todos: [Todo] = []
 
@@ -207,8 +253,8 @@ class TodoRepository {
         => find todo in local array
         => toggle its completed state immediately
         => update UI via state change
-        => send update to API in background
-        => if API fails, revert local change
+        => send update to gateway in background
+        => if gateway fails, revert local change
         => show error to user
     }
 }
@@ -217,21 +263,30 @@ class TodoRepository {
 ## Batch Operations
 
 ```weft
-@Repository
-class SyncRepository {
-    private var api: APIClient
+@Role(gateway)
+protocol SyncGateway {
+    func syncArticles(ids: [string]) async throws -> [ArticleDTO]
+    func uploadChanges(dtos: [ArticleDTO]) async throws
+}
+
+@Role(adapter)
+@Lifecycle(singleton)
+class SyncRepositoryImpl: SyncRepository {
+    @Subscriber private var gateway: SyncGateway
+    private var database: Database
 
     func syncArticles(ids: [string]) async {
         @SumFunc
-        => batch fetch articles by ids
-        => use single API call for efficiency
-        => parse and save all results
+        => batch fetch DTOs from gateway by ids
+        => convert DTOs to entities
+        => save entities to database
     }
 
     func uploadPendingChanges() async {
         @SumFunc
-        => collect all pending changes from database
-        => batch send to API
+        => collect pending entities from database
+        => convert entities to DTOs
+        => batch send DTOs to gateway
         => mark as synced on success
         => retry on failure
     }
@@ -241,10 +296,11 @@ class SyncRepository {
 ## Request Cancellation
 
 ```weft
-@Observable
-@Repository
-class SearchRepository {
-    private var api: APIClient
+@Role(adapter)
+@Lifecycle(singleton)
+@Publisher
+class SearchRepositoryImpl: SearchRepository {
+    @Subscriber private var gateway: SearchGateway
     private(set) var results: [Article] = []
     private var currentTask: Task? = null
 
@@ -253,7 +309,8 @@ class SearchRepository {
         => cancel any pending search task
         => create new search task
         => debounce for 300ms
-        => call search API
+        => call gateway search method
+        => convert DTOs to entities
         => update results array
     }
 }
@@ -262,16 +319,19 @@ class SearchRepository {
 ## Retry Logic
 
 ```weft
-@Repository
-class ArticleRepository {
+@Role(adapter)
+@Lifecycle(singleton)
+class ArticleGatewayImpl: ArticleGateway {
     private var api: APIClient
 
-    func fetchWithRetry(url: string, maxRetries: int = 3) async => Response? {
+    func fetchArticles() async throws -> [ArticleDTO] {
         var attempts = 0
+        var maxRetries = 3
 
         while attempts < maxRetries {
             try {
-                return await api.get(url)
+                var response = await api.get("/articles")
+                return [ArticleDTO].fromJSON(response)
             } catch error: NetworkError {
                 attempts += 1
                 if attempts >= maxRetries {
@@ -281,7 +341,7 @@ class ArticleRepository {
             }
         }
 
-        return null
+        throw NetworkError("Max retries exceeded")
     }
 }
 ```
@@ -289,28 +349,27 @@ class ArticleRepository {
 ## Response Validation
 
 ```weft
+@Role(dto)
 @JSON
-type APIResponse<T> {
+data APIResponse<T> {
     var success: bool
     var data: T?
     var error: string?
 }
 
-@Repository
-class UserRepository {
-    func fetchUser(id: string) async => User? {
-        try {
-            var response = await api.get("/users/\(id)")
-            var parsed = APIResponse<User>.fromJSON(response)
+@Role(adapter)
+@Lifecycle(singleton)
+class UserGatewayImpl: UserGateway {
+    private var api: APIClient
+    
+    func fetchUser(id: string) async throws -> UserDTO {
+        var response = await api.get("/users/\(id)")
+        var parsed = APIResponse<UserDTO>.fromJSON(response)
 
-            if parsed.success && parsed.data != null {
-                return parsed.data
-            } else {
-                print("API error: \(parsed.error ?? 'unknown')")
-                return null
-            }
-        } catch error {
-            return null
+        if parsed.success && parsed.data != null {
+            return parsed.data!
+        } else {
+            throw APIError(parsed.error ?? "unknown error")
         }
     }
 }
@@ -319,101 +378,28 @@ class UserRepository {
 ## Timeout Handling
 
 ```weft
-@Repository
-class ArticleRepository {
+@Role(adapter)
+@Lifecycle(singleton)
+class ArticleGatewayImpl: ArticleGateway {
     private var api: APIClient
 
-    func fetchArticles(timeout: int = 30) async => [Article]? {
+    func fetchArticles(timeout: int = 30) async throws -> [ArticleDTO] {
         try {
             var response = await api.get("/articles", timeout: timeout)
-            return [Article].fromJSON(response)
+            return [ArticleDTO].fromJSON(response)
         } catch error: TimeoutError {
             print("Request timed out after \(timeout)s")
-            return null
+            throw error
         } catch error {
             print("Request failed: \(error)")
-            return null
+            throw error
         }
     }
 }
 ```
 
-## Best Practices
-
-**Keep API calls in Repositories**: Don't call APIs from ViewModels or Views.
-
-```weft
-// Good
-@Repository
-class ArticleRepository {
-    func fetchArticles() async { /* ... */ }
-}
-
-// Avoid
-@ViewModel
-class ArticleViewModel {
-    func fetchArticles() async {
-        var response = await api.get(/* ... */)  // Don't do this
-    }
-}
-```
-
-**Expose state, not functions**: Let views observe changes.
-
-```weft
-@Repository
-class ArticleRepository {
-    private(set) var articles: [Article] = []  // observable
-    private(set) var isLoading: bool = false   // observable
-
-    func fetchArticles() async {
-        isLoading = true
-        // fetch logic
-        isLoading = false
-    }
-}
-```
-
-**Use DTOs at API boundary**: If using DTOs and domain models, convert to domain models immediately. DTO instances should not leak to the rest of your app.
-
-```weft
-func fetchArticles() async {
-    @SumFunc
-    => fetch ArticleDTO objects from API
-    => convert to Article domain models
-    => return domain models to app
-}
-```
-
-**Handle errors gracefully**: Store errors as observable state.
-
-```weft
-private(set) var lastError: Error? = null
-
-func fetch() async {
-    try {
-        // fetch logic
-        lastError = null
-    } catch error {
-        lastError = error
-    }
-}
-```
-
-**Cache intelligently**: Reduce unnecessary API calls.
-
-```weft
-func getArticle(id: string) async => Article? {
-    @SumFunc
-    => check cache first
-    => return cached if fresh
-    => fetch from API if needed
-    => update cache
-}
-```
-
 ## See Also
 
-- [JSON](01-json.md) - Serialization patterns
+- [Roles & Patterns](../architecture/05-roles-and-patterns.md) - Gateway, repository, and adapter patterns
+- [JSON](01-json.md) - DTOs and serialization
 - [Databases](02-databases.md) - Local persistence
-- [Repositories](../architecture/06-repositories.md) - Repository pattern

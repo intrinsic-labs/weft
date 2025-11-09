@@ -48,9 +48,9 @@ Organize your codebase effectively:
 Design scalable, maintainable applications:
 
 - [Overview](architecture/01-overview.md) - Architecture philosophy and patterns
-- [Lifecycle & Scope](architecture/02-lifecycle-scope.md) - `@Singleton`, `@ViewScoped`, `@FeatureScoped`
-- [Observability](architecture/03-observability.md) - `@Observable` and reactive state
-- [State Ownership](architecture/04-ui-state-ownership.md) - `@State`, `@Binding`, `@Environment`
+- [Lifecycle & Scope](architecture/02-lifecycle-scope.md) - `@Lifecycle(singleton|session|feature|view)`
+- [Observability](architecture/03-observability.md) - `@Publisher`, `@Subscriber` and reactive state
+- [State Ownership](architecture/04-ui-state-ownership.md) - `@LocalState`, `@Binding`, `@Subscriber(source: environment)`
 - [Patterns Overview](architecture/05-roles-and-patterns.md) - Repositories, ViewModels, Services working together
 - [Repository Pattern](architecture/06-repositories.md) - Data layer implementation
 - [ViewModel Pattern](architecture/07-viewmodels.md) - Presentation layer implementation
@@ -72,9 +72,9 @@ Build user interfaces:
 
 Work with data:
 
-- [JSON](data/01-json.md) - Serialization and `@JSON` annotation *(coming soon)*
-- [Databases](data/02-databases.md) - Schema definitions and database annotations *(coming soon)*
-- [API Integration](data/03-api-integration.md) - Async patterns and error handling *(coming soon)*
+- [JSON](data/01-json.md) - Serialization and DTOs
+- [Databases](data/02-databases.md) - Schema definitions and entity/schema separation
+- [API Integration](data/03-api-integration.md) - Gateway pattern and async patterns
 
 ### Reference
 
@@ -132,5 +132,5 @@ Weft is in active development. Feedback, suggestions, and contributions are welc
 
 ---
 
-**Version:** 0.2.0  
-**Last Updated:** October 2025
+**Version:** 0.3.0  
+**Last Updated:** January 2025

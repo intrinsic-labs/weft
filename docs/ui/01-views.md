@@ -88,14 +88,16 @@ view UserProfile {
 
 ## State Management
 
-### @State - Local State
+Read more about state ownership in the UI layer [here](../architecture/04-ui-state-ownership.md).
 
-Use `@State` for local mutable state owned by the view:
+### @LocalState - View-Only State
+
+Use `@LocalState` for ephemeral state owned by the view:
 
 ```weft
 view ExpandableCard {
     var content: string
-    @State var isExpanded = false  // Type inferred
+    @LocalState var isExpanded: bool = false
 
     Column(onTap: { isExpanded = !isExpanded }) {
         Text(content) {
@@ -112,7 +114,7 @@ Use `@Binding` when a child needs to modify parent state. Pass bindings with the
 
 ```weft
 view ParentView {
-    @State var searchText: string = ""
+    @LocalState var searchText: string = ""
 
     SearchBar(text: $searchText)  // $ passes binding
 }
@@ -124,13 +126,13 @@ view SearchBar {
 }
 ```
 
-### ViewModels and Repositories
+### @Subscriber - Observing Publishers
 
-Views can depend on ViewModels and Repositories. Changes to observable properties trigger automatic re-renders:
+Use `@Subscriber` to observe ViewModels, Repositories, or other `@Publisher` classes:
 
 ```weft
 view ArticleListView {
-    var viewModel: ArticleListViewModel
+    @Subscriber var viewModel: ArticleListViewModel
 
     Column(isScrollable: true, spacing: 12) {
         if viewModel.isLoading {
@@ -144,13 +146,13 @@ view ArticleListView {
 }
 ```
 
-### @Environment - Shared Context
+### @Subscriber(source: environment) - Shared Context
 
-Access app-wide state without passing through every view:
+Access app-wide state from the environment:
 
 ```weft
 view ThemedButton {
-    @Environment var theme: Theme
+    @Subscriber(source: environment) var theme: Theme
     var label: string
     var onTap: () => void
 
@@ -192,7 +194,7 @@ Runs when the view appears on screen:
 ```weft
 view ArticleView {
     var articleId: string
-    var viewModel: ArticleViewModel
+    @Subscriber var viewModel: ArticleViewModel
 
     Column {
         if let article = viewModel.article {
@@ -227,8 +229,8 @@ Runs when a specific value changes:
 
 ```weft
 view SearchView {
-    @State var query: string = ""
-    var viewModel: SearchViewModel
+    @LocalState var query: string = ""
+    @Subscriber var viewModel: SearchViewModel
 
     TextField(binding: $query)
 
@@ -269,7 +271,7 @@ Views can define methods for actions and logic:
 view TodoItem {
     var todo: Todo
     var onToggle: (string) => void
-    @State var isEditing = false
+    @LocalState var isEditing: bool = false
 
     func save() async {
         @SumFunc
@@ -337,9 +339,9 @@ view UserCard {
 ```weft
 view ArticleDetailView {
     var articleId: string
-    var viewModel: ArticleDetailViewModel
-    @Environment var theme: Theme
-    @State var showShareSheet = false
+    @Subscriber var viewModel: ArticleDetailViewModel
+    @Subscriber(source: environment) var theme: Theme
+    @LocalState var showShareSheet: bool = false
 
     var isBookmarked: bool {
         viewModel.bookmarkedArticleIds.contains(articleId)
@@ -440,6 +442,6 @@ view ComplexAnimation {
 ## See Also
 
 - [Components](02-components.md) - Built-in UI components
-- [Layout](03-layout.md) - Layout containers and patterns
-- [State Ownership](../architecture/04-ui-state-ownership.md) - State management patterns
-- [ViewModels](../architecture/07-viewmodels.md) - ViewModel pattern
+- [State Ownership](../architecture/04-ui-state-ownership.md) - Detailed state management patterns
+- [Observability](../architecture/03-observability.md) - @Publisher and @Subscriber
+- [Roles & Patterns](../architecture/05-roles-and-patterns.md) - ViewModel pattern

@@ -1,14 +1,46 @@
 # Databases
 
-Weft provides annotations for defining database schemas. Mark types with `@Schema`, `@Entity`, or `@DatabaseModel` to create tables.
+Weft separates domain entities from database schemas:
 
-## Core Principles
+- **`@Role(entity)`** - Core business objects in your domain layer
+- **`@Schema`** - Database table definitions in your framework layer
 
-**Schema-first**: Define your schema, get type-safe queries.
+This separation follows Clean Architecture principles: entities are pure domain logic, schemas handle persistence details.
 
-**Annotation-driven**: Use `@Id`, `@ForeignKey`, `@Index` to describe structure. Specific annotations outlined in this document.
+## Entities vs Schemas
 
-**Platform translation**: Same schema becomes Room, SwiftData or CoreData, SQLite, Postgres, etc
+```weft
+// Domain entity - pure business logic
+@Role(entity)
+data Article {
+    var id: string
+    var title: string
+    var content: string
+    var authorId: string
+    var publishedAt: datetime?
+}
+
+// Database schema - persistence mapping
+@Schema
+struct ArticleSchema {
+    @Id(generated)
+    var id: string
+    var title: string
+    var content: string
+    
+    @ForeignKey("users")
+    @Index
+    var author_id: string
+    
+    @Nullable
+    var published_at: datetime?
+    
+    var created_at: datetime
+    var updated_at: datetime
+}
+```
+
+Entities define **what** your data means. Schemas define **how** it's stored.
 
 ## Basic Schema
 
@@ -319,83 +351,8 @@ struct User {
 }
 ```
 
-## Queries in Repositories
-
-```weft
-@Observable
-@Repository
-@Singleton
-class UserRepository {
-    private var database: Database
-
-    func getUser(id: string) async => User? {
-        @SumFunc
-        => query database for user by id
-        => return user or null
-    }
-
-    func getUserByEmail(email: string) async => User? {
-        @SumFunc
-        => query database where email matches
-        => return first result or null
-    }
-
-    func getAllUsers() async => [User] {
-        @SumFunc
-        => query all users from database
-        => order by created date descending
-        => return array of users
-    }
-}
-```
-
-## Inserting Data
-
-```weft
-@Repository
-class ArticleRepository {
-    private var database: Database
-
-    func saveArticle(article: Article) async {
-        @SumFunc
-        => insert or update article in database
-        => handle conflicts by replacing existing
-    }
-
-    func saveMany(articles: [Article]) async {
-        @SumFunc
-        => batch insert articles for performance
-        => use transaction for atomicity
-    }
-}
-```
-
-## Deleting Data
-
-```weft
-@Repository
-class TodoRepository {
-    private var database: Database
-
-    func deleteTodo(id: string) async {
-        @SumFunc
-        => delete todo from database by id
-    }
-
-    func deleteCompleted() async {
-        @SumFunc
-        => delete all todos where completed is true
-    }
-
-    func clearAll() async {
-        @SumFunc
-        => delete all todos from database
-    }
-}
-```
-
 ## See Also
 
-- [JSON](01-json.md) - Serialization patterns
-- [API Integration](03-api-integration.md) - Network + database
-- [Repositories](../architecture/06-repositories.md) - Data layer pattern
+- [Roles & Patterns](../architecture/05-roles-and-patterns.md) - Entity and repository patterns
+- [JSON](01-json.md) - DTOs and serialization
+- [API Integration](03-api-integration.md) - Network layer

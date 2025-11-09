@@ -1,14 +1,10 @@
 # JSON Serialization
 
-Weft provides automatic JSON serialization for data types. Mark types with `@JSON` to enable automatic encoding/decoding.
-
-## Core Principles
+Weft provides a `@JSON` annotation to signal JSON serialization for data types.
 
 **Automatic mapping**: Properties map to JSON keys by default.
 
 **Flexible naming**: Use `@JSONKey` to customize JSON field names.
-
-**Type safety**: Weft validates types during serialization.
 
 ## Basic JSON Types
 
@@ -143,22 +139,6 @@ type Event {
 }
 ```
 
-## Computed Properties
-
-```weft
-@JSON
-type Article {
-    var id: string
-    var title: string
-    var createdAt: datetime
-
-    @JSONIgnore
-    var formattedDate: string {
-        return createdAt.format("MMM d, yyyy")
-    }
-}
-```
-
 ## Enums
 
 ```weft
@@ -229,109 +209,76 @@ func fetchArticles() async => [Article] {
 }
 ```
 
-## Data Transfer Objects (DTOs)
+## Data Transfer Objects
+
+Use `@Role(dto)` for objects that cross architectural boundaries (API responses, database records).
 
 ```weft
-// API DTO - matches backend shape
+// API DTO - matches external API shape
+@Role(dto)
 @JSON
-type ArticleDTO {
+data ArticleDTO {
     var id: string
     @JSONKey("post_title")
     var title: string
     @JSONKey("post_content")
     var content: string
+    @JSONKey("author_id")
+    var authorId: string
     @JSONKey("featured_image")
     var imageUrl: string?
+
+    func toEntity() -> Article {
+        return Article(
+            id: id,
+            title: title,
+            content: content,
+            authorId: authorId,
+            imageUrl: imageUrl
+        )
+    }
 }
 
-// Domain model - app's internal shape
-type Article {
+// Domain entity - app's core model
+@Role(entity)
+data Article {
     var id: string
     var title: string
     var content: string
+    var authorId: string
     var imageUrl: string?
 }
+```
 
-// Conversion
-func toDomain(dto: ArticleDTO) => Article {
-    return Article(
-        id: dto.id,
-        title: dto.title,
-        content: dto.content,
-        imageUrl: dto.imageUrl
-    )
-}
+DTOs handle format differences (snake_case vs camelCase, date formats, field names) so entities remain clean.
 ```
 
 ## Validation
 
 ```weft
+@Role(dto)
 @JSON
-type User {
+data UserDTO {
     var id: string
     var email: string
     var age: int
 
-    func isValid() => bool {
-        return email.contains("@") && age >= 0
+    func toEntity() -> User? {
+        if !email.contains("@") || age < 0 {
+            return null
+        }
+        return User(id: id, email: email, age: age)
     }
 }
 
-func parseUser(json: string) => User? {
-    var user = User.fromJSON(json)
-    return user?.isValid() ? user : null
-}
-```
-
-## Best Practices
-
-**Use DTOs for APIs**: Separate API shape from domain models.
-
-```weft
-// API layer
-@JSON
-type UserDTO { /* ... */ }
-
-// Domain layer
-type User { /* ... */ }
-
-// Convert at boundary
-func toDTO(user: User) => UserDTO
-func toDomain(dto: UserDTO) => User
-```
-
-**Handle optionals explicitly**: Make null-safety clear.
-
-```weft
-@JSON
-type Response {
-    var data: [Article]?    // explicit optional
-    var error: string?      // explicit optional
-}
-```
-
-**Validate after parsing**: Don't trust external data.
-
-```weft
-var user = User.fromJSON(json)
-if let validUser = user, validUser.isValid() {
-    // use validUser
-}
-```
-
-**Use type-safe defaults**: Avoid null where possible.
-
-```weft
-@JSON
-type Config {
-    var enabled: bool = false
-    var timeout: int = 30
-    var retries: int = 3
+func parseUser(json: string) -> User? {
+    var dto = UserDTO.fromJSON(json)
+    return dto?.toEntity()
 }
 ```
 
 ## See Also
 
 - [Databases](02-databases.md) - Schema and persistence
-- [API Integration](03-api-integration.md) - Async patterns
-- [Repositories](../architecture/06-repositories.md) - Data layer
+- [API Integration](03-api-integration.md) - Network requests and DTOs
+- [Roles & Patterns](../architecture/05-roles-and-patterns.md) - DTO pattern details
