@@ -1,7 +1,7 @@
 # Annotation System Update Plan
 
 **Last Updated**: January 2025  
-**Status**: In Progress - Planning Phase Complete, Starting Updates
+**Status**: In Progress - Phase 1 Complete (Architecture Core), Moving to Phase 2
 
 ---
 
@@ -20,51 +20,29 @@ We've redesigned Weft's annotation system to align with Clean Architecture princ
 
 ---
 
-## 🔄 Needs Updating
+## 🔄 In Progress
 
-### Critical Updates (Core Changes)
+### Phase 1: Architecture Core ✅ COMPLETE
 
-#### 1. `language/07-annotations.md`
-**Current**: Documents @Main, @Instruction, @SumFunc, @Index as language-level annotations  
-**Needs**: 
-- Update @Instruction definition - clarify it's for translation ambiguity, not comments
-- Update @SumFunc definition - clarify it replaces implementation, no code underneath
-- Add examples showing correct vs incorrect usage
-- Remove any code examples that show implementation under @SumFunc
+All Phase 1 files have been updated with:
+- @LifeCycle(singleton|session|feature|view) parameterized form
+- @Publisher replacing @Observable
+- @Subscriber requirement for observing publishers
+- @LocalState replacing @State (view-only)
+- Clean Architecture introduction
+- All 8 @Role annotations
+- Updated examples throughout
 
-#### 2. `architecture/02-lifecycle-scope.md`
-**Current**: Documents @Singleton, @ViewScoped, @FeatureScoped, @SessionScoped as separate annotations  
-**Needs**:
-- Migrate to `@LifeCycle(singleton|session|feature|view)` parameterized form
-- Update all examples throughout
-- Add dependency hierarchy rules (longer → shorter lived only)
-- Note that protocols don't have lifecycle annotations
+#### Completed Files:
+- [x] architecture/02-lifecycle-scope.md - ✅ Complete
+- [x] architecture/03-observability.md - ✅ Complete  
+- [x] architecture/04-state-ownership.md - ✅ Complete
+- [x] architecture/05-patterns-overview.md - ✅ Complete
+- [x] architecture/01-overview.md - ✅ Complete
 
-#### 3. `architecture/03-observability.md`
-**Current**: Documents @Observable pattern  
-**Needs**:
-- Deprecate @Observable, introduce @Publisher
-- Explain implicit observability via access modifiers in @Publisher classes
-- Update all code examples to use @Publisher
-- Add migration notes
+---
 
-#### 4. `architecture/04-state-ownership.md`
-**Current**: Documents @State, @Binding, @Environment  
-**Needs**:
-- Rename @State to @LocalState (UI-only)
-- Add @Subscriber as required annotation for observing publishers
-- Update @Binding to be sugar for @Subscriber(writable: true)
-- Clarify @LocalState is view-only (LSP enforced)
-- Update all examples
-
-#### 5. `architecture/05-patterns-overview.md`
-**Current**: Overview of Repositories, ViewModels, Services working together  
-**Needs**:
-- Add Clean Architecture layer introduction
-- Update to use @Role(repository|viewmodel|service)
-- Add new roles: entity, usecase, gateway, dto, adapter
-- Show how roles map to CA layers
-- Update all code examples
+### Phase 2: Pattern Details (NEXT)
 
 #### 6. `architecture/06-repositories.md`
 **Current**: Documents @Repository annotation  
@@ -92,56 +70,7 @@ We've redesigned Weft's annotation system to align with Clean Architecture princ
 - Show interface/implementation split pattern
 - Update examples
 
-#### 9. `data/02-databases.md`
-**Current**: May document @Entity as database annotation  
-**Needs**:
-- Clarify @Schema is for database mapping (framework layer)
-- Separate @Role(entity) for core business objects (inner layer)
-- Show entity → schema conversion pattern
-- Add @Role(dto) examples for database DTOs
-
----
-
-### Important Updates (Context & Consistency)
-
-#### 10. `architecture/01-overview.md`
-**Needs**:
-- Add Clean Architecture introduction
-- Explain concentric circles and dependency rule
-- Show how Weft's roles map to CA layers
-- Set context for all architecture docs
-
-#### 11. `ui/01-views.md`
-**Needs**:
-- Update @State references to @LocalState
-- Add @Subscriber requirement for observing view models
-- Update all state management examples
-- Ensure consistency with new state annotations
-
-#### 12. `data/01-json.md`
-**Needs**:
-- Check for any @Entity references
-- Add @Role(dto) pattern for API responses
-- Show entity ↔ DTO conversion
-
-#### 13. `data/03-api-integration.md`
-**Needs**:
-- Add @Role(dto) for API request/response objects
-- Add @Role(gateway) for API service interfaces
-- Add @Role(adapter) for concrete API implementations
-- Show Clean Architecture API patterns
-
-#### 14. `README.md`
-**Needs**:
-- Update any references to old annotation names
-- Ensure links are accurate
-- Update version number if needed
-
----
-
-### New Content Needed
-
-#### 15. `architecture/10-clean-architecture.md` (NEW FILE)
+#### 9. `architecture/10-clean-architecture.md` (NEW FILE)
 **Should Include**:
 - What is Clean Architecture?
 - The dependency rule explained
@@ -151,6 +80,57 @@ We've redesigned Weft's annotation system to align with Clean Architecture princ
 - Complete example showing all layers
 - Common pitfalls and how to avoid them
 - Link to reference/annotations.md for details
+
+---
+
+### Phase 3: Language & Data
+
+#### 10. `language/07-annotations.md`
+**Current**: Documents @Main, @Instruction, @SumFunc, @Index as language-level annotations  
+**Needs**: 
+- Update @Instruction definition - clarify it's for translation ambiguity, not comments
+- Update @SumFunc definition - clarify it replaces implementation, no code underneath
+- Add examples showing correct vs incorrect usage
+- Remove any code examples that show implementation under @SumFunc
+
+#### 11. `data/02-databases.md`
+**Current**: May document @Entity as database annotation  
+**Needs**:
+- Clarify @Schema is for database mapping (framework layer)
+- Separate @Role(entity) for core business objects (inner layer)
+- Show entity → schema conversion pattern
+- Add @Role(dto) examples for database DTOs
+
+#### 12. `ui/01-views.md`
+**Needs**:
+- Update @State references to @LocalState
+- Add @Subscriber requirement for observing view models
+- Update all state management examples
+- Ensure consistency with new state annotations
+
+#### 13. `data/01-json.md`
+**Needs**:
+- Check for any @Entity references
+- Add @Role(dto) pattern for API responses
+- Show entity ↔ DTO conversion
+
+#### 14. `data/03-api-integration.md`
+**Needs**:
+- Add @Role(dto) for API request/response objects
+- Add @Role(gateway) for API service interfaces
+- Add @Role(adapter) for concrete API implementations
+- Show Clean Architecture API patterns
+
+---
+
+### Phase 4: UI & Polish
+
+#### 15. `README.md`
+**Needs**:
+- Update any references to old annotation names
+- Ensure links are accurate
+- Update version number if needed
+
 
 ---
 
@@ -230,14 +210,14 @@ We've redesigned Weft's annotation system to align with Clean Architecture princ
 
 ## Update Strategy
 
-### Phase 1: Architecture Core (Most Critical)
-1. architecture/02-lifecycle-scope.md
-2. architecture/03-observability.md
-3. architecture/04-state-ownership.md
-4. architecture/05-patterns-overview.md
-5. architecture/01-overview.md (add CA intro)
+### Phase 1: Architecture Core ✅ COMPLETE
+1. ✅ architecture/02-lifecycle-scope.md - DONE
+2. ✅ architecture/03-observability.md - DONE
+3. ✅ architecture/04-state-ownership.md - DONE
+4. ✅ architecture/05-patterns-overview.md - DONE
+5. ✅ architecture/01-overview.md - DONE
 
-### Phase 2: Pattern Details
+### Phase 2: Pattern Details (IN PROGRESS)
 6. architecture/06-repositories.md
 7. architecture/07-viewmodels.md
 8. architecture/08-services.md

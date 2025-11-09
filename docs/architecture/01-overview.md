@@ -1,105 +1,365 @@
 # Architecture Overview
 
-Weft provides first-class support for modern application architecture patterns through annotations and semantic type definitions. This section covers how to design scalable, maintainable applications using Weft's architecture features.
+Weft provides first-class support for **Clean Architecture** through annotations and semantic type definitions. This enables you to build scalable, maintainable applications with clear separation of concerns and enforced dependency rules.
 
-## Core Concepts
+## What is Clean Architecture?
 
-### Separation of Concerns
+Clean Architecture is a software design philosophy that organizes code into concentric layers, with the most important business rules at the center and implementation details at the edges.
 
-Well-architected applications separate different responsibilities into distinct layers:
+### The Core Principle: The Dependency Rule
 
-- **Data Layer**: Repositories manage data access and persistence
-- **Business Logic Layer**: Services handle business rules and operations
-- **Presentation Layer**: ViewModels coordinate UI state and user interactions
-- **UI Layer**: Views render user interfaces and handle user input
+**Source code dependencies must point only inward, toward higher-level policies.**
 
-Each layer has clear responsibilities and well-defined boundaries.
+This means:
+- **Inner layers** contain business logic and are independent of frameworks
+- **Outer layers** contain implementation details (UI, databases, APIs)
+- **Inner layers cannot depend on outer layers**
+- **Outer layers can depend on inner layers**
 
-### State Management
+```
+┌─────────────────────────────────────────────┐
+│  FRAMEWORKS & DRIVERS                       │  ← Outermost
+│  @Role(adapter), @Schema                    │     (Implementation details)
+│  ┌────────────────────────────────────────┐ │
+│  │  INTERFACE ADAPTERS                    │ │
+│  │  @Role(repository|service|             │ │
+│  │        viewmodel|gateway)              │ │
+│  │  ┌───────────────────────────────────┐ │ │
+│  │  │  USE CASES                        │ │ │
+│  │  │  @Role(usecase)                   │ │ │
+│  │  │  ┌─────────────────────────────┐  │ │ │
+│  │  │  │  ENTITIES                   │  │ │ │  ← Innermost
+│  │  │  │  @Role(entity)              │  │ │ │     (Business rules)
+│  │  │  └─────────────────────────────┘  │ │ │
+│  │  └───────────────────────────────────┘ │ │
+│  └────────────────────────────────────────┘ │
+└─────────────────────────────────────────────┘
+```
 
-State in Weft is explicit and observable. The framework provides annotations to express:
+### Why Clean Architecture?
 
-- **Who owns the state**: `@State` for local ownership
-- **How state is observed**: `@Observable` for reactive state
-- **How state flows**: `@Binding` for parent-child communication
-- **Where state lives**: `@Environment` for app-wide context
+**Benefits:**
+1. **Independent of frameworks** - Business logic doesn't depend on UI or database frameworks
+2. **Testable** - Business rules can be tested without UI, database, or external services
+3. **Independent of UI** - Can swap SwiftUI for UIKit without changing business logic
+4. **Independent of database** - Can swap Core Data for Realm without changing business logic
+5. **Independent of external services** - Business rules don't know about the outside world
+6. **Scalable** - Clear boundaries make it easy to add features and grow the codebase
 
-### Lifecycle and Scope
+## Weft's Architecture Layers
+
+Weft maps Clean Architecture layers to specific role annotations:
+
+### 1. Entities Layer (Innermost)
+
+**@Role(entity)** - Core business objects with no dependencies
+
+```weft
+@Role(entity)
+data Article {
+    var id: string
+    var title: string
+    var content: string
+    var publishedAt: datetime?
+    
+    func isPublished() -> bool {
+        if let published = publishedAt {
+            return published <= datetime.now()
+        }
+        return false
+    }
+}
+```
+
+**Characteristics:**
+- Pure business objects
+- No framework dependencies
+- Can contain business logic
+- Cannot depend on any other layer
+
+### 2. Use Cases Layer
+
+**@Role(usecase)** - Application-specific business rules
+
+```weft
+@Role(usecase)
+class PublishArticleUseCase {
+    private var repository: ArticleRepository  // Interface, not implementation
+    private var emailService: EmailService     // Interface, not implementation
+    
+    func execute(articleId: string) async throws {
+        @SumFunc
+        => fetch article from repository
+        => validate article is ready for publishing
+        => set published date to now
+        => save article back to repository
+        => send notification email to subscribers
+    }
+}
+```
+
+**Characteristics:**
+- Contains application business rules
+- Orchestrates entities
+- Depends only on entities and interfaces (not implementations)
+- Independent of UI and frameworks
+
+### 3. Interface Adapters Layer
+
+This layer contains interfaces that define contracts between layers.
+
+**@Role(repository)** - Data access interface
+```weft
+@Role(repository)
+protocol ArticleRepository {
+    var articles: [Article] { get }
+    func fetchArticles() async throws
+    func save(article: Article) async throws
+}
+```
+
+**@Role(service)** - Business utility interface
+```weft
+@Role(service)
+protocol EmailService {
+    func sendEmail(to: string, subject: string, body: string) async throws
+}
+```
+
+**@Role(viewmodel)** - Presentation logic
+```weft
+@Role(viewmodel)
+@LifeCycle(view)
+@Publisher
+class ArticleListViewModel {
+    @Subscriber private var repository: ArticleRepository
+    
+    var articles: [Article] {
+        return repository.articles
+    }
+}
+```
+
+**@Role(gateway)** - External service interface
+```weft
+@Role(gateway)
+protocol PaymentGateway {
+    func processPayment(amount: float, method: PaymentMethod) async throws -> Receipt
+}
+```
+
+**@Role(dto)** - Data transfer objects (boundary crossing)
+```weft
+@Role(dto)
+data ArticleDTO {
+    var id: string
+    var title: string
+    var author_name: string  // External API format
+    
+    func toEntity() -> Article {
+        @SumFunc
+        => create Article entity from DTO
+        => map external field names to entity properties
+        => return entity
+    }
+}
+```
+
+**Characteristics:**
+- Define contracts between layers
+- ViewModels coordinate presentation logic
+- DTOs handle boundary crossing (API/DB ↔ entities)
+- Depend on entities and use cases
+
+### 4. Frameworks & Drivers Layer (Outermost)
+
+**@Role(adapter)** - Concrete implementations
+
+```weft
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
+class ArticleRepositoryImpl: ArticleRepository {
+    private var api: APIClient
+    private var database: Database
+    
+    private(set) var articles: [Article] = []
+    
+    func fetchArticles() async throws {
+        var dtos: [ArticleDTO] = await api.fetchArticles()
+        articles = dtos.map(dto => dto.toEntity())
+        await database.saveArticles(articles)
+    }
+}
+```
+
+**@Schema** - Database mapping (framework concern)
+```weft
+@Schema("articles")
+data ArticleEntity {
+    @Index var id: string
+    var title: string
+    var content: string
+    var published_at: datetime?
+}
+```
+
+**Characteristics:**
+- Concrete implementations of interfaces
+- Framework-specific code (API clients, databases)
+- Can depend on anything (outermost layer)
+- Business logic doesn't depend on these
+
+## State Management
+
+State in Weft is explicit and observable:
+
+### @Publisher - Observable State
+
+Classes marked as `@Publisher` have observable state that changes over time:
+
+```weft
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
+class ArticleRepositoryImpl: ArticleRepository {
+    private(set) var articles: [Article] = []  // Observable
+    private(set) var isLoading: bool = false   // Observable
+}
+```
+
+### @Subscriber - Observe Publishers
+
+Properties marked as `@Subscriber` observe publishers and receive updates:
+
+```weft
+@Role(viewmodel)
+@Publisher
+class ArticleListViewModel {
+    @Subscriber private var repository: ArticleRepository  // Observes changes
+    
+    var articles: [Article] {
+        return repository.articles  // Auto-updates when repository changes
+    }
+}
+```
+
+### @LocalState - Ephemeral UI State
+
+Views use `@LocalState` for ephemeral UI state that doesn't need to persist:
+
+```weft
+view ArticleListView {
+    @Subscriber var viewModel: ArticleListViewModel
+    @LocalState var showFilters: bool = false  // UI-only state
+    
+    Column {
+        if showFilters {
+            FilterPanel()
+        }
+    }
+}
+```
+
+## Lifecycle and Scope
 
 Different parts of your application have different lifetimes:
 
-- **Application scope**: Lives for the entire app lifetime (singletons)
-- **Feature scope**: Lives while a feature is active
-- **View scope**: Lives while a view/screen is visible
-- **Session scope**: Lives while a user session is active
-
-Weft makes lifecycle explicit through scope annotations.
-
-## Architecture Annotations
-
-### Semantic Type Annotations
-
-Tell the translator what role a type plays:
-
 ```weft
-@Repository - Data layer abstraction
-@Service - Business logic and utilities
-@ViewModel - Presentation layer coordinator
+@LifeCycle(singleton)  // Lives for entire app
+@LifeCycle(session)    // Lives while user is logged in
+@LifeCycle(feature)    // Lives while feature is active
+@LifeCycle(view)       // Lives while view is visible
 ```
 
-### Lifecycle Annotations
-
-Specify how long instances live:
+**Dependency hierarchy:** Longer-lived → shorter-lived only
 
 ```weft
-@Singleton - Application lifetime
-@ViewScoped - View/screen lifetime
-@FeatureScoped - Feature lifetime
-@SessionScoped - User session lifetime
-```
+// ✅ Valid: View-scoped depends on singleton
+@Role(viewmodel)
+@LifeCycle(view)
+class MyViewModel {
+    private var repository: ArticleRepository  // @LifeCycle(singleton)
+}
 
-### Observability Annotations
-
-Control reactive state:
-
-```weft
-@Observable - Type has observable state
-@State - Local state ownership
-@Binding - Two-way parent-child binding
-@Environment - App-wide context injection
+// ❌ Invalid: Singleton depends on view-scoped
+@Role(adapter)
+@LifeCycle(singleton)
+class MyRepository {
+    private var viewModel: MyViewModel  // @LifeCycle(view) - ERROR!
+}
 ```
 
 ## Basic Architecture Pattern
 
-A typical Weft application follows this pattern:
+Here's a typical Weft application structure:
 
 ```weft
-// Data Layer
-@Repository
-@Singleton
-@Observable
-class ArticleRepository {
+// ============================================
+// ENTITIES LAYER - Core business objects
+// ============================================
+
+@Role(entity)
+data Article {
+    var id: string
+    var title: string
+    var content: string
+    var publishedAt: datetime?
+}
+
+// ============================================
+// DATA LAYER - Repository interface + DTO
+// ============================================
+
+@Role(dto)
+data ArticleDTO {
+    var id: string
+    var title: string
+    
+    func toEntity() -> Article {
+        return Article(id: id, title: title, content: "", publishedAt: null)
+    }
+}
+
+@Role(repository)
+protocol ArticleRepository {
+    var articles: [Article] { get }
+    var isLoading: bool { get }
+    func fetchArticles() async throws
+}
+
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
+class ArticleRepositoryImpl: ArticleRepository {
     private var api: APIClient
     private var database: Database
     
     private(set) var articles: [Article] = []
     private(set) var isLoading: bool = false
     
-    func fetchArticles() async {
+    func fetchArticles() async throws {
         isLoading = true
-        articles = await api.fetchArticles()
+        
+        var dtos: [ArticleDTO] = await api.fetchArticles()
+        articles = dtos.map(dto => dto.toEntity())
         await database.saveArticles(articles)
+        
         isLoading = false
     }
 }
 
-// Presentation Layer
-@ViewModel
-@ViewScoped
+// ============================================
+// PRESENTATION LAYER - ViewModel
+// ============================================
+
+@Role(viewmodel)
+@LifeCycle(view)
+@Publisher
 class ArticleListViewModel {
-    private var repository: ArticleRepository
+    @Subscriber private var repository: ArticleRepository
     
-    @State var errorMessage: string? = null
+    var errorMessage: string? = null
     
     var articles: [Article] {
         return repository.articles
@@ -118,9 +378,12 @@ class ArticleListViewModel {
     }
 }
 
-// UI Layer
+// ============================================
+// UI LAYER - View
+// ============================================
+
 view ArticleListView {
-    var viewModel: ArticleListViewModel
+    @Subscriber var viewModel: ArticleListViewModel
     
     Column(isScrollable: true) {
         if viewModel.isLoading {
@@ -129,6 +392,10 @@ view ArticleListView {
             for article in viewModel.articles {
                 ArticleCard(article: article)
             }
+        }
+        
+        if let error = viewModel.errorMessage {
+            ErrorBanner(message: error)
         }
     }
 }
@@ -141,210 +408,203 @@ view ArticleListView {
 Data flows in one direction through the architecture:
 
 ```
-User Action → ViewModel → Repository → Data Source
-                ↓             ↓
-              View  ←  Observable State
+User Action
+    ↓
+  View
+    ↓
+ViewModel
+    ↓
+Use Case (optional)
+    ↓
+Repository
+    ↓
+Entity
+    ↓
+API/Database
+    ↓
+Observable State Updates
+    ↓
+ViewModel Recomputes
+    ↓
+View Re-renders
 ```
 
-1. User interacts with View
-2. View calls ViewModel method
-3. ViewModel coordinates with Repository
-4. Repository updates its state
-5. Observable state changes trigger UI updates
-6. View re-renders with new data
+1. User interacts with **View**
+2. View calls **ViewModel** method
+3. ViewModel calls **Use Case** or **Repository**
+4. Repository updates **Entities**
+5. Repository publishes state changes
+6. ViewModel automatically recomputes properties
+7. View automatically re-renders
+
+**Key principle:** State flows down, events flow up.
 
 ### State Propagation
 
-When state changes, it automatically propagates:
+When state changes, it automatically propagates through observers:
 
 ```weft
-@Repository
-@Singleton
-@Observable
+// Repository updates state
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
 class UserRepository {
     private(set) var currentUser: User? = null
     
     func login(credentials: Credentials) async {
         currentUser = await api.login(credentials)
-        // All observers automatically notified
+        // All @Subscriber properties automatically notified
     }
 }
 
-// Multiple ViewModels can observe the same repository
-@ViewModel
+// Multiple ViewModels observe the same repository
+@Role(viewmodel)
+@Publisher
 class ProfileViewModel {
-    private var userRepository: UserRepository
+    @Subscriber private var userRepository: UserRepository
     
-    var user: User? {
-        return userRepository.currentUser
+    var userName: string? {
+        return userRepository.currentUser?.name  // Auto-updates
     }
 }
 
-@ViewModel
-class SettingsViewModel {
-    private var userRepository: UserRepository
+@Role(viewmodel)
+@Publisher
+class NavBarViewModel {
+    @Subscriber private var userRepository: UserRepository
     
     var isLoggedIn: bool {
-        return userRepository.currentUser != null
+        return userRepository.currentUser != null  // Auto-updates
     }
+}
+```
+
+## Dependency Injection
+
+Dependencies are automatically provided based on lifecycle:
+
+```weft
+// The system knows:
+// 1. ArticleRepositoryImpl is @LifeCycle(singleton) - create once, reuse
+// 2. ArticleListViewModel is @LifeCycle(view) - create per view
+// 3. ViewModel needs repository - inject the singleton
+
+@Role(adapter)
+@LifeCycle(singleton)
+class ArticleRepositoryImpl: ArticleRepository { }
+
+@Role(viewmodel)
+@LifeCycle(view)
+@Publisher
+class ArticleListViewModel {
+    private var repository: ArticleRepository  // Injected automatically
+}
+```
+
+The translator generates platform-specific dependency injection code.
+
+## Validation and Enforcement
+
+The Weft LSP validates Clean Architecture rules in real-time:
+
+**Dependency Rule Validation:**
+```weft
+// ❌ LSP Error: Entity cannot depend on Repository
+@Role(entity)
+data Article {
+    private var repository: ArticleRepository  // ERROR!
+}
+
+// ✅ OK: Use Case depends on Repository interface
+@Role(usecase)
+class PublishArticleUseCase {
+    private var repository: ArticleRepository  // OK
+}
+```
+
+**Lifecycle Validation:**
+```weft
+// ❌ LSP Error: Singleton cannot depend on view-scoped
+@Role(adapter)
+@LifeCycle(singleton)
+class MyRepository {
+    private var viewModel: MyViewModel  // @LifeCycle(view) - ERROR!
+}
+```
+
+**State Annotation Validation:**
+```weft
+// ❌ LSP Warning: Missing @Subscriber
+@Role(viewmodel)
+class MyViewModel {
+    private var repository: ArticleRepository  // Warning!
+}
+
+// ✅ OK: Explicit @Subscriber
+@Role(viewmodel)
+class MyViewModel {
+    @Subscriber private var repository: ArticleRepository
+}
+```
+
+### Configuration
+
+```json
+// weft.settings.json
+{
+  "validation": {
+    "dependencyRule": "error",         // Enforce CA dependency rule
+    "layerViolations": "error",        // Enforce layer boundaries
+    "lifecycleViolations": "warning",  // Warn on lifecycle issues
+    "stateAnnotations": "warning"      // Warn on missing @Subscriber
+  },
+  "architecture": {
+    "style": "clean"
+  }
 }
 ```
 
 ## Benefits of This Architecture
 
-**Testability**: Each layer can be tested independently with mock dependencies.
-
-**Scalability**: Clear boundaries make it easy to add features without affecting existing code.
-
-**Maintainability**: Well-defined responsibilities make code easier to understand and modify.
-
-**Reusability**: Repositories and services can be shared across multiple ViewModels.
-
-**Type Safety**: Weft's strict typing catches errors early in the development process.
-
-**Platform Agnostic**: The same architecture translates cleanly to Swift, Kotlin, TypeScript, etc.
-
-## Architecture Layers in Detail
-
-### Repository Layer
-
-Repositories abstract data sources and provide a clean API for data access:
-
-- Coordinate between network, database, and cache
-- Handle data transformation and mapping
-- Provide observable streams of data
-- Manage data consistency
-
-See [Repositories](05-repositories.md) for details.
-
-### ViewModel Layer
-
-ViewModels coordinate presentation logic and UI state:
-
-- Transform repository data for UI display
-- Handle user interactions
-- Manage local UI state
-- Coordinate multiple repositories/services
-
-See [ViewModels](06-viewmodels.md) for details.
-
-### Service Layer
-
-Services provide business logic and utilities:
-
-- Implement business rules
-- Coordinate cross-cutting concerns
-- Provide stateless operations
-- Handle integrations with external systems
-
-See [Services](07-services.md) for details.
-
-## Example: Complete Feature
-
-Here's how all the pieces fit together for a complete feature:
+**Testability:** Each layer can be tested independently with mock dependencies.
 
 ```weft
-// 1. Data Layer - Repository
-@Repository
-@Singleton
-@Observable
-class ArticleRepository {
-    private var api: APIClient
-    private var database: Database
+// Test use case with mock repository
+func testPublishArticle() {
+    var mockRepo = MockArticleRepository()
+    var useCase = PublishArticleUseCase(repository: mockRepo)
     
-    private(set) var articles: [Article] = []
+    await useCase.execute("article-123")
     
-    func fetchArticles() async {
-        var fresh = await api.fetchArticles()
-        await database.saveArticles(fresh)
-        articles = fresh
-    }
-    
-    func bookmarkArticle(id: string) async {
-        @SumFunc
-        => find article in articles array by id
-        => mark article as bookmarked
-        => update article in database
-    }
-}
-
-// 2. Business Logic - Service
-@Service
-@Singleton
-class AnalyticsService {
-    func trackArticleView(articleId: string) {
-        logEvent("article_viewed", ["article_id": articleId])
-    }
-    
-    func trackBookmark(articleId: string) {
-        logEvent("article_bookmarked", ["article_id": articleId])
-    }
-}
-
-// 3. Presentation Layer - ViewModel
-@ViewModel
-@ViewScoped
-class ArticleListViewModel {
-    private var repository: ArticleRepository
-    private var analytics: AnalyticsService
-    
-    @State var isRefreshing: bool = false
-    @State var errorMessage: string? = null
-    
-    var articles: [Article] {
-        return repository.articles
-    }
-    
-    func refresh() async {
-        @SumFunc
-        => set refreshing state to true
-        => attempt to fetch articles from repository
-        => handle any errors by setting error message
-        => always set refreshing state to false when complete
-    }
-    
-    func bookmarkArticle(id: string) async {
-        await repository.bookmarkArticle(id)
-        analytics.trackBookmark(id)
-    }
-}
-
-// 4. UI Layer - View
-view ArticleListView {
-    var viewModel: ArticleListViewModel
-    @Environment var theme: Theme
-    
-    Column(
-        isScrollable: true
-        onRefresh: viewModel.refresh()
-    ) {
-        if viewModel.isRefreshing {
-            LoadingSpinner()
-        } else if let error = viewModel.errorMessage {
-            ErrorView(message: error)
-        } else {
-            for article in viewModel.articles {
-                ArticleCard(
-                    article: article,
-                    onBookmark: { viewModel.bookmarkArticle(article.id) }
-                )
-            }
-        }
-    }
+    assert(mockRepo.savedArticle?.publishedAt != null)
 }
 ```
+
+**Scalability:** Clear boundaries make it easy to add features without affecting existing code.
+
+**Maintainability:** Well-defined responsibilities make code easier to understand and modify.
+
+**Reusability:** Repositories and services can be shared across multiple ViewModels and use cases.
+
+**Type Safety:** Weft's strict typing catches errors early in the development process.
+
+**Platform Agnostic:** The same architecture translates cleanly to Swift, Kotlin, TypeScript, etc.
 
 ## Next Steps
 
 Continue reading to learn about each architectural concept in depth:
 
 1. [Lifecycle & Scope](02-lifecycle-scope.md) - Controlling object lifetimes
-2. [Observability](03-observability.md) - Making state reactive
-3. [State Ownership](04-state-ownership.md) - Managing state lifecycle
-4. [Patterns in Practice](05-patterns-in-practice.md) - Repositories, ViewModels, and Services in action
+2. [Observability](03-observability.md) - Making state reactive with @Publisher
+3. [State Ownership](04-state-ownership.md) - Managing state with @LocalState and @Subscriber
+4. [Patterns Overview](05-patterns-overview.md) - Repositories, ViewModels, and Services
+5. [Repositories](06-repositories.md) - Repository pattern in detail
+6. [ViewModels](07-viewmodels.md) - ViewModel pattern in detail
+7. [Services](08-services.md) - Service pattern in detail
+8. [Clean Architecture](10-clean-architecture.md) - Deep dive into Clean Architecture
 
 ## See Also
 
-- [State Management](../ui/01-views.md) - UI state patterns
+- [Annotations Reference](../reference/annotations.md) - Complete annotation guide
 - [Types](../language/01-types.md) - Type system
-- [Definitions](../structure/01-definitions.md) - Type definitions
+- [Views](../ui/01-views.md) - UI patterns

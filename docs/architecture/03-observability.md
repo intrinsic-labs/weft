@@ -2,12 +2,14 @@
 
 Observability in Weft makes state changes reactive—when data changes, all observers are automatically notified. This is the foundation of reactive UI updates and data synchronization across your application.
 
-## The @Observable Annotation
+## The @Publisher Annotation
 
-Mark classes as observable to indicate they contain state that changes over time:
+Mark classes as `@Publisher` to indicate they contain observable state that changes over time:
 
 ```weft
-@Observable
+@Role(repository)
+@LifeCycle(singleton)
+@Publisher
 class ArticleRepository {
     private(set) var articles: [Article] = []
     private(set) var isLoading: bool = false
@@ -20,58 +22,58 @@ class ArticleRepository {
 }
 ```
 
-When properties on an `@Observable` type change, all observers are automatically notified.
+When properties on a `@Publisher` type change, all observers are automatically notified.
 
-## What Should Be Observable?
+## What Should Be @Publisher?
 
-Mark types as `@Observable` when:
+Mark types as `@Publisher` when:
 
 - The type holds state that changes over time
 - UI components need to react to state changes
 - Multiple parts of your app need to observe the same data
-- You're implementing repositories, services, or ViewModels
+- You're implementing repository adapters, service adapters, or ViewModels
 
-**Examples of observable types:**
+**Examples of publisher types:**
 
 ```weft
-// Repository - data changes over time
-@Observable
-@Repository
-class UserRepository {
+// Repository adapter - data changes over time
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
+class UserRepositoryImpl: UserRepository {
     private(set) var currentUser: User? = null
     private(set) var isAuthenticated: bool = false
 }
 
 // ViewModel - UI state changes
-@Observable
-@ViewModel
+@Role(viewmodel)
+@LifeCycle(view)
+@Publisher
 class ProfileViewModel {
     private(set) var isLoading: bool = false
     private(set) var errorMessage: string? = null
 }
 
-// Service - app-wide state
-@Observable
-@Service
-class ThemeService {
+// Service adapter - app-wide state
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
+class ThemeServiceImpl: ThemeService {
     var isDarkMode: bool = false
     var primaryColor: Color = Color.blue
 }
 ```
 
-## Observing Changes
+## Observing Changes with @Subscriber
 
-When you use an `@Observable` type, changes are automatically observed based on context:
-
-### In ViewModels
-
-ViewModels can depend on observable repositories:
+To observe a `@Publisher`, mark properties with `@Subscriber`:
 
 ```weft
-@ViewModel
-@ViewScoped
+@Role(viewmodel)
+@LifeCycle(view)
+@Publisher
 class ArticleListViewModel {
-    private var repository: ArticleRepository  // Observable repository
+    @Subscriber private var repository: ArticleRepository  // Observable repository
 
     // This computed property automatically updates when repository.articles changes
     var articles: [Article] {
@@ -84,13 +86,66 @@ class ArticleListViewModel {
 }
 ```
 
-### In Views
+**Important:** In v0.3.0, `@Subscriber` is now **required** when observing publishers. The compiler/LSP will warn you if you forget it.
 
-Views automatically re-render when observable properties change:
+### @Subscriber Parameters
+
+The `@Subscriber` annotation accepts optional parameters:
+
+**`writable: bool`** - Whether subscriber can write back (default: false)
+**`source: parent|environment`** - Where the publisher comes from (default: parent)
+
+```weft
+view ChildView {
+    @Subscriber(writable: true) var count: int
+    // Can read AND write - like @Binding
+
+    @Subscriber(source: environment) var theme: Theme
+    // Observes from environment instead of parent
+}
+```
+
+## Implicit Observability via Access Modifiers
+
+In `@Publisher` classes, **access modifiers control what's observable**:
+
+```weft
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
+class ShoppingCart {
+    // ✅ Observable - public property
+    var items: [Item] = []
+
+    // ✅ Observable (read-only) - public getter, private setter
+    private(set) var total: float = 0.0
+
+    // ❌ NOT observable - private property
+    private var internalCache: [string: any] = [:]
+
+    func addItem(item: Item) {
+        items.append(item)       // Observers notified
+        total += item.price      // Observers notified
+        internalCache[item.id] = item  // NOT observable
+    }
+}
+```
+
+**Rules:**
+- `var propertyName` (public) → **Observable**
+- `private(set) var propertyName` (read-only) → **Observable**
+- `private var propertyName` → **NOT observable**
+
+This gives you fine-grained control over what state changes trigger UI updates.
+
+## @Subscriber in Views
+
+Views must use `@Subscriber` to observe ViewModels and other publishers:
 
 ```weft
 view ArticleListView {
-    var viewModel: ArticleListViewModel  // Observable ViewModel
+    @Subscriber var viewModel: ArticleListViewModel  // Observes ViewModel
+    @Subscriber(source: environment) var theme: Theme  // Observes from environment
 
     Column {
         if viewModel.isLoading {
@@ -104,33 +159,14 @@ view ArticleListView {
 }
 ```
 
-## Observable Properties
-
-Properties on `@Observable` types are automatically tracked:
-
-```weft
-@Observable
-class ShoppingCart {
-    // All properties are observable by default
-    private(set) var items: [Item] = []
-    private(set) var total: float = 0.0
-    private(set) var itemCount: int = 0
-
-    func addItem(item: Item) {
-        items.append(item)       // Change tracked
-        total += item.price      // Change tracked
-        itemCount += 1           // Change tracked
-        // All observers notified once after method completes
-    }
-}
-```
-
 ## Private(set) for Controlled Updates
 
 Use `private(set)` to allow public reading but private writing:
 
 ```weft
-@Observable
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
 class ArticleRepository {
     // Readable everywhere, writable only in this class
     private(set) var articles: [Article] = []
@@ -151,7 +187,9 @@ This pattern ensures state only changes through controlled methods, not directly
 Computed properties automatically update when their dependencies change:
 
 ```weft
-@Observable
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
 class ShoppingCart {
     private(set) var items: [Item] = []
 
@@ -175,34 +213,41 @@ class ShoppingCart {
 Multiple parts of your app can observe the same state:
 
 ```weft
-@Observable
-@Singleton
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
 class UserRepository {
     private(set) var currentUser: User? = null
 }
 
 // Multiple ViewModels observe the same repository
-@ViewModel
+@Role(viewmodel)
+@LifeCycle(view)
+@Publisher
 class ProfileViewModel {
-    private var userRepository: UserRepository
+    @Subscriber private var userRepository: UserRepository
 
     var userName: string? {
         return userRepository.currentUser?.name
     }
 }
 
-@ViewModel
+@Role(viewmodel)
+@LifeCycle(view)
+@Publisher
 class SettingsViewModel {
-    private var userRepository: UserRepository
+    @Subscriber private var userRepository: UserRepository
 
     var userEmail: string? {
         return userRepository.currentUser?.email
     }
 }
 
-@ViewModel
+@Role(viewmodel)
+@LifeCycle(view)
+@Publisher
 class NavBarViewModel {
-    private var userRepository: UserRepository
+    @Subscriber private var userRepository: UserRepository
 
     var isLoggedIn: bool {
         return userRepository.currentUser != null
@@ -214,7 +259,7 @@ class NavBarViewModel {
 
 ## Platform Translation
 
-The `@Observable` annotation translates to platform-specific reactive mechanisms:
+The `@Publisher` annotation translates to platform-specific reactive mechanisms:
 
 **Swift:**
 ```swift
@@ -225,6 +270,13 @@ class ArticleRepository {
 }
 
 // SwiftUI views automatically observe @Observable types
+struct ArticleListView: View {
+    @State private var viewModel: ArticleListViewModel
+
+    var body: some View {
+        // Automatically re-renders when viewModel publishes changes
+    }
+}
 ```
 
 **Kotlin:**
@@ -237,6 +289,10 @@ class ArticleRepository {
 }
 
 // Compose automatically recomposes when state changes
+@Composable
+fun ArticleListView(viewModel: ArticleListViewModel) {
+    // Automatically recomposes when viewModel state changes
+}
 ```
 
 **TypeScript/React:**
@@ -253,17 +309,23 @@ class ArticleRepository {
 }
 
 // React components use context/hooks to observe
+function ArticleListView() {
+    const viewModel = useViewModel(ArticleListViewModel);
+    const theme = useContext(ThemeContext);
+    // Re-renders when viewModel or theme changes
+}
 ```
 
 ## Best Practices
 
-**Mark the source of truth as observable**: The class that owns and modifies the data should be `@Observable`.
+**Mark the source of truth as @Publisher**: The class that owns and modifies the data should be `@Publisher`.
 
 ```weft
-// Good: Repository owns the data
-@Observable
-@Repository
-class ArticleRepository {
+// ✅ Good: Repository adapter owns the data
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
+class ArticleRepositoryImpl: ArticleRepository {
     private(set) var articles: [Article] = []
 
     func fetchArticles() async {
@@ -271,10 +333,12 @@ class ArticleRepository {
     }
 }
 
-// ViewModel observes and transforms
-@ViewModel
+// ✅ Good: ViewModel observes and transforms
+@Role(viewmodel)
+@LifeCycle(view)
+@Publisher
 class ArticleListViewModel {
-    private var repository: ArticleRepository
+    @Subscriber private var repository: ArticleRepository
 
     var articles: [Article] {
         return repository.articles
@@ -285,7 +349,9 @@ class ArticleListViewModel {
 **Use private(set) for encapsulation**: Let observers read but not write.
 
 ```weft
-@Observable
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
 class DataStore {
     private(set) var data: [Item] = []
 
@@ -296,11 +362,39 @@ class DataStore {
 }
 ```
 
+**Always use @Subscriber when observing publishers**: The LSP will warn you if you forget.
+
+```weft
+// ❌ Bad: Missing @Subscriber
+@Role(viewmodel)
+class MyViewModel {
+    private var repository: ArticleRepository  // LSP warning!
+}
+
+// ✅ Good: Explicit subscription
+@Role(viewmodel)
+class MyViewModel {
+    @Subscriber private var repository: ArticleRepository
+}
+```
+
+**Use @Subscriber(source: environment) for environment values**: Replaces the old `@Environment` annotation.
+
+```weft
+// ✅ Correct: Subscribe to environment values
+view MyView {
+    @Subscriber(source: environment) var theme: Theme
+    @Subscriber(source: environment) var authService: AuthService
+}
+```
+
 **Keep observable logic simple**: Don't put complex business logic in observable state updates.
 
 ```weft
-// Good: Simple state updates
-@Observable
+// ✅ Good: Simple state updates
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
 class UserRepository {
     private(set) var users: [User] = []
 
@@ -311,13 +405,6 @@ class UserRepository {
 
 // Complex logic in separate methods
 func processAndStoreUsers(rawData: [UserDTO]) async {
-    var processed = rawData.map(dto => User.fromDTO(dto))
-    var validated = processed.filter(user => user.isValid())
-    repository.setUsers(validated)
-}
-
-// Weft alternative: Use @SumFunc to describe logic in plain English
-func processAndStoreUsers(rawData: [UserDTO]) async {
     @SumFunc
     => transform each DTO into a User object
     => filter out any invalid users
@@ -325,19 +412,40 @@ func processAndStoreUsers(rawData: [UserDTO]) async {
 }
 ```
 
-**Don't over-observe**: Not everything needs to be observable. Simple data types and DTOs don't need `@Observable`.
+**Don't over-publish**: Not everything needs to be `@Publisher`. Simple data types and DTOs don't need it.
 
 ```weft
-// Don't need @Observable - simple data
+// ❌ Don't need @Publisher - simple data
+@Role(dto)
 data ArticleDTO {
     var id: string
     var title: string
 }
 
-// Do need @Observable - manages state
-@Observable
-class ArticleRepository {
+// ✅ Do need @Publisher - manages state
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
+class ArticleRepositoryImpl: ArticleRepository {
     private(set) var articles: [Article] = []
+}
+```
+
+**Use access modifiers to control observability**: Not every property needs to be observable.
+
+```weft
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
+class CacheService {
+    // Observable - public
+    var cacheSize: int = 0
+
+    // Observable (read-only) - private(set)
+    private(set) var lastUpdated: datetime? = null
+
+    // NOT observable - private (internal optimization)
+    private var internalIndex: [string: int] = [:]
 }
 ```
 
@@ -346,10 +454,17 @@ class ArticleRepository {
 ### Repository Pattern
 
 ```weft
-@Observable
-@Repository
-@Singleton
-class ArticleRepository {
+@Role(repository)
+protocol ArticleRepository {
+    var articles: [Article] { get }
+    var isLoading: bool { get }
+    func fetchArticles() async
+}
+
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
+class ArticleRepositoryImpl: ArticleRepository {
     private var api: APIClient
     private var database: Database
 
@@ -377,14 +492,14 @@ class ArticleRepository {
 ### ViewModel Pattern
 
 ```weft
-@Observable
-@ViewModel
-@ViewScoped
+@Role(viewmodel)
+@LifeCycle(view)
+@Publisher
 class ArticleListViewModel {
-    private var repository: ArticleRepository
+    @Subscriber private var repository: ArticleRepository
 
-    @State var selectedArticle: Article? = null
-    @State var searchQuery: string = ""
+    var selectedArticle: Article? = null
+    var searchQuery: string = ""
 
     var articles: [Article] {
         var all = repository.articles
@@ -403,10 +518,17 @@ class ArticleListViewModel {
 ### Service Pattern
 
 ```weft
-@Observable
-@Service
-@Singleton
-class AuthService {
+@Role(service)
+protocol AuthService {
+    var currentUser: User? { get }
+    var isAuthenticated: bool { get }
+    func login(credentials: Credentials) async
+}
+
+@Role(adapter)
+@LifeCycle(singleton)
+@Publisher
+class AuthServiceImpl: AuthService {
     private(set) var currentUser: User? = null
     private(set) var isAuthenticated: bool = false
 
@@ -423,9 +545,49 @@ class AuthService {
 }
 ```
 
+## @Binding - Syntactic Sugar
+
+`@Binding` is syntactic sugar for `@Subscriber(writable: true, source: parent)`:
+
+```weft
+view ParentView {
+    @LocalState var searchText = ""
+
+    SearchBar(query: $searchText)  // Pass binding with $
+}
+
+view SearchBar {
+    @Binding var query: string  // Two-way binding
+
+    TextField(binding: $query)
+}
+```
+
+**Equivalent to**:
+```weft
+view SearchBar {
+    @Subscriber(writable: true, source: parent) var query: string
+}
+```
+
+## Validation Configuration
+
+The Weft LSP can validate state annotation usage:
+
+```json
+// weft.settings.json
+{
+  "validation": {
+    "stateAnnotations": "warning",  // Warn on missing @Subscriber
+    "publisherAccess": "warning"    // Warn on access modifier issues
+  }
+}
+```
+
 ## See Also
 
 - [Lifecycle & Scope](02-lifecycle-scope.md) - Controlling object lifetimes
-- [State Ownership](04-state-ownership.md) - Managing local vs shared state
+- [State Ownership](04-state-ownership.md) - Managing local vs shared state with @LocalState
 - [Repositories](06-repositories.md) - Repository pattern in depth
 - [ViewModels](07-viewmodels.md) - ViewModel pattern in depth
+- [Annotations Reference](../reference/annotations.md) - Complete annotation guide
