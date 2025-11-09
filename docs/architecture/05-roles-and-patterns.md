@@ -679,3 +679,4 @@ The Weft LSP validates Clean Architecture rules:
 - [Observability](03-observability.md) - Reactive state with @Publisher
 - [UI State Ownership](04-ui-state-ownership.md) - UI state patterns with @LocalState
 - [Annotations Reference](../reference/annotations.md) - Complete annotation guide
+- [Full Architecture Example](07-full-example.md) - Full example of implementing Weft's architecture
