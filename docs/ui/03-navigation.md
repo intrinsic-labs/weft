@@ -64,7 +64,7 @@ view SelectionView {
 }
 
 // Caller
-@State var selectedItem: Item? = null
+@LocalState var selectedItem: Item? = null
 
 Button(action: {
     navigateTo(SelectionView(onSelect: { item in
@@ -79,7 +79,7 @@ Button(action: {
 
 ```weft
 // Modal with state
-@State var showingModal = false
+@LocalState var showingModal = false
 
 Button(action: { showingModal = true }) {
     text: "Settings"
@@ -128,7 +128,7 @@ view MainTabView {
 }
 
 // With selection binding
-@State var selectedTab = 0
+@LocalState var selectedTab = 0
 
 TabView(selection: $selectedTab) {
     Tab(title: "Feed", icon: Icons.home, tag: 0) {
@@ -144,7 +144,7 @@ TabView(selection: $selectedTab) {
 
 ```weft
 view AppRoot {
-    @Environment var router: Router
+    @Subscriber(source: environment) var router: Router
 
     onAppear {
         router.registerRoutes([
@@ -164,9 +164,9 @@ view AppRoot {
 ## Navigation in ViewModels
 
 ```weft
-@Observable
-@ViewModel
-@ViewScoped
+@Publisher
+@Role(viewmodel)
+@Lifecycle(view)
 class ArticleListViewModel {
     private var navigation: NavigationService
 
@@ -207,8 +207,8 @@ Sheet(isPresented: $showingOptions) {
 
 ```weft
 view RegistrationFlow {
-    @State var step = 1
-    @State var formData = RegistrationData()
+    @LocalState var step = 1
+    @LocalState var formData = RegistrationData()
 
     if step == 1 {
         EmailStep(email: $formData.email, onNext: { step = 2 })
@@ -232,8 +232,8 @@ view RegistrationFlow {
 
 ```weft
 view AppRoot {
-    @Environment var auth: AuthService
-    @State var isLoading = true
+    @Subscriber(source: environment) var auth: AuthService
+    @LocalState var isLoading = true
 
     if isLoading {
         LoadingView()
@@ -273,10 +273,10 @@ view DetailView {
 }
 ```
 
-**Track modal state**: Use `@State` for presentation.
+**Track modal state**: Use `@LocalState` for presentation.
 
 ```weft
-@State var showingModal = false
+@LocalState var showingModal = false
 Modal(isPresented: $showingModal) { /* ... */ }
 ```
 
@@ -286,4 +286,3 @@ Modal(isPresented: $showingModal) { /* ... */ }
 
 - [Views](01-views.md) - View structure and lifecycle
 - [Components](02-components.md) - UI components
-- [ViewModels](../architecture/07-viewmodels.md) - Business logic patterns
