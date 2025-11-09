@@ -1,6 +1,6 @@
-# State Ownership
+# State Ownership in User Interfaces
 
-State ownership defines who creates, manages, and has the authority to modify state in your application. Weft provides explicit annotations to communicate state ownership patterns that translate cleanly to all UI frameworks.
+State ownership defines who creates, manages, and has the authority to modify state in your UI layer. Weft provides explicit annotations to communicate state ownership patterns that translate cleanly to all UI frameworks. While a comprehensive user interface module in the documentation is coming soon, it makes sense to address some fundamental concepts around UI state ownership here.
 
 ## Core Concepts
 
@@ -9,9 +9,9 @@ State ownership defines who creates, manages, and has the authority to modify st
 2. Who can modify this state?
 3. How does this state flow through the app?
 
-Weft's state annotations make these relationships explicit, helping you reason about data flow and preventing common bugs.
+Weft's UI state annotations make these relationships explicit, helping you reason about data flow and preventing common bugs.
 
-## State Annotations
+## UI State Annotations
 
 ### @LocalState
 
@@ -49,32 +49,6 @@ view MyView {
 }
 ```
 
-### @Subscriber
-
-Observes a `@Publisher` and receives updates when its state changes. Required when observing ViewModels, repositories, or services.
-
-```weft
-view ArticleListView {
-    @Subscriber var viewModel: ArticleListViewModel  // Observes ViewModel
-    @LocalState var showFilters: bool = false  // Local UI state
-
-    Column {
-        if viewModel.isLoading {
-            LoadingSpinner()
-        } else {
-            for article in viewModel.articles {
-                ArticleCard(article: article)
-            }
-        }
-    }
-}
-```
-
-**Use @Subscriber when:**
-- Observing a `@Publisher` class (ViewModel, repository, service)
-- You need reactive updates when the publisher's state changes
-- Required in v0.3.0 (LSP will warn if missing)
-
 ### @Binding
 
 Two-way connection to state owned by a parent view. Allows reading and writing parent's state.
@@ -102,7 +76,7 @@ view SearchBar {
 
 **The $ prefix** signals passing a binding (two-way connection) rather than a value (one-way).
 
-**Note:** `@Binding` is sugar for `@Subscriber(writable: true, source: parent)`.
+**Note:** `@Binding` is sugar for `@Subscriber(writable: true, source: parent)`, and is also **only valid in views**. Read more about publishers and subscribers in the [observability module](03-observability.md).
 
 ### Environment Values
 
@@ -126,7 +100,25 @@ view ArticleView {
 - You don't want to pass state through every intermediate view
 - Working with app-wide concerns (theme, auth, navigation, etc.)
 
-**Note:** In v0.3.0, the old `@Environment` annotation has been replaced by `@Subscriber(source: environment)`.
+#### Environment Injection
+
+Provide environment values at the root of your view hierarchy:
+
+```weft
+@Main
+class MyApp: App {
+    @LocalState var theme = Theme()
+    @LocalState var authService = AuthService()
+
+    var content: View {
+        MainView() {
+            environment: [theme, authService]
+        }
+    }
+}
+```
+
+Child views automatically have access via `@Subscriber(source: environment)`.
 
 ## State Flow Patterns
 
@@ -172,112 +164,6 @@ view ToggleControl {
 }
 ```
 
-### Observing ViewModels
-
-Views observe ViewModels using `@Subscriber`:
-
-```weft
-@Role(viewmodel)
-@LifeCycle(view)
-@Publisher
-class ArticleListViewModel {
-    private(set) var articles: [Article] = []
-    private(set) var isLoading: bool = false
-}
-
-view ArticleListView {
-    @Subscriber var viewModel: ArticleListViewModel  // Required!
-
-    Column {
-        if viewModel.isLoading {
-            LoadingSpinner()
-        } else {
-            for article in viewModel.articles {
-                ArticleCard(article: article)
-            }
-        }
-    }
-}
-```
-
-### Shared Observable State
-
-Multiple views can observe the same repository/service through their ViewModels:
-
-```weft
-@Role(adapter)
-@LifeCycle(singleton)
-@Publisher
-class UserRepository {
-    private(set) var currentUser: User? = null
-}
-
-@Role(viewmodel)
-@LifeCycle(view)
-@Publisher
-class ProfileViewModel {
-    @Subscriber private var userRepository: UserRepository
-    
-    var userName: string? {
-        return userRepository.currentUser?.name
-    }
-}
-
-@Role(viewmodel)
-@LifeCycle(view)
-@Publisher
-class NavBarViewModel {
-    @Subscriber private var userRepository: UserRepository
-    
-    var isLoggedIn: bool {
-        return userRepository.currentUser != null
-    }
-}
-
-// Both ViewModels automatically update when repository changes
-view ProfileView {
-    @Subscriber var viewModel: ProfileViewModel
-    Text(viewModel.userName ?? "Guest")
-}
-
-view NavBarView {
-    @Subscriber var viewModel: NavBarViewModel
-    if viewModel.isLoggedIn {
-        UserAvatar()
-    }
-}
-```
-
-## Environment Injection
-
-Provide environment values at the root of your view hierarchy:
-
-```weft
-@Main
-class MyApp: App {
-    @LocalState var theme = Theme()
-    @LocalState var authService = AuthService()
-
-    var content: View {
-        MainView() {
-            environment: [theme, authService]
-        }
-    }
-}
-```
-
-Child views automatically have access via `@Subscriber(source: environment)`:
-
-```weft
-view SettingsView {
-    @Subscriber(source: environment) var theme: Theme
-
-    ColorPicker(
-        selectedColor: $theme.primaryColor
-    )
-}
-```
-
 ## Complete Example
 
 ```weft
@@ -293,7 +179,7 @@ protocol ArticleRepository {
 }
 
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private(set) var articles: [Article] = []
@@ -313,7 +199,7 @@ class ArticleRepositoryImpl: ArticleRepository {
 // ============================================
 
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     @Subscriber private var repository: ArticleRepository
@@ -435,112 +321,6 @@ function CounterView({ parentValue, setParentValue }) {
     const viewModel = useViewModel(ArticleListViewModel);
 
     // ...
-}
-```
-
-## Best Practices
-
-**Prefer @LocalState for ephemeral UI state**
-
-```weft
-view ArticleCard {
-    var article: Article
-    @LocalState var isExpanded: bool = false  // UI state only
-
-    Column {
-        Text(article.title)
-
-        if isExpanded {
-            Text(article.content)
-        }
-
-        Button(action: { isExpanded = !isExpanded }) {
-            text: isExpanded ? "Show Less" : "Show More"
-        }
-    }
-}
-```
-
-**Always use @Subscriber when observing publishers**
-
-```weft
-// ❌ Bad: Missing @Subscriber
-view ArticleListView {
-    var viewModel: ArticleListViewModel  // LSP warning!
-}
-
-// ✅ Good: Explicit subscription
-view ArticleListView {
-    @Subscriber var viewModel: ArticleListViewModel
-}
-```
-
-**Use @Binding for reusable UI components**
-
-```weft
-view TextField {
-    @Binding var text: string
-    var placeholder: string
-
-    // Reusable text input that modifies parent state
-}
-
-view Form {
-    @LocalState var email: string = ""
-    @LocalState var password: string = ""
-
-    TextField(text: $email, placeholder: "Email")
-    TextField(text: $password, placeholder: "Password")
-}
-```
-
-**Use environment subscription sparingly**
-
-```weft
-// ✅ Good: Truly app-wide concerns
-@Subscriber(source: environment) var theme: Theme
-@Subscriber(source: environment) var authService: AuthService
-@Subscriber(source: environment) var navigation: NavigationController
-
-// ❌ Avoid: Should be passed explicitly
-@Subscriber(source: environment) var articleId: string  // Pass this as property instead
-```
-
-**Keep state close to where it's used**
-
-```weft
-// ✅ Good: State owned by the view that uses it
-view TodoItem {
-    var todo: Todo
-    @LocalState var isEditing: bool = false
-
-    if isEditing {
-        TextField(text: $todo.title)
-    } else {
-        Text(todo.title)
-    }
-}
-
-// ❌ Avoid: State too high in hierarchy
-view TodoListView {
-    @LocalState var itemEditingStates: [string: bool] = [:]  // Complex to manage
-}
-```
-
-**Don't use @LocalState outside of views**
-
-```weft
-// ❌ Invalid
-@Role(viewmodel)
-class MyViewModel {
-    @LocalState var count: int = 0  // ERROR: @LocalState only allowed in views
-}
-
-// ✅ Valid: Use regular properties in ViewModels
-@Role(viewmodel)
-@Publisher
-class MyViewModel {
-    var count: int = 0  // Observable if public in @Publisher class
 }
 ```
 
@@ -671,7 +451,7 @@ The Weft LSP can validate state annotation usage:
 ## See Also
 
 - [Lifecycle & Scope](02-lifecycle-scope.md) - Object lifetimes and scoping
-- [Observability](03-observability.md) - @Publisher and reactive state
+- [Observability](03-observability.md) - @Publisher, @Subscriber, and reactive state
 - [Views](../ui/01-views.md) - View basics and composition
 - [ViewModels](07-viewmodels.md) - ViewModel pattern
 - [Annotations Reference](../reference/annotations.md) - Complete annotation guide

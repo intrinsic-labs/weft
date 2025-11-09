@@ -129,7 +129,7 @@ protocol EmailService {
 **@Role(viewmodel)** - Presentation logic
 ```weft
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     @Subscriber private var repository: ArticleRepository
@@ -177,7 +177,7 @@ data ArticleDTO {
 
 ```weft
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private var api: APIClient
@@ -195,8 +195,8 @@ class ArticleRepositoryImpl: ArticleRepository {
 
 **@Schema** - Database mapping (framework concern)
 ```weft
-@Schema("articles")
-data ArticleEntity {
+@Schema
+data ArticleRowSchema {
     @Index var id: string
     var title: string
     var content: string
@@ -220,7 +220,7 @@ Classes marked as `@Publisher` have observable state that changes over time:
 
 ```weft
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private(set) var articles: [Article] = []  // Observable
@@ -266,10 +266,10 @@ view ArticleListView {
 Different parts of your application have different lifetimes:
 
 ```weft
-@LifeCycle(singleton)  // Lives for entire app
-@LifeCycle(session)    // Lives while user is logged in
-@LifeCycle(feature)    // Lives while feature is active
-@LifeCycle(view)       // Lives while view is visible
+@Lifecycle(singleton)  // Lives for entire app
+@Lifecycle(session)    // Lives while user is logged in
+@Lifecycle(feature)    // Lives while feature is active
+@Lifecycle(view)       // Lives while view is visible
 ```
 
 **Dependency hierarchy:** Longer-lived → shorter-lived only
@@ -277,16 +277,16 @@ Different parts of your application have different lifetimes:
 ```weft
 // ✅ Valid: View-scoped depends on singleton
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 class MyViewModel {
-    private var repository: ArticleRepository  // @LifeCycle(singleton)
+    private var repository: ArticleRepository  // @Lifecycle(singleton)
 }
 
 // ❌ Invalid: Singleton depends on view-scoped
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class MyRepository {
-    private var viewModel: MyViewModel  // @LifeCycle(view) - ERROR!
+    private var viewModel: MyViewModel  // @Lifecycle(view) - ERROR!
 }
 ```
 
@@ -329,7 +329,7 @@ protocol ArticleRepository {
 }
 
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private var api: APIClient
@@ -354,7 +354,7 @@ class ArticleRepositoryImpl: ArticleRepository {
 // ============================================
 
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     @Subscriber private var repository: ArticleRepository
@@ -446,7 +446,7 @@ When state changes, it automatically propagates through observers:
 ```weft
 // Repository updates state
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class UserRepository {
     private(set) var currentUser: User? = null
@@ -485,16 +485,16 @@ Dependencies are automatically provided based on lifecycle:
 
 ```weft
 // The system knows:
-// 1. ArticleRepositoryImpl is @LifeCycle(singleton) - create once, reuse
-// 2. ArticleListViewModel is @LifeCycle(view) - create per view
+// 1. ArticleRepositoryImpl is @Lifecycle(singleton) - create once, reuse
+// 2. ArticleListViewModel is @Lifecycle(view) - create per view
 // 3. ViewModel needs repository - inject the singleton
 
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class ArticleRepositoryImpl: ArticleRepository { }
 
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     private var repository: ArticleRepository  // Injected automatically
@@ -526,9 +526,9 @@ class PublishArticleUseCase {
 ```weft
 // ❌ LSP Error: Singleton cannot depend on view-scoped
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class MyRepository {
-    private var viewModel: MyViewModel  // @LifeCycle(view) - ERROR!
+    private var viewModel: MyViewModel  // @Lifecycle(view) - ERROR!
 }
 ```
 
@@ -596,8 +596,8 @@ Continue reading to learn about each architectural concept in depth:
 
 1. [Lifecycle & Scope](02-lifecycle-scope.md) - Controlling object lifetimes
 2. [Observability](03-observability.md) - Making state reactive with @Publisher
-3. [State Ownership](04-state-ownership.md) - Managing state with @LocalState and @Subscriber
-4. [Patterns Overview](05-patterns-overview.md) - Repositories, ViewModels, and Services
+3. [State Ownership](04-ui-state-ownership.md) - Managing state with @LocalState and @Subscriber
+4. [Patterns Overview](05-roles-and-patterns.md) - Repositories, ViewModels, and Services
 5. [Repositories](06-repositories.md) - Repository pattern in detail
 6. [ViewModels](07-viewmodels.md) - ViewModel pattern in detail
 7. [Services](08-services.md) - Service pattern in detail

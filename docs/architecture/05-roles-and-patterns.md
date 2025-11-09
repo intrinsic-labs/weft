@@ -1,4 +1,4 @@
-# Patterns in Practice
+# Roles & Patterns
 
 This section covers practical implementation patterns for building scalable Weft applications. These patterns work together to create clean separation of concerns and maintainable architectures based on **Clean Architecture** principles.
 
@@ -55,7 +55,7 @@ data Article {
     var title: string
     var content: string
     var publishedAt: datetime
-    
+
     func isPublished() -> bool {
         return publishedAt <= datetime.now()
     }
@@ -67,7 +67,7 @@ data Article {
 @Role(usecase)
 class PublishArticleUseCase {
     private var repository: ArticleRepository  // Interface
-    
+
     func execute(articleId: string) async throws {
         @SumFunc
         => fetch article from repository
@@ -101,11 +101,11 @@ protocol AnalyticsService {
 **@Role(viewmodel)** - Presentation logic
 ```weft
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     @Subscriber private var repository: ArticleRepository
-    
+
     var articles: [Article] {
         return repository.articles
     }
@@ -127,7 +127,7 @@ data ArticleDTO {
     var id: string
     var title: string
     var author_name: string  // External API format
-    
+
     func toEntity() -> Article {
         @SumFunc
         => create Article from DTO fields
@@ -142,14 +142,14 @@ data ArticleDTO {
 **@Role(adapter)** - Concrete implementations
 ```weft
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private var api: APIClient
     private var database: Database
-    
+
     private(set) var articles: [Article] = []
-    
+
     func fetchArticles() async throws {
         var dtos = await api.fetchArticles()
         articles = dtos.map(dto => dto.toEntity())
@@ -158,7 +158,7 @@ class ArticleRepositoryImpl: ArticleRepository {
 }
 ```
 
-## The Three Core Patterns
+## Implementing These Core Patterns
 
 ### Repository Pattern
 
@@ -170,11 +170,11 @@ class ArticleRepositoryImpl: ArticleRepository {
 - Handle entity ↔ DTO conversion
 - Manage data consistency
 
-**Typical scope:** `@LifeCycle(singleton)` (app-wide, shared across features)
+**Typical scope:** `@Lifecycle(singleton)` (app-wide, shared across features)
 
 **Pattern:**
 - Define interface with `@Role(repository)`
-- Implement with `@Role(adapter)` + `@LifeCycle(singleton)` + `@Publisher`
+- Implement with `@Role(adapter)` + `@Lifecycle(singleton)` + `@Publisher`
 - Use `@Role(dto)` for API/DB boundary objects
 - Return `@Role(entity)` objects to consumers
 
@@ -190,10 +190,10 @@ class ArticleRepositoryImpl: ArticleRepository {
 - Manage local UI state
 - Coordinate multiple repositories/services
 
-**Typical scope:** `@LifeCycle(view)` (one per view/screen)
+**Typical scope:** `@Lifecycle(view)` (one per view/screen)
 
 **Pattern:**
-- Use `@Role(viewmodel)` + `@LifeCycle(view)` + `@Publisher`
+- Use `@Role(viewmodel)` + `@Lifecycle(view)` + `@Publisher`
 - Inject repositories and services via `@Subscriber`
 - Expose computed properties for UI
 - Keep business logic in use cases or services
@@ -210,11 +210,11 @@ class ArticleRepositoryImpl: ArticleRepository {
 - Handle integrations (analytics, logging, etc.)
 - Coordinate app-wide concerns
 
-**Typical scope:** `@LifeCycle(singleton)` (app-wide, shared)
+**Typical scope:** `@Lifecycle(singleton)` (app-wide, shared)
 
 **Pattern:**
 - Define interface with `@Role(service)` or `@Role(gateway)`
-- Implement with `@Role(adapter)` + `@LifeCycle(singleton)`
+- Implement with `@Role(adapter)` + `@Lifecycle(singleton)`
 - No observable state for stateless services
 - Use `@Publisher` if service maintains state
 
@@ -279,7 +279,7 @@ data Task {
     var completed: bool
     var dueDate: datetime?
     var createdAt: datetime
-    
+
     func isOverdue() -> bool {
         if let due = dueDate {
             return !completed && due < datetime.now()
@@ -299,7 +299,7 @@ data TaskDTO {
     var is_completed: bool  // API uses snake_case
     var due_date: string?
     var created_at: string
-    
+
     func toEntity() -> Task {
         @SumFunc
         => create Task from DTO fields
@@ -320,25 +320,25 @@ protocol TaskRepository {
 }
 
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class TaskRepositoryImpl: TaskRepository {
     private var api: APIClient
     private var database: Database
-    
+
     private(set) var tasks: [Task] = []
     private(set) var isLoading: bool = false
-    
+
     func fetchTasks() async throws {
         isLoading = true
-        
+
         var dtos: [TaskDTO] = await api.fetchTasks()
         tasks = dtos.map(dto => dto.toEntity())
         await database.saveTasks(tasks)
-        
+
         isLoading = false
     }
-    
+
     func addTask(title: string, dueDate: datetime?) async throws {
         @SumFunc
         => create new Task entity
@@ -346,7 +346,7 @@ class TaskRepositoryImpl: TaskRepository {
         => sync to API in background
         => add to tasks array
     }
-    
+
     func toggleComplete(taskId: string) async throws {
         @SumFunc
         => find task by id in tasks array
@@ -367,7 +367,7 @@ protocol AnalyticsService {
 }
 
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class AnalyticsServiceImpl: AnalyticsService {
     func trackEvent(name: string, properties: [string: any]) {
         @SumFunc
@@ -381,7 +381,7 @@ class AnalyticsServiceImpl: AnalyticsService {
 class CompleteTaskUseCase {
     private var repository: TaskRepository
     private var analytics: AnalyticsService
-    
+
     func execute(taskId: string) async throws {
         @SumFunc
         => toggle task completion in repository
@@ -396,16 +396,16 @@ class CompleteTaskUseCase {
 // ============================================
 
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class TaskListViewModel {
     @Subscriber private var repository: TaskRepository
     private var completeTaskUseCase: CompleteTaskUseCase
-    
+
     var filterType: TaskFilter = TaskFilter.ALL
     var newTaskTitle: string = ""
     var showCompleted: bool = true
-    
+
     var filteredTasks: [Task] {
         @SumFunc
         => get all tasks from repository
@@ -414,22 +414,22 @@ class TaskListViewModel {
         => sort by due date
         => return filtered and sorted tasks
     }
-    
+
     var isLoading: bool {
         return repository.isLoading
     }
-    
+
     var overdueCount: int {
         return repository.tasks.filter(t => t.isOverdue()).count
     }
-    
+
     func addTask() async {
         @SumFunc
         => return early if title is empty
         => call repository to add task
         => clear new task title input
     }
-    
+
     func toggleTask(taskId: string) async {
         try {
             await completeTaskUseCase.execute(taskId)
@@ -437,7 +437,7 @@ class TaskListViewModel {
             // Handle error
         }
     }
-    
+
     func refresh() async {
         try {
             await repository.fetchTasks()
@@ -454,9 +454,9 @@ class TaskListViewModel {
 view TaskListView {
     @Subscriber var viewModel: TaskListViewModel
     @Subscriber(source: environment) var theme: Theme
-    
+
     @LocalState var showFilters: bool = false
-    
+
     Column(
         isScrollable: true
         onRefresh: viewModel.refresh()
@@ -466,25 +466,25 @@ view TaskListView {
             TextField(text: $viewModel.newTaskTitle) {
                 placeholder: "New task..."
             }
-            
+
             Button(action: { viewModel.addTask() }) {
                 text: "Add"
                 isDisabled: viewModel.newTaskTitle.isEmpty
             }
         }
-        
+
         // Filter controls
         Row(padding: 16) {
             SegmentedControl(
                 selected: $viewModel.filterType,
                 options: [TaskFilter.ALL, TaskFilter.TODAY, TaskFilter.WEEK]
             )
-            
+
             Toggle(
                 isOn: $viewModel.showCompleted,
                 label: "Show Completed"
             )
-            
+
             if viewModel.overdueCount > 0 {
                 Badge(count: viewModel.overdueCount) {
                     text: "Overdue"
@@ -492,7 +492,7 @@ view TaskListView {
                 }
             }
         }
-        
+
         // Task list
         if viewModel.isLoading {
             LoadingSpinner()
@@ -637,7 +637,7 @@ class ProcessOrderUseCase {
 @Role(viewmodel)
 class CheckoutViewModel {
     private var processOrderUseCase: ProcessOrderUseCase
-    
+
     func checkout() async {
         await processOrderUseCase.execute(currentOrder)
     }
@@ -662,16 +662,9 @@ The Weft LSP validates Clean Architecture rules:
 }
 ```
 
-## Learn More
-
-- [Repository Pattern](06-repositories.md) - Data layer implementation patterns
-- [ViewModel Pattern](07-viewmodels.md) - Presentation layer patterns
-- [Service Pattern](08-services.md) - Business logic and utilities
-- [Clean Architecture](10-clean-architecture.md) - Deep dive into CA principles
-
 ## See Also
 
 - [Lifecycle & Scope](02-lifecycle-scope.md) - Object lifetimes
 - [Observability](03-observability.md) - Reactive state with @Publisher
-- [State Ownership](04-state-ownership.md) - UI state patterns with @LocalState
+- [UI State Ownership](04-ui-state-ownership.md) - UI state patterns with @LocalState
 - [Annotations Reference](../reference/annotations.md) - Complete annotation guide

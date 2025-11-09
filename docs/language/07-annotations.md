@@ -79,6 +79,6 @@ All models follow the naming convention: EntityType + suffix.
 ## See Also
 
 - [Architecture Annotations](../architecture/02-lifecycle-scope.md) - `@Singleton`, `@ViewScoped`, lifecycle annotations
-- [State Annotations](../architecture/04-state-ownership.md) - `@State`, `@Binding`, `@Environment`
-- [Pattern Annotations](../architecture/05-patterns-overview.md) - `@Repository`, `@ViewModel`, `@Service`
+- [State Annotations](../architecture/04-ui-state-ownership.md) - `@State`, `@Binding`, `@Environment`
+- [Pattern Annotations](../architecture/05-roles-and-patterns.md) - `@Repository`, `@ViewModel`, `@Service`
 - [Complete Annotation Index](../reference/annotations.md) - All annotations in one place

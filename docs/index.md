@@ -32,12 +32,12 @@ weft/docs/
 │   ├── 01-overview.md                 # Architecture philosophy and patterns
 │   ├── 02-lifecycle-scope.md          # @Singleton, @ViewScoped, @FeatureScoped, @SessionScoped
 │   ├── 03-observability.md            # @Observable pattern
-│   ├── 04-state-ownership.md          # @State, @Binding, @Environment
-│   ├── 05-patterns-overview.md        # Repositories, ViewModels, Services working together
+│   ├── 04-ui-state-ownership.md          # @State, @Binding, @Environment
+│   ├── 05-roles-and-patterns.md        # Repositories, ViewModels, Services working together
 │   ├── 06-repositories.md             # @Repository pattern
 │   ├── 07-viewmodels.md               # @ViewModel pattern
 │   ├── 08-services.md                 # @Service pattern
-│   └── 09-dependency-injection.md     # Implicit dependency injection system
+│   └── 06-dependency-injection.md     # Implicit dependency injection system
 │
 ├── ui/                                # User interface
 │   ├── 00-overview.md                 # UI philosophy, flexibility, syntax freedom
@@ -123,11 +123,11 @@ weft/docs/
 - **Content**: @Observable pattern, reactive state, automatic UI updates
 
 ### State Ownership
-- **File**: `architecture/04-state-ownership.md`
+- **File**: `architecture/04-ui-state-ownership.md`
 - **Content**: @State (local state), @Binding (two-way state), @Environment (shared context)
 
 ### Patterns Overview
-- **File**: `architecture/05-patterns-overview.md`
+- **File**: `architecture/05-roles-and-patterns.md`
 - **Content**: How Repositories, ViewModels, and Services work together
 
 ### Repository Pattern
@@ -143,7 +143,7 @@ weft/docs/
 - **Content**: @Service annotation, business logic, utilities, shared functionality
 
 ### Dependency Injection
-- **File**: `architecture/09-dependency-injection.md`
+- **File**: `architecture/06-dependency-injection.md`
 - **Content**: Implicit DI system, how dependencies are inferred and resolved
 
 ## User Interface

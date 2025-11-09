@@ -112,20 +112,20 @@ The same Weft code generates idiomatic DI for each platform:
 ```swift
 class AppContainer {
     static let shared = AppContainer()
-    
+
     // Singletons
     lazy var articleRepository = ArticleRepository(
         api: apiClient,
         database: database
     )
-    
+
     lazy var analyticsService = AnalyticsService()
 }
 
 class ArticleListViewModel: ObservableObject {
     private let repository: ArticleRepository
     private let analytics: AnalyticsService
-    
+
     init(
         repository: ArticleRepository = AppContainer.shared.articleRepository,
         analytics: AnalyticsService = AppContainer.shared.analyticsService
@@ -157,7 +157,7 @@ class ArticleListViewModel @Inject constructor(
 class ArticleListViewModel {
     private repository: ArticleRepository;
     private analytics: AnalyticsService;
-    
+
     constructor() {
         this.repository = container.resolve(ArticleRepository);
         this.analytics = container.resolve(AnalyticsService);
@@ -175,7 +175,7 @@ Weft uses property-based dependency declarations that translate to constructor i
 class ArticleListViewModel {
     private var repository: ArticleRepository
     private var analytics: AnalyticsService
-    
+
     // No explicit constructor needed
 }
 ```
@@ -197,7 +197,7 @@ class ArticleListViewModel {
 func testViewModel() {
     var mockRepo = MockArticleRepository()
     var viewModel = ArticleListViewModel(repository: mockRepo)
-    
+
     // Test viewModel with mock
 }
 ```
@@ -237,7 +237,7 @@ Use optional types for dependencies that might not always be available:
 class ProfileViewModel {
     private var repository: UserRepository
     private var analytics: AnalyticsService?  // Optional dependency
-    
+
     func trackEvent(name: string) {
         analytics?.trackEvent(name)  // Safe optional chaining
     }
@@ -287,6 +287,4 @@ The scope annotations and property declarations are sufficient. The translator h
 
 - [Lifecycle & Scope](02-lifecycle-scope.md) - Scope annotations in detail
 - [Observability](03-observability.md) - Observable dependencies
-- [Repositories](06-repositories.md) - Repository pattern with DI
-- [ViewModels](07-viewmodels.md) - ViewModel pattern with DI
-- [Services](08-services.md) - Service pattern with DI
+- [Roles & Patterns](05-roles-and-patterns.md) - Clean architecture roles and building patterns

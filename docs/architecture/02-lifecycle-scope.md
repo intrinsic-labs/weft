@@ -1,6 +1,6 @@
 # Lifecycle & Scope
 
-Lifecycle and scope define how long objects live in your application. Weft makes lifecycle explicit through the `@LifeCycle` annotation, helping you understand when objects are created, shared, and destroyed.
+Lifecycle and scope define how long objects live in your application. Weft makes lifecycle explicit through the `@Lifecycle` annotation, helping you understand when objects are created, shared, and destroyed.
 
 ## Understanding Scope
 
@@ -19,19 +19,19 @@ Making scope explicit helps you reason about:
 - Whether objects are shared or unique
 - Memory management and resource cleanup
 
-## The @LifeCycle Annotation
+## The @Lifecycle Annotation
 
-Use `@LifeCycle` with a parameter to specify how long an instance should live:
+Use `@Lifecycle` with a parameter to specify how long an instance should live:
 
 ```weft
-@LifeCycle(singleton|session|feature|view)
+@Lifecycle(singleton|session|feature|view)
 ```
 
 **Note:** Protocols (interfaces) do not have lifecycle annotations. Only concrete implementations have lifecycles.
 
 ## Lifecycle Scopes
 
-### @LifeCycle(singleton)
+### @Lifecycle(singleton)
 
 Objects live for the entire application lifetime. Only one instance exists, shared across the entire app.
 
@@ -43,7 +43,7 @@ protocol ArticleRepository {
 }
 
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private var api: APIClient
@@ -58,7 +58,7 @@ class ArticleRepositoryImpl: ArticleRepository {
 }
 ```
 
-**Use @LifeCycle(singleton) for:**
+**Use @Lifecycle(singleton) for:**
 - Repository implementations (data layer)
 - Core services (analytics, auth, networking)
 - App-wide configuration
@@ -71,13 +71,13 @@ class ArticleRepositoryImpl: ArticleRepository {
 - Shared across all features and views
 - Maintains state across navigation
 
-### @LifeCycle(view)
+### @Lifecycle(view)
 
 Objects live while a specific view/screen is visible. Each view gets its own instance.
 
 ```weft
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleDetailViewModel {
     private var repository: ArticleRepository  // Singleton
@@ -93,7 +93,7 @@ class ArticleDetailViewModel {
 }
 ```
 
-**Use @LifeCycle(view) for:**
+**Use @Lifecycle(view) for:**
 - ViewModels
 - Screen-specific state
 - View controllers
@@ -105,7 +105,7 @@ class ArticleDetailViewModel {
 - Not shared between views
 - Local state is cleaned up automatically
 
-### @LifeCycle(feature)
+### @Lifecycle(feature)
 
 Objects live while a feature or user flow is active.
 
@@ -117,7 +117,7 @@ protocol CheckoutService {
 }
 
 @Role(adapter)
-@LifeCycle(feature)
+@Lifecycle(feature)
 @Publisher
 class CheckoutServiceImpl: CheckoutService {
     private(set) var cart: ShoppingCart
@@ -136,7 +136,7 @@ class CheckoutServiceImpl: CheckoutService {
 }
 ```
 
-**Use @LifeCycle(feature) for:**
+**Use @Lifecycle(feature) for:**
 - Multi-step flows (checkout, onboarding)
 - Feature-specific caches
 - Wizard or form state
@@ -148,7 +148,7 @@ class CheckoutServiceImpl: CheckoutService {
 - Shared across views within feature
 - State persists across feature navigation
 
-### @LifeCycle(session)
+### @Lifecycle(session)
 
 Objects live while a user session is active (typically while authenticated).
 
@@ -161,7 +161,7 @@ protocol AuthService {
 }
 
 @Role(adapter)
-@LifeCycle(session)
+@Lifecycle(session)
 @Publisher
 class AuthServiceImpl: AuthService {
     private(set) var authToken: string? = null
@@ -183,7 +183,7 @@ class AuthServiceImpl: AuthService {
 }
 ```
 
-**Use @LifeCycle(session) for:**
+**Use @Lifecycle(session) for:**
 - Authentication state
 - User-specific services
 - Session-specific caches
@@ -200,12 +200,12 @@ class AuthServiceImpl: AuthService {
 Scopes form a hierarchy—shorter-lived scopes can depend on longer-lived scopes:
 
 ```
-@LifeCycle(singleton)     ← Longest lived
-    ├── @LifeCycle(session)
-    │   ├── @LifeCycle(feature)
-    │   │   └── @LifeCycle(view)
-    │   └── @LifeCycle(view)
-    └── @LifeCycle(view)   ← Shortest lived
+@Lifecycle(singleton)     ← Longest lived
+    ├── @Lifecycle(session)
+    │   ├── @Lifecycle(feature)
+    │   │   └── @Lifecycle(view)
+    │   └── @Lifecycle(view)
+    └── @Lifecycle(view)   ← Shortest lived
 ```
 
 **Dependency Rule:**
@@ -215,17 +215,17 @@ Scopes form a hierarchy—shorter-lived scopes can depend on longer-lived scopes
 ```weft
 // ✅ Valid: View-scoped depends on singleton
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ProfileViewModel {
-    private var repository: ArticleRepository  // @LifeCycle(singleton) - OK
+    private var repository: ArticleRepository  // @Lifecycle(singleton) - OK
 }
 
 // ❌ Invalid: Singleton depends on view-scoped
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class ArticleRepositoryImpl: ArticleRepository {
-    private var viewModel: ProfileViewModel  // @LifeCycle(view) - ERROR
+    private var viewModel: ProfileViewModel  // @Lifecycle(view) - ERROR
 }
 ```
 
@@ -236,25 +236,25 @@ The LSP will enforce this rule and show an error if you violate the dependency h
 ```
 Application Start
     │
-    ├─── [@LifeCycle(singleton)] ArticleRepositoryImpl
+    ├─── [@Lifecycle(singleton)] ArticleRepositoryImpl
     │         │
     │         │ (lives for entire app)
     │         │
     ├─── User Logs In
     │         │
-    │         ├─── [@LifeCycle(session)] AuthServiceImpl
+    │         ├─── [@Lifecycle(session)] AuthServiceImpl
     │         │         │
     │         │         │ (lives while authenticated)
     │         │         │
     │         ├─── Navigate to Articles
     │         │         │
-    │         │         ├─── [@LifeCycle(view)] ArticleListViewModel
+    │         │         ├─── [@Lifecycle(view)] ArticleListViewModel
     │         │         │         │
     │         │         │         │ (lives while view visible)
     │         │         │         │
     │         │         │    User taps article
     │         │         │         │
-    │         │         └─── [@LifeCycle(view)] ArticleDetailViewModel
+    │         │         └─── [@Lifecycle(view)] ArticleDetailViewModel
     │         │                   │
     │         │                   │ (lives while detail view visible)
     │         │                   │
@@ -285,7 +285,7 @@ protocol ArticleRepository {
 }
 
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private var api: APIClient
@@ -309,7 +309,7 @@ protocol AnalyticsService {
 }
 
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class AnalyticsServiceImpl: AnalyticsService {
     func trackEvent(name: string, properties: [string: any]) {
         @SumFunc
@@ -331,7 +331,7 @@ protocol AuthService {
 }
 
 @Role(adapter)
-@LifeCycle(session)
+@Lifecycle(session)
 @Publisher
 class AuthServiceImpl: AuthService {
     private(set) var currentUser: User? = null
@@ -354,13 +354,13 @@ class AuthServiceImpl: AuthService {
 // ============================================
 
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     // Dependencies (longer-lived scopes)
-    private var repository: ArticleRepository    // @LifeCycle(singleton)
-    private var analytics: AnalyticsService      // @LifeCycle(singleton)
-    private var authService: AuthService         // @LifeCycle(session)
+    private var repository: ArticleRepository    // @Lifecycle(singleton)
+    private var analytics: AnalyticsService      // @Lifecycle(singleton)
+    private var authService: AuthService         // @Lifecycle(session)
 
     // Local state (lives with this ViewModel)
     var isRefreshing: bool = false
@@ -414,16 +414,16 @@ Dependencies are automatically provided based on scope:
 
 ```weft
 // The system knows:
-// 1. ArticleRepositoryImpl is @LifeCycle(singleton) - create once, reuse
-// 2. ArticleListViewModel is @LifeCycle(view) - create per view
+// 1. ArticleRepositoryImpl is @Lifecycle(singleton) - create once, reuse
+// 2. ArticleListViewModel is @Lifecycle(view) - create per view
 // 3. ViewModel needs repository - inject the singleton
 
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class ArticleRepositoryImpl: ArticleRepository { }
 
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     private var repository: ArticleRepository  // Injected automatically
@@ -466,22 +466,22 @@ class ArticleListViewModel @Inject constructor(
 ## Platform Translation
 
 **Swift:**
-- `@LifeCycle(singleton)` → Single static instance or app-level container
-- `@LifeCycle(view)` → `@State` (or older `@StateObject`) in SwiftUI
-- `@LifeCycle(session)` → Environment object tied to auth state
-- `@LifeCycle(feature)` → Feature coordinator pattern
+- `@Lifecycle(singleton)` → Single static instance or app-level container
+- `@Lifecycle(view)` → `@State` (or older `@StateObject`) in SwiftUI
+- `@Lifecycle(session)` → Environment object tied to auth state
+- `@Lifecycle(feature)` → Feature coordinator pattern
 
 **Kotlin:**
-- `@LifeCycle(singleton)` → `@Singleton` in Hilt/Dagger
-- `@LifeCycle(view)` → `viewModel()` scoped to composable lifecycle
-- `@LifeCycle(session)` → Custom scope in Hilt
-- `@LifeCycle(feature)` → `@ActivityRetained` or custom scope
+- `@Lifecycle(singleton)` → `@Singleton` in Hilt/Dagger
+- `@Lifecycle(view)` → `viewModel()` scoped to composable lifecycle
+- `@Lifecycle(session)` → Custom scope in Hilt
+- `@Lifecycle(feature)` → `@ActivityRetained` or custom scope
 
 **TypeScript:**
-- `@LifeCycle(singleton)` → Module-level singleton or DI container
-- `@LifeCycle(view)` → React component state or hooks
-- `@LifeCycle(session)` → Context provider tied to auth
-- `@LifeCycle(feature)` → Context provider for feature subtree
+- `@Lifecycle(singleton)` → Module-level singleton or DI container
+- `@Lifecycle(view)` → React component state or hooks
+- `@Lifecycle(session)` → Context provider tied to auth
+- `@Lifecycle(feature)` → Context provider for feature subtree
 
 ## Best Practices
 
@@ -490,36 +490,18 @@ class ArticleListViewModel @Inject constructor(
 ```weft
 // ✅ Good: Shared data layer
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class ArticleRepositoryImpl: ArticleRepository { }
 
 // ✅ Good: View-specific state
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 class ArticleDetailViewModel { }
 
-// ❌ Bad: Would be better as @LifeCycle(singleton)
+// ❌ Bad: Would be better as @Lifecycle(singleton)
 @Role(adapter)
-@LifeCycle(view)
+@Lifecycle(view)
 class DatabaseConnection { }
-```
-
-**Respect the scope hierarchy**: Don't inject shorter-lived scopes into longer-lived ones.
-
-```weft
-// ✅ Good: Singleton depends on singleton
-@Role(adapter)
-@LifeCycle(singleton)
-class ServiceA {
-    private var serviceB: ServiceB  // @LifeCycle(singleton) - OK
-}
-
-// ❌ Bad: Singleton depends on view-scoped
-@Role(adapter)
-@LifeCycle(singleton)
-class ServiceA {
-    private var viewModel: SomeViewModel  // @LifeCycle(view) - ERROR
-}
 ```
 
 **Clean up resources in appropriate scopes**: Long-lived scopes should clean up resources they manage.
@@ -532,7 +514,7 @@ protocol CacheService {
 }
 
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class CacheServiceImpl: CacheService {
     private var cache: [string: any] = [:]
 
@@ -547,20 +529,6 @@ class CacheServiceImpl: CacheService {
 }
 ```
 
-**Use @LifeCycle(view) for screen state**: Each screen should have its own ViewModel instance.
-
-```weft
-@Role(viewmodel)
-@LifeCycle(view)
-@Publisher
-class ProfileViewModel {
-    var isEditing: bool = false
-    var formData: ProfileForm = ProfileForm()
-
-    // State is automatically cleaned up when view is dismissed
-}
-```
-
 **Protocols don't need lifecycle annotations**: Only concrete implementations have lifecycles.
 
 ```weft
@@ -572,7 +540,7 @@ protocol ArticleRepository {
 
 // ✅ Correct: Implementation has lifecycle
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class ArticleRepositoryImpl: ArticleRepository { }
 ```
 
@@ -593,7 +561,7 @@ The Weft LSP can validate lifecycle violations:
 ## See Also
 
 - [Observability](03-observability.md) - Reactive state management with @Publisher
-- [State Ownership](04-state-ownership.md) - Local vs shared state
+- [State Ownership](04-ui-state-ownership.md) - Local vs shared state
 - [Repositories](06-repositories.md) - Repository pattern and scoping
 - [ViewModels](07-viewmodels.md) - ViewModel pattern and scoping
 - [Clean Architecture](10-clean-architecture.md) - Understanding layer dependencies

@@ -1,6 +1,6 @@
 # Annotation System Update Plan
 
-**Last Updated**: January 2025  
+**Last Updated**: January 2025
 **Status**: In Progress - Phase 1 Complete (Architecture Core), Moving to Phase 2
 
 ---
@@ -25,7 +25,7 @@ We've redesigned Weft's annotation system to align with Clean Architecture princ
 ### Phase 1: Architecture Core ✅ COMPLETE
 
 All Phase 1 files have been updated with:
-- @LifeCycle(singleton|session|feature|view) parameterized form
+- @Lifecycle(singleton|session|feature|view) parameterized form
 - @Publisher replacing @Observable
 - @Subscriber requirement for observing publishers
 - @LocalState replacing @State (view-only)
@@ -35,66 +35,30 @@ All Phase 1 files have been updated with:
 
 #### Completed Files:
 - [x] architecture/02-lifecycle-scope.md - ✅ Complete
-- [x] architecture/03-observability.md - ✅ Complete  
-- [x] architecture/04-state-ownership.md - ✅ Complete
-- [x] architecture/05-patterns-overview.md - ✅ Complete
+- [x] architecture/03-observability.md - ✅ Complete
+- [x] architecture/04-ui-state-ownership.md - ✅ Complete
+- [ ] architecture/05-roles-and-patterns.md - X Not Complete - needs update (see note below)
 - [x] architecture/01-overview.md - ✅ Complete
 
----
-
-### Phase 2: Pattern Details (NEXT)
-
-#### 6. `architecture/06-repositories.md`
-**Current**: Documents @Repository annotation  
-**Needs**:
-- Update to @Role(repository) for interfaces
-- Add @Role(adapter) for implementations
-- Show interface/implementation split
-- Emphasize returning entities not DTOs
-- Update examples with @LifeCycle and @Publisher
-
-#### 7. `architecture/07-viewmodels.md`
-**Current**: Documents @ViewModel annotation  
-**Needs**:
-- Update to @Role(viewmodel)
-- Add @Publisher and @Subscriber patterns
-- Show @LocalState usage in connected views
-- Update lifecycle to @LifeCycle(view) typically
-- Update all examples
-
-#### 8. `architecture/08-services.md`
-**Current**: Documents @Service annotation  
-**Needs**:
-- Update to @Role(service) for interfaces
-- Add @Role(adapter) for implementations
-- Show interface/implementation split pattern
-- Update examples
-
-#### 9. `architecture/10-clean-architecture.md` (NEW FILE)
-**Should Include**:
-- What is Clean Architecture?
-- The dependency rule explained
-- Concentric circles diagram (text representation)
-- How Weft's @Role annotations map to CA layers
-- Dependency validation rules
-- Complete example showing all layers
-- Common pitfalls and how to avoid them
-- Link to reference/annotations.md for details
+Note on roles and patterns doc:
+- It has been updated to reflect all 8 roles
+- But it still cites old architecture docs that highlighted viewmodels, repositories, services. It gives good examples of how and when to use these three patterns. I need the file updated to include such examples for all 8 roles.
+- look for the `## Implementing These Core Patterns` header - you'll see that we need to flesh out the other 5 roles like we have done for viewmodels, services, and repositories
 
 ---
 
-### Phase 3: Language & Data
+### Phase 2: Language & Data
 
 #### 10. `language/07-annotations.md`
-**Current**: Documents @Main, @Instruction, @SumFunc, @Index as language-level annotations  
-**Needs**: 
+**Current**: Documents @Main, @Instruction, @SumFunc, @Index as language-level annotations
+**Needs**:
 - Update @Instruction definition - clarify it's for translation ambiguity, not comments
 - Update @SumFunc definition - clarify it replaces implementation, no code underneath
 - Add examples showing correct vs incorrect usage
 - Remove any code examples that show implementation under @SumFunc
 
 #### 11. `data/02-databases.md`
-**Current**: May document @Entity as database annotation  
+**Current**: May document @Entity as database annotation
 **Needs**:
 - Clarify @Schema is for database mapping (framework layer)
 - Separate @Role(entity) for core business objects (inner layer)
@@ -106,7 +70,7 @@ All Phase 1 files have been updated with:
 - Update @State references to @LocalState
 - Add @Subscriber requirement for observing view models
 - Update all state management examples
-- Ensure consistency with new state annotations
+- Ensure consistency with new state annotations (read architechture/04-ui-state-ownership.md for reference)
 
 #### 13. `data/01-json.md`
 **Needs**:
@@ -123,7 +87,7 @@ All Phase 1 files have been updated with:
 
 ---
 
-### Phase 4: UI & Polish
+### Phase 3: UI & Polish
 
 #### 15. `README.md`
 **Needs**:
@@ -141,10 +105,10 @@ All Phase 1 files have been updated with:
 | Old (v0.2.0) | New (v0.3.0) | Notes |
 |--------------|--------------|-------|
 | `@Observable` | `@Publisher` | Class-level, implicit observability via access modifiers |
-| `@Singleton` | `@LifeCycle(singleton)` | Parameterized |
-| `@ViewScoped` | `@LifeCycle(view)` | Parameterized |
-| `@FeatureScoped` | `@LifeCycle(feature)` | Parameterized |
-| `@SessionScoped` | `@LifeCycle(session)` | Parameterized |
+| `@Singleton` | `@Lifecycle(singleton)` | Parameterized |
+| `@ViewScoped` | `@Lifecycle(view)` | Parameterized |
+| `@FeatureScoped` | `@Lifecycle(feature)` | Parameterized |
+| `@SessionScoped` | `@Lifecycle(session)` | Parameterized |
 | `@Repository` | `@Role(repository)` | Interface definition |
 | `@ViewModel` | `@Role(viewmodel)` | Presentation logic |
 | `@Service` | `@Role(service)` | Utility interface |
@@ -213,8 +177,8 @@ All Phase 1 files have been updated with:
 ### Phase 1: Architecture Core ✅ COMPLETE
 1. ✅ architecture/02-lifecycle-scope.md - DONE
 2. ✅ architecture/03-observability.md - DONE
-3. ✅ architecture/04-state-ownership.md - DONE
-4. ✅ architecture/05-patterns-overview.md - DONE
+3. ✅ architecture/04-ui-state-ownership.md - DONE
+4. ✅ architecture/05-roles-and-patterns.md - DONE
 5. ✅ architecture/01-overview.md - DONE
 
 ### Phase 2: Pattern Details (IN PROGRESS)

@@ -50,8 +50,8 @@ Design scalable, maintainable applications:
 - [Overview](architecture/01-overview.md) - Architecture philosophy and patterns
 - [Lifecycle & Scope](architecture/02-lifecycle-scope.md) - `@Singleton`, `@ViewScoped`, `@FeatureScoped`
 - [Observability](architecture/03-observability.md) - `@Observable` and reactive state
-- [State Ownership](architecture/04-state-ownership.md) - `@State`, `@Binding`, `@Environment`
-- [Patterns Overview](architecture/05-patterns-overview.md) - Repositories, ViewModels, Services working together
+- [State Ownership](architecture/04-ui-state-ownership.md) - `@State`, `@Binding`, `@Environment`
+- [Patterns Overview](architecture/05-roles-and-patterns.md) - Repositories, ViewModels, Services working together
 - [Repository Pattern](architecture/06-repositories.md) - Data layer implementation
 - [ViewModel Pattern](architecture/07-viewmodels.md) - Presentation layer implementation
 - [Service Pattern](architecture/08-services.md) - Business logic and utilities

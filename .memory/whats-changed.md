@@ -30,7 +30,7 @@
 ### Lifecycle Annotations
 ```
 OLD: @Singleton, @ViewScoped, @FeatureScoped, @SessionScoped
-NEW: @LifeCycle(singleton|session|feature|view)
+NEW: @Lifecycle(singleton|session|feature|view)
 ```
 
 ### Role Annotations
@@ -105,7 +105,7 @@ class ArticleRepository { }
 protocol ArticleRepository { }  // Interface (inner layer)
 
 @Role(adapter)                   // Implementation (outer layer)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository { }
 ```
@@ -120,7 +120,7 @@ class ArticleListViewModel {
 
 // NEW
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     var error: string? = nil  // Implicitly observable (public)
@@ -215,8 +215,8 @@ func processPayment(cart: ShoppingCart) async throws -> Receipt {
 ## Migration Checklist
 
 - [ ] Replace `@Observable` with `@Publisher`
-- [ ] Replace `@Singleton` with `@LifeCycle(singleton)`
-- [ ] Replace `@ViewScoped` with `@LifeCycle(view)`
+- [ ] Replace `@Singleton` with `@Lifecycle(singleton)`
+- [ ] Replace `@ViewScoped` with `@Lifecycle(view)`
 - [ ] Replace `@Repository` with `@Role(repository)`
 - [ ] Replace `@ViewModel` with `@Role(viewmodel)`
 - [ ] Replace `@Service` with `@Role(service)`

@@ -48,13 +48,13 @@ Weft's role annotations map directly to Clean Architecture layers:
 
 Control how long objects live and their scope boundaries.
 
-### `@LifeCycle(singleton)`
+### `@Lifecycle(singleton)`
 
 **Lives for entire application lifetime.** Single shared instance across the app.
 
 ```weft
 @Role(repository)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class ArticleRepository {
     // Created once, lives until app terminates
 }
@@ -64,13 +64,13 @@ class ArticleRepository {
 
 ---
 
-### `@LifeCycle(session)`
+### `@Lifecycle(session)`
 
 **Lives for user session lifetime.** Created at login, destroyed at logout.
 
 ```weft
 @Role(service)
-@LifeCycle(session)
+@Lifecycle(session)
 class AuthenticationService {
     var currentUser: User?
     var authToken: string?
@@ -82,13 +82,13 @@ class AuthenticationService {
 
 ---
 
-### `@LifeCycle(feature)`
+### `@Lifecycle(feature)`
 
 **Lives during a feature or flow.** Created when entering a feature, destroyed when leaving.
 
 ```weft
 @Role(viewmodel)
-@LifeCycle(feature)
+@Lifecycle(feature)
 class CheckoutFlowCoordinator {
     // Lives during entire checkout flow (multiple screens)
 }
@@ -98,13 +98,13 @@ class CheckoutFlowCoordinator {
 
 ---
 
-### `@LifeCycle(view)`
+### `@Lifecycle(view)`
 
 **Lives while a single view/screen is visible.** Created when view appears, destroyed when dismissed.
 
 ```weft
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 class ArticleDetailViewModel {
     // Created when screen appears, destroyed when dismissed
 }
@@ -119,19 +119,19 @@ class ArticleDetailViewModel {
 **Valid dependency flow** (longer → shorter lifetimes only):
 
 ```
-@LifeCycle(singleton)
-    ├── Can inject into @LifeCycle(session)
-    ├── Can inject into @LifeCycle(feature)
-    └── Can inject into @LifeCycle(view)
+@Lifecycle(singleton)
+    ├── Can inject into @Lifecycle(session)
+    ├── Can inject into @Lifecycle(feature)
+    └── Can inject into @Lifecycle(view)
 
-@LifeCycle(session)
-    ├── Can inject into @LifeCycle(feature)
-    └── Can inject into @LifeCycle(view)
+@Lifecycle(session)
+    ├── Can inject into @Lifecycle(feature)
+    └── Can inject into @Lifecycle(view)
 
-@LifeCycle(feature)
-    └── Can inject into @LifeCycle(view)
+@Lifecycle(feature)
+    └── Can inject into @Lifecycle(view)
 
-@LifeCycle(view)
+@Lifecycle(view)
     └── Cannot inject into longer-lived scopes
 ```
 
@@ -188,7 +188,7 @@ data Author {
 
 ```weft
 @Role(usecase)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class FetchArticlesUseCase {
     private var repository: ArticleRepository  // Interface!
     private var cache: CacheService  // Interface!
@@ -306,7 +306,7 @@ protocol ValidationService {
 
 ```weft
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     private var fetchUseCase: FetchArticlesUseCase
@@ -340,7 +340,7 @@ class ArticleListViewModel {
 - Transforms entities for UI display
 - Handles user interactions
 - Typically `@Publisher` for reactive UI updates
-- Usually `@LifeCycle(view)` or `@LifeCycle(feature)`
+- Usually `@Lifecycle(view)` or `@Lifecycle(feature)`
 
 ---
 
@@ -433,7 +433,7 @@ struct CreateArticleRequest {
 
 ```weft
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class ArticleRepositoryImpl: ArticleRepository {
     private var database: Database
     private var apiClient: APIClient
@@ -462,7 +462,7 @@ class ArticleRepositoryImpl: ArticleRepository {
 }
 
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class StripePaymentAdapter: PaymentGateway {
     private var apiKey: string
 
@@ -474,7 +474,7 @@ class StripePaymentAdapter: PaymentGateway {
 }
 
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class FirebaseAnalyticsAdapter: AnalyticsService {
     func trackEvent(name: string, properties: [string: any]?) {
         // Firebase-specific implementation
@@ -488,7 +488,7 @@ class FirebaseAnalyticsAdapter: AnalyticsService {
 - Contains framework-specific code
 - Handles external dependencies (databases, APIs, SDKs)
 - Converts between DTOs/schemas and entities
-- Usually `@LifeCycle(singleton)` or `@LifeCycle(session)`
+- Usually `@Lifecycle(singleton)` or `@Lifecycle(session)`
 
 ---
 
@@ -503,7 +503,7 @@ Control how data flows through your application and what triggers UI updates.
 
 ```weft
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     // Public properties are observable
@@ -1026,7 +1026,7 @@ protocol ArticleRepository {
 
 // Implementation (outer layer)
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private var database: Database
@@ -1048,7 +1048,7 @@ class ArticleRepositoryImpl: ArticleRepository {
 
 ```weft
 @Role(usecase)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class PublishArticleUseCase {
     private var articleRepository: ArticleRepository
     private var notificationGateway: NotificationGateway
@@ -1073,7 +1073,7 @@ class PublishArticleUseCase {
 
 ```weft
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     private var fetchUseCase: FetchArticlesUseCase
@@ -1174,14 +1174,14 @@ class FetchArticles {
 ```weft
 // ✅ VALID: ViewScoped depends on Singleton
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 class ArticleViewModel {
     private var repository: ArticleRepository  // Singleton
 }
 
 // ❌ INVALID: Singleton depends on ViewScoped
 @Role(repository)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class ArticleRepository {
     private var viewModel: ArticleViewModel  // ERROR: can't inject shorter-lived dependency
 }
@@ -1239,10 +1239,10 @@ Control validation strictness in `weft.settings.json`:
 | Old | New | Migration |
 |-----|-----|-----------|
 | `@Observable` | `@Publisher` | Replace all occurrences |
-| `@Singleton` | `@LifeCycle(singleton)` | Parameterized form |
-| `@ViewScoped` | `@LifeCycle(view)` | Parameterized form |
-| `@FeatureScoped` | `@LifeCycle(feature)` | Parameterized form |
-| `@SessionScoped` | `@LifeCycle(session)` | Parameterized form |
+| `@Singleton` | `@Lifecycle(singleton)` | Parameterized form |
+| `@ViewScoped` | `@Lifecycle(view)` | Parameterized form |
+| `@FeatureScoped` | `@Lifecycle(feature)` | Parameterized form |
+| `@SessionScoped` | `@Lifecycle(session)` | Parameterized form |
 | `@Repository` | `@Role(repository)` | Parameterized form |
 | `@ViewModel` | `@Role(viewmodel)` | Parameterized form |
 | `@Service` | `@Role(service)` | Parameterized form |
@@ -1277,14 +1277,14 @@ view ArticleListView {
 **After (v0.3.0)**:
 ```weft
 @Role(repository)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class ArticleRepository {
     var articles: [Article] = []  // Implicitly observable (public)
 }
 
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     @LocalState var errorMessage: string? = nil
@@ -1303,10 +1303,10 @@ view ArticleListView {
 | Annotation | Category | Purpose | Example |
 |------------|----------|---------|---------|
 | **Lifecycle** |
-| `@LifeCycle(singleton)` | Scope | App lifetime | `@LifeCycle(singleton)` |
-| `@LifeCycle(session)` | Scope | User session | `@LifeCycle(session)` |
-| `@LifeCycle(feature)` | Scope | Feature flow | `@LifeCycle(feature)` |
-| `@LifeCycle(view)` | Scope | Single screen | `@LifeCycle(view)` |
+| `@Lifecycle(singleton)` | Scope | App lifetime | `@Lifecycle(singleton)` |
+| `@Lifecycle(session)` | Scope | User session | `@Lifecycle(session)` |
+| `@Lifecycle(feature)` | Scope | Feature flow | `@Lifecycle(feature)` |
+| `@Lifecycle(view)` | Scope | Single screen | `@Lifecycle(view)` |
 | **Role** |
 | `@Role(entity)` | Architecture | Business object | `@Role(entity) data Article` |
 | `@Role(usecase)` | Architecture | Business rules | `@Role(usecase) class FetchArticles` |
@@ -1348,7 +1348,7 @@ view ArticleListView {
 
 - [Architecture: Overview](../architecture/01-overview.md) - Architecture patterns and philosophy
 - [Architecture: Lifecycle & Scope](../architecture/02-lifecycle-scope.md) - Detailed lifecycle docs
-- [Architecture: State Ownership](../architecture/04-state-ownership.md) - State management patterns
+- [Architecture: State Ownership](../architecture/04-ui-state-ownership.md) - State management patterns
 - [Data: JSON](../data/01-json.md) - JSON serialization
 - [Data: Databases](../data/02-databases.md) - Database schemas
 - [Language: Annotations](../language/07-annotations.md) - Core language annotations

@@ -8,7 +8,7 @@ A quick reference guide for Weft's Clean Architecture-aligned annotations and pa
 
 Weft's annotations are organized into semantic categories:
 
-1. **Lifecycle** - How long objects live (`@LifeCycle`)
+1. **Lifecycle** - How long objects live (`@Lifecycle`)
 2. **Role** - Architectural layer and responsibility (`@Role`)
 3. **State & Reactivity** - Data flow and observability (`@Publisher`, `@Subscriber`, `@Binding`, `@LocalState`)
 4. **Persistence** - Data storage and serialization (`@Schema`, `@JSON`, field annotations)
@@ -21,20 +21,20 @@ Weft's annotations are organized into semantic categories:
 Control how long objects live:
 
 ```weft
-@LifeCycle(singleton)   // Lives for entire app lifetime
-@LifeCycle(session)     // Lives from login to logout
-@LifeCycle(feature)     // Lives during a feature/flow
-@LifeCycle(view)        // Lives while view/screen is visible
+@Lifecycle(singleton)   // Lives for entire app lifetime
+@Lifecycle(session)     // Lives from login to logout
+@Lifecycle(feature)     // Lives during a feature/flow
+@Lifecycle(view)        // Lives while view/screen is visible
 ```
 
 **Example:**
 ```weft
 @Role(repository)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class ArticleRepository { }
 
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 class ArticleListViewModel { }
 ```
 
@@ -95,7 +95,7 @@ data Article {
 
 // Use case
 @Role(usecase)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class FetchArticlesUseCase {
     private var repository: ArticleRepository  // Depends on interface
 }
@@ -108,14 +108,14 @@ protocol ArticleRepository {
 
 // Repository implementation
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class ArticleRepositoryImpl: ArticleRepository {
     // Concrete implementation
 }
 
 // ViewModel
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     private var fetchUseCase: FetchArticlesUseCase
@@ -396,7 +396,7 @@ data Article {
 
 ```weft
 @Role(usecase)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class FetchArticlesUseCase {
     private var repository: ArticleRepository  // Interface!
     private var cache: CacheService
@@ -433,7 +433,7 @@ protocol ArticleRepository {
 **Implementation** (outer layer):
 ```weft
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private var database: Database
@@ -459,7 +459,7 @@ class ArticleRepositoryImpl: ArticleRepository {
 
 ```weft
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     private var fetchUseCase: FetchArticlesUseCase
@@ -480,7 +480,7 @@ class ArticleListViewModel {
 **Key points**:
 - Presentation logic only
 - Marked as `@Publisher` for reactive UI
-- Usually `@LifeCycle(view)` or `@LifeCycle(feature)`
+- Usually `@Lifecycle(view)` or `@Lifecycle(feature)`
 
 ---
 
@@ -579,10 +579,10 @@ private(set)        // Readable everywhere, writable privately
 
 ### What lifecycle should it have?
 
-- **Entire app?** → `@LifeCycle(singleton)`
-- **User session?** → `@LifeCycle(session)`
-- **Feature flow?** → `@LifeCycle(feature)`
-- **Single screen?** → `@LifeCycle(view)`
+- **Entire app?** → `@Lifecycle(singleton)`
+- **User session?** → `@Lifecycle(session)`
+- **Feature flow?** → `@Lifecycle(feature)`
+- **Single screen?** → `@Lifecycle(view)`
 
 ---
 
@@ -640,10 +640,10 @@ private(set)        // Readable everywhere, writable privately
 | Old (v0.2.0) | New (v0.3.0) | Notes |
 |--------------|--------------|-------|
 | `@Observable` | `@Publisher` | Clearer terminology |
-| `@Singleton` | `@LifeCycle(singleton)` | Parameterized |
-| `@ViewScoped` | `@LifeCycle(view)` | Parameterized |
-| `@FeatureScoped` | `@LifeCycle(feature)` | Parameterized |
-| `@SessionScoped` | `@LifeCycle(session)` | Parameterized |
+| `@Singleton` | `@Lifecycle(singleton)` | Parameterized |
+| `@ViewScoped` | `@Lifecycle(view)` | Parameterized |
+| `@FeatureScoped` | `@Lifecycle(feature)` | Parameterized |
+| `@SessionScoped` | `@Lifecycle(session)` | Parameterized |
 | `@Repository` | `@Role(repository)` | Parameterized |
 | `@ViewModel` | `@Role(viewmodel)` | Parameterized |
 | `@Service` | `@Role(service)` | Parameterized |
@@ -666,7 +666,7 @@ data Article {
 
 // ===== USE CASES =====
 @Role(usecase)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 class FetchArticlesUseCase {
     private var repository: ArticleRepository
 
@@ -683,7 +683,7 @@ protocol ArticleRepository {
 
 // ===== ADAPTERS (Implementation) =====
 @Role(adapter)
-@LifeCycle(singleton)
+@Lifecycle(singleton)
 @Publisher
 class ArticleRepositoryImpl: ArticleRepository {
     private var database: Database
@@ -711,7 +711,7 @@ struct ArticleSchema {
 
 // ===== VIEWMODELS =====
 @Role(viewmodel)
-@LifeCycle(view)
+@Lifecycle(view)
 @Publisher
 class ArticleListViewModel {
     private var fetchUseCase: FetchArticlesUseCase

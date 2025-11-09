@@ -441,5 +441,5 @@ view ComplexAnimation {
 
 - [Components](02-components.md) - Built-in UI components
 - [Layout](03-layout.md) - Layout containers and patterns
-- [State Ownership](../architecture/04-state-ownership.md) - State management patterns
+- [State Ownership](../architecture/04-ui-state-ownership.md) - State management patterns
 - [ViewModels](../architecture/07-viewmodels.md) - ViewModel pattern
