@@ -30,14 +30,12 @@ weft/docs/
 │
 ├── architecture/                      # Design patterns and architecture
 │   ├── 01-overview.md                 # Architecture philosophy and patterns
-│   ├── 02-lifecycle-scope.md          # @Singleton, @ViewScoped, @FeatureScoped, @SessionScoped
-│   ├── 03-observability.md            # @Observable pattern
-│   ├── 04-ui-state-ownership.md          # @State, @Binding, @Environment
-│   ├── 05-roles-and-patterns.md        # Repositories, ViewModels, Services working together
-│   ├── 06-repositories.md             # @Repository pattern
-│   ├── 07-viewmodels.md               # @ViewModel pattern
-│   ├── 08-services.md                 # @Service pattern
-│   └── 06-dependency-injection.md     # Implicit dependency injection system
+│   ├── 02-lifecycle-scope.md          # @Lifecycle annotations and scope management
+│   ├── 03-observability.md            # Observability with @Publisher & @Subscriber
+│   ├── 04-ui-state-ownership.md       # @LocalState, @Binding, state ownership in UI
+│   ├── 05-roles-and-patterns.md       # Clean Architecture and @Role Annotations
+│   ├── 06-dependency-injection.md     # Implicit dependency injection system
+│   └── 07-full-example.md             # Full example of implementing Weft's architecture
 │
 ├── ui/                                # User interface
 │   ├── 00-overview.md                 # UI philosophy, flexibility, syntax freedom
