@@ -51,22 +51,15 @@ Design scalable, maintainable applications:
 - [Lifecycle & Scope](architecture/02-lifecycle-scope.md) - `@Lifecycle(singleton|session|feature|view)`
 - [Observability](architecture/03-observability.md) - `@Publisher`, `@Subscriber` and reactive state
 - [State Ownership](architecture/04-ui-state-ownership.md) - `@LocalState`, `@Binding`, `@Subscriber(source: environment)`
-- [Patterns Overview](architecture/05-roles-and-patterns.md) - Repositories, ViewModels, Services working together
-- [Repository Pattern](architecture/06-repositories.md) - Data layer implementation
-- [ViewModel Pattern](architecture/07-viewmodels.md) - Presentation layer implementation
-- [Service Pattern](architecture/08-services.md) - Business logic and utilities
+- [Roles & Patterns](architecture/05-roles-and-patterns.md) - Clean Architecture roles as first-class citizens with `@Role(entity|usecase|repository|service|viewmodel|gateway|dto|adapter)`
 
 ### User Interface
 
 Build user interfaces:
 
-- [Views](ui/01-views.md) - View basics and state management *(coming soon)*
-- [Components](ui/02-components.md) - Text, Image, Button, TextField *(coming soon)*
-- [Layout](ui/03-layout.md) - Column, Row, ZStack, Spacer *(coming soon)*
-- [Styling](ui/04-styling.md) - Appearance parameters and theming *(coming soon)*
-- [Interaction](ui/05-interaction.md) - Gestures, taps, user input *(coming soon)*
-- [Navigation](ui/06-navigation.md) - Navigation patterns and modals *(coming soon)*
-- [Lifecycle Hooks](ui/07-lifecycle-hooks.md) - `onAppear`, `onDisappear`, `onChange` *(coming soon)*
+- [Views](ui/01-views.md) - View basics and state management
+- [Components](ui/02-components.md) - UI Components in Weft
+- [Navigation](ui/03-navigation.md) - Navigation patterns
 
 ### Data & Persistence
 
@@ -132,5 +125,5 @@ Weft is in active development. Feedback, suggestions, and contributions are welc
 
 ---
 
-**Version:** 0.3.0  
+**Version:** 0.3.0
 **Last Updated:** January 2025

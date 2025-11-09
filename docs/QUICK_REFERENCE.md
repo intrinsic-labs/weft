@@ -170,56 +170,6 @@ class ParentViewModel {
 
 ---
 
-### `@Binding` (on properties)
-
-Two-way binding between parent and child (syntactic sugar):
-
-```weft
-view ParentView {
-    @LocalState var searchText = ""
-    SearchBar(query: $searchText)  // Pass with $
-}
-
-view SearchBar {
-    @Binding var query: string  // Two-way binding
-}
-```
-
-**Equivalent to**: `@Subscriber(writable: true, source: parent)`
-
----
-
-### `@LocalState` (on properties, UI only)
-
-Ephemeral UI state (views only):
-
-```weft
-view ArticleListView {
-    @Subscriber var viewModel: ArticleListViewModel
-
-    @LocalState var showFilters: bool = false  // View-only state
-    @LocalState var selectedTab: int = 0
-}
-```
-
-**Rules**:
-- Only allowed in views (LSP enforces)
-- Not observable by others
-- Resets when view is recreated
-
----
-
-## State Management Summary
-
-```weft
-@Publisher          // "I have observable state" (on class)
-@Subscriber         // "I observe this publisher" (on property)
-@Binding            // "Two-way binding to parent" (on property)
-@LocalState         // "Ephemeral UI state" (on property, views only)
-```
-
----
-
 ## Documentation Annotations
 
 ### `@Main`
@@ -635,24 +585,6 @@ private(set)        // Readable everywhere, writable privately
 
 ---
 
-## Migration from v0.2.0
-
-| Old (v0.2.0) | New (v0.3.0) | Notes |
-|--------------|--------------|-------|
-| `@Observable` | `@Publisher` | Clearer terminology |
-| `@Singleton` | `@Lifecycle(singleton)` | Parameterized |
-| `@ViewScoped` | `@Lifecycle(view)` | Parameterized |
-| `@FeatureScoped` | `@Lifecycle(feature)` | Parameterized |
-| `@SessionScoped` | `@Lifecycle(session)` | Parameterized |
-| `@Repository` | `@Role(repository)` | Parameterized |
-| `@ViewModel` | `@Role(viewmodel)` | Parameterized |
-| `@Service` | `@Role(service)` | Parameterized |
-| `@State` | `@LocalState` | More explicit |
-| `@Entity` (DB) | `@Schema` | Use `@Role(entity)` for business objects |
-| No annotation | `@Subscriber` | Now required for observing properties |
-
----
-
 ## Complete Example
 
 ```weft
@@ -753,4 +685,4 @@ view ArticleListView {
 ---
 
 **Version:** 0.3.0
-**Last Updated:** January 2025
+**Last Updated:** November 2025
