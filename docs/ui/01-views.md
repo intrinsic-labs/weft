@@ -88,82 +88,7 @@ view UserProfile {
 
 ## State Management
 
-Read more about state ownership in the UI layer [here](../ui/04-ui-state-ownership.md).
-
-### @LocalState - View-Only State
-
-Use `@LocalState` for ephemeral state owned by the view:
-
-```weft
-view ExpandableCard {
-    var content: string
-    @LocalState var isExpanded: bool = false
-
-    Column(onTap: { isExpanded = !isExpanded }) {
-        Text(content) {
-            maxLines: isExpanded ? null : 3
-            ellipsize: end
-        }
-    }
-}
-```
-
-### @Binding - Two-Way State
-
-Use `@Binding` when a child needs to modify parent state. Pass bindings with the `$` prefix:
-
-```weft
-view ParentView {
-    @LocalState var searchText: string = ""
-
-    SearchBar(text: $searchText)  // $ passes binding
-}
-
-view SearchBar {
-    @Binding var text: string     // Two-way connection
-
-    TextField(binding: $text)
-}
-```
-
-### @Subscriber - Observing Publishers
-
-Use `@Subscriber` to observe ViewModels, Repositories, or other `@Publisher` classes:
-
-```weft
-view ArticleListView {
-    @Subscriber var viewModel: ArticleListViewModel
-
-    Column(isScrollable: true, spacing: 12) {
-        if viewModel.isLoading {
-            LoadingSpinner()
-        } else {
-            for article in viewModel.articles {
-                ArticleCard(article: article)
-            }
-        }
-    }
-}
-```
-
-### @Subscriber(source: environment) - Shared Context
-
-Access app-wide state from the environment:
-
-```weft
-view ThemedButton {
-    @Subscriber(source: environment) var theme: Theme
-    var label: string
-    var onTap: () => void
-
-    Button(action: onTap) {
-        text: label
-        backgroundColor: theme.primaryColor
-        textColor: white
-        cornerRadius: 8
-    }
-}
-```
+Read about state ownership in the UI layer [here](../ui/04-ui-state-ownership.md). This covers annotations like `@LocalState`, `@Binding`, and `@Subscriber`.
 
 ## Computed Properties
 
@@ -287,7 +212,7 @@ view TodoItem {
             TextField(binding: $todo.title) {
                 placeholder: "Task name"
             }
-            Button(action: save) { text: "Save" }
+            Button(action: { Task { await save() } }) { text: "Save" }
         } else {
             Checkbox(isChecked: todo.completed, onToggle: { onToggle(todo.id) })
             Text(todo.title)
@@ -296,6 +221,8 @@ view TodoItem {
     }
 }
 ```
+
+Note that for most applications, functional logic should be owned and managed by a ViewModel outside the view itself. This separates concerns and keeps views focused on display only.
 
 ## Reusable Components
 
@@ -413,10 +340,6 @@ view ArticleDetailView {
 **Keep views focused**: Each view should have a single responsibility.
 
 **Use ViewModels for logic**: Views render state; ViewModels contain business logic.
-
-**Prefer @LocalState for UI-only state**: Local toggles, selections, animations.
-
-**Use @Binding for reusable components**: Forms, inputs, controls that modify parent state.
 
 **Keep computed properties simple**: Complex calculations belong in ViewModels.
 
