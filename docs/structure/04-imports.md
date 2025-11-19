@@ -34,19 +34,7 @@ import Article
 import User
 ```
 
-All styles are equivalent—use whichever feels most natural.
-
-## Relative vs Absolute Paths
-
-```weft
-// Absolute (from project root)
-import models/Article
-import repositories/ArticleRepository
-
-// Relative (from current file)
-import ./Article
-import ../models/User
-```
+All styles are equivalent—the main point is they signal to the translator where and what to look for when writing implementations.
 
 ## Aliasing
 
@@ -81,66 +69,6 @@ func formatArticleDate(article: Article) => string {
 }
 ```
 
-## Example: Typical Project Structure
-
-```weft
-// models/User.weft
-data User {
-    var id: string
-    var username: string
-    var email: string
-}
-
-// models/Article.weft
-import User
-
-data Article {
-    var id: string
-    var title: string
-    var author: User
-}
-
-// repositories/ArticleRepository.weft
-import Article
-
-@Role(repository)
-@Lifecycle(singleton)
-class ArticleRepository {
-    func getArticles() => [Article] {
-        // implementation
-    }
-}
-
-// viewmodels/ArticleListViewModel.weft
-import Article
-import ArticleRepository
-
-@Role(viewmodel)
-@Lifecycle(viewmodel)
-class ArticleListViewModel {
-    private var repository: ArticleRepository
-    
-    @LocalState var articles: [Article] = []
-    
-    func loadArticles() async {
-        articles = await repository.getArticles()
-    }
-}
-
-// views/ArticleListView.weft
-import ArticleListViewModel
-
-view ArticleListView {
-    var viewModel: ArticleListViewModel
-    
-    Column(isScrollable: true) {
-        for article in viewModel.articles {
-            ArticleCard(article: article)
-        }
-    }
-}
-```
-
 ## Platform Translation
 
 The translator handles platform-specific import syntax:
@@ -152,15 +80,6 @@ The translator handles platform-specific import syntax:
 ## Best Practices
 
 **Import only what you need**: Be explicit rather than using wildcards.
-
-```weft
-// Good: Clear dependencies
-import Article
-import ArticleRepository
-
-// Acceptable but less clear
-import * from models
-```
 
 **Use consistent import style**: Pick one syntax style for your project and stick with it.
 
