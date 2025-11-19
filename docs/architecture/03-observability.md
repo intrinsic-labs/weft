@@ -86,7 +86,7 @@ class ArticleListViewModel {
 }
 ```
 
-**Important:** In v0.3.0, `@Subscriber` is now **required** when observing publishers. The LSP will warn you if you forget it.
+**Important:** @Subscriber` is **required** when observing publishers. The LSP will warn you if you forget it.
 
 ### @Subscriber Parameters
 
@@ -105,7 +105,7 @@ view ChildView {
 }
 ```
 
-### @Binding - Syntactic Sugar for UI Only
+### @Binding - Syntactic Sugar for User Interfaces
 
 `@Binding` is syntactic sugar for `@Subscriber(writable: true, source: parent)` when building user interfaces:
 
@@ -130,7 +130,7 @@ view SearchBar {
 }
 ```
 
-`@Binding` should not be used outside of views. Prefer explicit `@Subscriber` in ViewModels and other non-UI types.
+`@Binding` cannot be used outside of views. You must use an explicit `@Subscriber` in ViewModels and other non-UI types.
 
 
 ## Implicit Observability via Access Modifiers
@@ -183,55 +183,6 @@ view ArticleListView {
                 ArticleCard(article: article)  // Updates when articles change
             }
         }
-    }
-}
-```
-
-## Private(set) for Controlled Updates
-
-Use `private(set)` to allow public reading but private writing:
-
-```weft
-@Role(adapter)
-@Lifecycle(singleton)
-@Publisher
-class ArticleRepository {
-    // Readable everywhere, writable only in this class
-    private(set) var articles: [Article] = []
-    private(set) var isLoading: bool = false
-
-    public func fetchArticles() async {
-        isLoading = true  // Only this class can change isLoading
-        articles = await api.fetchArticles()
-        isLoading = false
-    }
-}
-```
-
-This pattern ensures state only changes through controlled methods, not directly.
-
-## Computed Properties
-
-Computed properties automatically update when their dependencies change:
-
-```weft
-@Role(adapter)
-@Lifecycle(singleton)
-@Publisher
-class ShoppingCart {
-    private(set) var items: [Item] = []
-
-    // Automatically recomputes when items changes
-    var total: float {
-        return items.reduce(0, (sum, item) => sum + item.price)
-    }
-
-    var itemCount: int {
-        return items.count
-    }
-
-    var isEmpty: bool {
-        return items.isEmpty
     }
 }
 ```
@@ -348,89 +299,11 @@ function ArticleListView() {
 
 **Mark the source of truth as @Publisher**: The class that owns and modifies the data should be `@Publisher`.
 
-```weft
-// ✅ Good: Repository adapter owns the data
-@Role(adapter)
-@Lifecycle(singleton)
-@Publisher
-class ArticleRepositoryImpl: ArticleRepository {
-    private(set) var articles: [Article] = []
-
-    func fetchArticles() async {
-        articles = await api.fetchArticles()
-    }
-}
-
-// ✅ Good: ViewModel observes and transforms
-@Role(viewmodel)
-@Lifecycle(view)
-@Publisher
-class ArticleListViewModel {
-    @Subscriber private var repository: ArticleRepository
-
-    var articles: [Article] {
-        return repository.articles
-    }
-}
-```
-
 **Use private(set) for encapsulation**: Let observers read but not write.
-
-```weft
-@Role(adapter)
-@Lifecycle(singleton)
-@Publisher
-class DataStore {
-    private(set) var data: [Item] = []
-
-    // Controlled mutation through methods
-    func loadData() async {
-        data = await fetchData()
-    }
-}
-```
 
 **Keep observable logic simple**: Don't put complex business logic in observable state updates.
 
-```weft
-// ✅ Good: Simple state updates
-@Role(adapter)
-@Lifecycle(singleton)
-@Publisher
-class UserRepository {
-    private(set) var users: [User] = []
-
-    func setUsers(users: [User]) {
-        self.users = users
-    }
-}
-
-// Complex logic in separate methods
-func processAndStoreUsers(rawData: [UserDTO]) async {
-    @SumFunc
-    => transform each DTO into a User object
-    => filter out any invalid users
-    => store validated users in repository
-}
-```
-
 **Use access modifiers to control observability**: Not every property needs to be observable.
-
-```weft
-@Role(adapter)
-@Lifecycle(singleton)
-@Publisher
-class CacheService {
-    // Observable - public
-    var cacheSize: int = 0
-
-    // Observable (read-only) - private(set)
-    private(set) var lastUpdated: datetime? = null
-
-    // NOT observable - private (internal optimization)
-    private var internalIndex: [string: int] = [:]
-}
-```
 
 ## Common Patterns
 
@@ -545,7 +418,5 @@ The Weft LSP can validate state annotation usage:
 ## See Also
 
 - [Lifecycle & Scope](02-lifecycle-scope.md) - Controlling object lifetimes
-- [State Ownership](04-ui-state-ownership.md) - Managing local vs shared state with @LocalState
-- [Repositories](06-repositories.md) - Repository pattern in depth
-- [ViewModels](07-viewmodels.md) - ViewModel pattern in depth
+- [UI State Ownership](../ui/04-ui-state-ownership.md) - State management & ownership in UI
 - [Annotations Reference](../reference/annotations.md) - Complete annotation guide

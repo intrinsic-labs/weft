@@ -1348,7 +1348,7 @@ view ArticleListView {
 
 - [Architecture: Overview](../architecture/01-overview.md) - Architecture patterns and philosophy
 - [Architecture: Lifecycle & Scope](../architecture/02-lifecycle-scope.md) - Detailed lifecycle docs
-- [Architecture: State Ownership](../architecture/04-ui-state-ownership.md) - State management patterns
+- [Architecture: State Ownership](../ui/04-ui-state-ownership.md) - State management patterns
 - [Data: JSON](../data/01-json.md) - JSON serialization
 - [Data: Databases](../data/02-databases.md) - Database schemas
 - [Language: Annotations](../language/07-annotations.md) - Core language annotations

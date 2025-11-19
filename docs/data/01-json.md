@@ -281,4 +281,4 @@ func parseUser(json: string) -> User? {
 
 - [Databases](02-databases.md) - Schema and persistence
 - [API Integration](03-api-integration.md) - Network requests and DTOs
-- [Roles & Patterns](../architecture/05-roles-and-patterns.md) - DTO pattern details
+- [Roles & Patterns](../architecture/04-roles-and-patterns.md) - DTO pattern details

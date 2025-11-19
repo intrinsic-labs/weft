@@ -50,8 +50,8 @@ Design scalable, maintainable applications:
 - [Overview](architecture/01-overview.md) - Architecture philosophy and patterns
 - [Lifecycle & Scope](architecture/02-lifecycle-scope.md) - `@Lifecycle(singleton|session|feature|view)`
 - [Observability](architecture/03-observability.md) - `@Publisher`, `@Subscriber` and reactive state
-- [State Ownership](architecture/04-ui-state-ownership.md) - `@LocalState`, `@Binding`, `@Subscriber(source: environment)`
-- [Roles & Patterns](architecture/05-roles-and-patterns.md) - Clean Architecture roles as first-class citizens with `@Role(entity|usecase|repository|service|viewmodel|gateway|dto|adapter)`
+- [State Ownership](ui/04-ui-state-ownership.md) - `@LocalState`, `@Binding`, `@Subscriber(source: environment)`
+- [Roles & Patterns](architecture/04-roles-and-patterns.md) - Clean Architecture roles as first-class citizens with `@Role(entity|usecase|repository|service|viewmodel|gateway|dto|adapter)`
 
 ### User Interface
 

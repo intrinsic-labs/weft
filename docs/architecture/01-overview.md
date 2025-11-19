@@ -596,12 +596,7 @@ Continue reading to learn about each architectural concept in depth:
 
 1. [Lifecycle & Scope](02-lifecycle-scope.md) - Controlling object lifetimes
 2. [Observability](03-observability.md) - Making state reactive with @Publisher
-3. [State Ownership](04-ui-state-ownership.md) - Managing state with @LocalState and @Subscriber
-4. [Patterns Overview](05-roles-and-patterns.md) - Repositories, ViewModels, and Services
-5. [Repositories](06-repositories.md) - Repository pattern in detail
-6. [ViewModels](07-viewmodels.md) - ViewModel pattern in detail
-7. [Services](08-services.md) - Service pattern in detail
-8. [Clean Architecture](10-clean-architecture.md) - Deep dive into Clean Architecture
+3. [Patterns Overview](04-roles-and-patterns.md) - Repositories, ViewModels, and Services
 
 ## See Also
 

@@ -258,8 +258,8 @@ var query = QueryBuilder.from("articles")
 Separate public interface from private implementation:
 
 ```weft
-@Repository
-@Singleton
+@Role(repository)
+@Lifecycle(singleton)
 public class ArticleRepository {
     private var api: APIClient
     private var database: Database

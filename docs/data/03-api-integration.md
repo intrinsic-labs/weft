@@ -400,6 +400,6 @@ class ArticleGatewayImpl: ArticleGateway {
 
 ## See Also
 
-- [Roles & Patterns](../architecture/05-roles-and-patterns.md) - Gateway, repository, and adapter patterns
+- [Roles & Patterns](../architecture/04-roles-and-patterns.md) - Gateway, repository, and adapter patterns
 - [JSON](01-json.md) - DTOs and serialization
 - [Databases](02-databases.md) - Local persistence

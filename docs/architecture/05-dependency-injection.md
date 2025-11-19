@@ -86,19 +86,7 @@ class PublishArticleUseCase {
 }
 ```
 
-See [Roles & Patterns](05-roles-and-patterns.md) for architectural patterns and dependency examples.
-
-## What You Don't Write
-
-Weft's implicit DI eliminates common boilerplate:
-
-- ❌ No `@Inject` annotations on every property
-- ❌ No manual factory methods
-- ❌ No provider classes
-- ❌ No module configuration files
-- ❌ No dependency graphs to maintain
-
-The role annotations, lifecycle scopes, and property declarations are sufficient. The translator handles the rest.
+See [Roles & Patterns](04-roles-and-patterns.md) for architectural patterns and dependency examples.
 
 ## Testing
 
@@ -123,5 +111,5 @@ func testViewModel() {
 ## See Also
 
 - [Lifecycle & Scope](02-lifecycle-scope.md) - Detailed scope rules and hierarchy
-- [Roles & Patterns](05-roles-and-patterns.md) - Practical dependency patterns and examples
-- [Full Architecture Example](07-full-example.md) - Full example of implementing Weft's architecture
+- [Roles & Patterns](04-roles-and-patterns.md) - Practical dependency patterns and examples
+- [Full Architecture Example](06-full-example.md) - Full example of implementing Weft's architecture

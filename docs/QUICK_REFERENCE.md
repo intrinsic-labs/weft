@@ -258,7 +258,7 @@ Mark deprecated code:
     since: "0.3.0",
     replacement: "@Publisher"
 )
-@Observable  // Old annotation
+@Observable  // n
 class MyClass { }
 ```
 

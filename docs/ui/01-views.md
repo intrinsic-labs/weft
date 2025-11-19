@@ -88,7 +88,7 @@ view UserProfile {
 
 ## State Management
 
-Read more about state ownership in the UI layer [here](../architecture/04-ui-state-ownership.md).
+Read more about state ownership in the UI layer [here](../ui/04-ui-state-ownership.md).
 
 ### @LocalState - View-Only State
 
@@ -414,7 +414,7 @@ view ArticleDetailView {
 
 **Use ViewModels for logic**: Views render state; ViewModels contain business logic.
 
-**Prefer @State for UI-only state**: Local toggles, selections, animations.
+**Prefer @LocalState for UI-only state**: Local toggles, selections, animations.
 
 **Use @Binding for reusable components**: Forms, inputs, controls that modify parent state.
 
@@ -431,7 +431,7 @@ view ComplexAnimation {
     card should bounce slightly and scale up 5%
     ''')
 
-    @State var isBouncing = false
+    @LocalState var isBouncing = false
 
     Column(onTap: { isBouncing = true }) {
         // content
@@ -442,6 +442,6 @@ view ComplexAnimation {
 ## See Also
 
 - [Components](02-components.md) - Built-in UI components
-- [State Ownership](../architecture/04-ui-state-ownership.md) - Detailed state management patterns
+- [State Ownership](../ui/04-ui-state-ownership.md) - Detailed state management patterns
 - [Observability](../architecture/03-observability.md) - @Publisher and @Subscriber
-- [Roles & Patterns](../architecture/05-roles-and-patterns.md) - ViewModel pattern
+- [Roles & Patterns](../architecture/04-roles-and-patterns.md) - ViewModel pattern

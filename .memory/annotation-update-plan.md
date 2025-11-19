@@ -36,8 +36,8 @@ All Phase 1 files have been updated with:
 #### Completed Files:
 - [x] architecture/02-lifecycle-scope.md - ✅ Complete
 - [x] architecture/03-observability.md - ✅ Complete
-- [x] architecture/04-ui-state-ownership.md - ✅ Complete
-- [x] architecture/05-roles-and-patterns.md - ✅ Complete
+- [x] ui/04-ui-state-ownership.md - ✅ Complete
+- [x] architecture/04-roles-and-patterns.md - ✅ Complete
 - [x] architecture/01-overview.md - ✅ Complete
 
 All Phase 2 files have been updated with:
@@ -152,8 +152,8 @@ All documentation has been successfully updated to v0.3.0:
 ### Phase 1: Architecture Core ✅ 
 - architecture/02-lifecycle-scope.md
 - architecture/03-observability.md
-- architecture/04-ui-state-ownership.md
-- architecture/05-roles-and-patterns.md
+- ui/04-ui-state-ownership.md
+- architecture/04-roles-and-patterns.md
 - architecture/01-overview.md
 
 ### Phase 2: Language & Data ✅

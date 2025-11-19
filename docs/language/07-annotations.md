@@ -11,7 +11,7 @@ Marks the entry point of the application.
 ```weft
 @Main
 class MyApp: App {
-    @State var theme = Theme()
+    @LocalState var theme = Theme()
     
     var content: View {
         MainView() {
@@ -107,6 +107,6 @@ All models follow the naming convention: EntityType + suffix.
 ## See Also
 
 - [Lifecycle Annotations](../architecture/02-lifecycle-scope.md) - `@Lifecycle(singleton|session|feature|view)`
-- [State Annotations](../architecture/04-ui-state-ownership.md) - `@LocalState`, `@Binding`, `@Subscriber`
-- [Role Annotations](../architecture/05-roles-and-patterns.md) - `@Role(entity|usecase|repository|...)`
+- [State Annotations](../ui/04-ui-state-ownership.md) - `@LocalState`, `@Binding`, `@Subscriber`
+- [Role Annotations](../architecture/04-roles-and-patterns.md) - `@Role(entity|usecase|repository|...)`
 - [Complete Annotation Reference](../reference/annotations.md) - All annotations in one place

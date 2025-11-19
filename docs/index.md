@@ -32,16 +32,16 @@ weft/docs/
 │   ├── 01-overview.md                 # Architecture philosophy and patterns
 │   ├── 02-lifecycle-scope.md          # @Lifecycle(singleton|session|feature|view)
 │   ├── 03-observability.md            # @Publisher, @Subscriber, and reactive state
-│   ├── 04-ui-state-ownership.md       # @LocalState, @Binding, state ownership in UI
-│   ├── 05-roles-and-patterns.md       # Clean Architecture and @Role annotations
-│   ├── 06-dependency-injection.md     # Implicit dependency injection system
-│   └── 07-full-example.md             # Full example of implementing Weft's architecture
+│   ├── 04-roles-and-patterns.md       # Clean Architecture and @Role annotations
+│   ├── 05-dependency-injection.md     # Implicit dependency injection system
+│   └── 06-full-example.md             # Full example of implementing Weft's architecture
 │
 ├── ui/                                # User interface
 │   ├── 00-overview.md                 # UI philosophy, flexibility, syntax freedom
 │   ├── 01-views.md                    # View basics, state management, lifecycle
 │   ├── 02-components.md               # Text, Image, Button, TextField, etc.
-│   └── 03-navigation.md               # Stack navigation, modals, tabs, deep linking
+│   ├── 03-navigation.md               # Stack navigation, modals, tabs, deep linking
+│   └── 04-ui-state-ownership.md               # State management with @LocalState, @Binding, etc
 │
 ├── data/                              # Data and persistence
 │   ├── 01-json.md                     # JSON serialization and @Role(dto)
@@ -121,11 +121,11 @@ weft/docs/
 - **Content**: @Publisher and @Subscriber patterns, reactive state, automatic UI updates
 
 ### State Ownership
-- **File**: `architecture/04-ui-state-ownership.md`
+- **File**: `ui/04-ui-state-ownership.md`
 - **Content**: @LocalState (view-only state), @Binding (two-way state), @Subscriber(source: environment)
 
 ### Roles & Patterns
-- **File**: `architecture/05-roles-and-patterns.md`
+- **File**: `architecture/04-roles-and-patterns.md`
 - **Content**: Clean Architecture principles, 8 @Role annotations, interface/adapter patterns
 
 ### Repository Pattern
@@ -141,7 +141,7 @@ weft/docs/
 - **Content**: @Role(service) interface, business logic utilities
 
 ### Dependency Injection
-- **File**: `architecture/06-dependency-injection.md`
+- **File**: `architecture/05-dependency-injection.md`
 - **Content**: Implicit DI system, how dependencies are inferred and resolved
 
 ## User Interface

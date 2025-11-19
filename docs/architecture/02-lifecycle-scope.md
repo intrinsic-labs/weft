@@ -231,46 +231,6 @@ class ArticleRepositoryImpl: ArticleRepository {
 
 The LSP will enforce this rule and show an error if you violate the dependency hierarchy.
 
-## Lifecycle Diagram
-
-```
-Application Start
-    │
-    ├─── [@Lifecycle(singleton)] ArticleRepositoryImpl
-    │         │
-    │         │ (lives for entire app)
-    │         │
-    ├─── User Logs In
-    │         │
-    │         ├─── [@Lifecycle(session)] AuthServiceImpl
-    │         │         │
-    │         │         │ (lives while authenticated)
-    │         │         │
-    │         ├─── Navigate to Articles
-    │         │         │
-    │         │         ├─── [@Lifecycle(view)] ArticleListViewModel
-    │         │         │         │
-    │         │         │         │ (lives while view visible)
-    │         │         │         │
-    │         │         │    User taps article
-    │         │         │         │
-    │         │         └─── [@Lifecycle(view)] ArticleDetailViewModel
-    │         │                   │
-    │         │                   │ (lives while detail view visible)
-    │         │                   │
-    │         │              User goes back
-    │         │                   │
-    │         │                   └─── Destroyed
-    │         │
-    │         └─── User Logs Out
-    │                   │
-    │                   └─── AuthServiceImpl Destroyed
-    │
-Application Terminated
-    │
-    └─── All singletons destroyed
-```
-
 ## Complete Example
 
 ```weft
@@ -408,61 +368,6 @@ view ArticleListView {
 }
 ```
 
-## Dependency Injection and Scope
-
-Dependencies are automatically provided based on scope:
-
-```weft
-// The system knows:
-// 1. ArticleRepositoryImpl is @Lifecycle(singleton) - create once, reuse
-// 2. ArticleListViewModel is @Lifecycle(view) - create per view
-// 3. ViewModel needs repository - inject the singleton
-
-@Role(adapter)
-@Lifecycle(singleton)
-class ArticleRepositoryImpl: ArticleRepository { }
-
-@Role(viewmodel)
-@Lifecycle(view)
-@Publisher
-class ArticleListViewModel {
-    private var repository: ArticleRepository  // Injected automatically
-}
-```
-
-The translator generates platform-specific dependency injection:
-
-**Swift:**
-```swift
-// Singleton stored in app-level container
-class AppContainer {
-    static let shared = AppContainer()
-    let articleRepository: ArticleRepository = ArticleRepositoryImpl()
-}
-
-// ViewModel gets repository from container
-@Observable
-class ArticleListViewModel {
-    private let repository: ArticleRepository
-
-    init(repository: ArticleRepository = AppContainer.shared.articleRepository) {
-        self.repository = repository
-    }
-}
-```
-
-**Kotlin:**
-```kotlin
-// Hilt handles scoping automatically
-@Singleton
-class ArticleRepositoryImpl @Inject constructor() : ArticleRepository { }
-
-@HiltViewModel
-class ArticleListViewModel @Inject constructor(
-    private val repository: ArticleRepository
-) : ViewModel() { }
-```
-
 ## Platform Translation
 
 **Swift:**
@@ -483,67 +388,6 @@ class ArticleListViewModel @Inject constructor(
 - `@Lifecycle(session)` → Context provider tied to auth
 - `@Lifecycle(feature)` → Context provider for feature subtree
 
-## Best Practices
-
-**Use the longest lifetime that makes sense**: Don't create singletons of everything, but don't create new instances unnecessarily.
-
-```weft
-// ✅ Good: Shared data layer
-@Role(adapter)
-@Lifecycle(singleton)
-class ArticleRepositoryImpl: ArticleRepository { }
-
-// ✅ Good: View-specific state
-@Role(viewmodel)
-@Lifecycle(view)
-class ArticleDetailViewModel { }
-
-// ❌ Bad: Would be better as @Lifecycle(singleton)
-@Role(adapter)
-@Lifecycle(view)
-class DatabaseConnection { }
-```
-
-**Clean up resources in appropriate scopes**: Long-lived scopes should clean up resources they manage.
-
-```weft
-@Role(service)
-protocol CacheService {
-    func clearCache()
-    func cleanup()
-}
-
-@Role(adapter)
-@Lifecycle(singleton)
-class CacheServiceImpl: CacheService {
-    private var cache: [string: any] = [:]
-
-    func clearCache() {
-        cache.removeAll()
-    }
-
-    func cleanup() {
-        clearCache()
-        // Close connections, release resources
-    }
-}
-```
-
-**Protocols don't need lifecycle annotations**: Only concrete implementations have lifecycles.
-
-```weft
-// ✅ Correct: Protocol has no lifecycle
-@Role(repository)
-protocol ArticleRepository {
-    func fetchArticles() async
-}
-
-// ✅ Correct: Implementation has lifecycle
-@Role(adapter)
-@Lifecycle(singleton)
-class ArticleRepositoryImpl: ArticleRepository { }
-```
-
 ## Validation Configuration
 
 The Weft LSP can validate lifecycle violations:
@@ -561,7 +405,4 @@ The Weft LSP can validate lifecycle violations:
 ## See Also
 
 - [Observability](03-observability.md) - Reactive state management with @Publisher
-- [State Ownership](04-ui-state-ownership.md) - Local vs shared state
-- [Repositories](06-repositories.md) - Repository pattern and scoping
-- [ViewModels](07-viewmodels.md) - ViewModel pattern and scoping
-- [Clean Architecture](10-clean-architecture.md) - Understanding layer dependencies
+- [UI State Ownership](../ui/04-ui-state-ownership.md) - State and ownership in UI

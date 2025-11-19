@@ -353,6 +353,6 @@ struct User {
 
 ## See Also
 
-- [Roles & Patterns](../architecture/05-roles-and-patterns.md) - Entity and repository patterns
+- [Roles & Patterns](../architecture/04-roles-and-patterns.md) - Entity and repository patterns
 - [JSON](01-json.md) - DTOs and serialization
 - [API Integration](03-api-integration.md) - Network layer

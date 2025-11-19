@@ -103,8 +103,8 @@ data Article {
 // repositories/ArticleRepository.weft
 import Article
 
-@Repository
-@Singleton
+@Role(repository)
+@Lifecycle(singleton)
 class ArticleRepository {
     func getArticles() => [Article] {
         // implementation
@@ -115,12 +115,12 @@ class ArticleRepository {
 import Article
 import ArticleRepository
 
-@ViewModel
-@ViewScoped
+@Role(viewmodel)
+@Lifecycle(viewmodel)
 class ArticleListViewModel {
     private var repository: ArticleRepository
     
-    @State var articles: [Article] = []
+    @LocalState var articles: [Article] = []
     
     func loadArticles() async {
         articles = await repository.getArticles()
