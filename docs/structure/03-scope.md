@@ -57,7 +57,7 @@ Use a colon (`:`) at the end of the declaration line, then indent the body.
 
 ## Mixed Styles
 
-You can mix both styles in the same file (although we recommend you pick one style and stick with it, at least on a per-file level) - Weft accepts whatever feels natural:
+You can technically mix both styles in the same file (although we recommend you pick one style and stick with it on a per-project basis) - Weft accepts whatever feels natural:
 
 ```weft
 def processArticles(articles: [Article]) => [Article] {
@@ -72,7 +72,7 @@ def processArticles(articles: [Article]) => [Article] {
 }
 ```
 
-The translator understands both styles and will parse them correctly.
+The translator understands both styles and can parse them correctly.
 
 ## Semicolons
 
@@ -156,127 +156,9 @@ class UserManager {
 }
 ```
 
-## Examples
-
-### Function with Braces
-
-```weft
-func validateEmail(email: string) => bool {
-    if email.isEmpty {
-        return false
-    }
-
-    if !email.contains("@") {
-        return false
-    }
-
-    if !email.contains(".") {
-        return false
-    }
-
-    return true
-}
-```
-
-### Function with Indentation
-
-```weft
-def validateEmail(email: string) => bool:
-    if email.isEmpty:
-        return false
-
-    if not email.contains("@"):
-        return false
-
-    if not email.contains("."):
-        return false
-
-    return true
-```
-
-### Class Definition
-
-```weft
-class ArticleRepository {
-    private var articles: [Article] = []
-    private var database: Database
-
-    public func init(database: Database) {
-        self.database = database
-    }
-
-    public func getAll() async => [Article] {
-        if articles.isEmpty {
-            articles = await database.queryAll()
-        }
-        return articles
-    }
-
-    public func getById(id: string) async => Article? {
-        for article in articles {
-            if article.id == id {
-                return article
-            }
-        }
-
-        var article = await database.queryOne(id)
-        if article != null {
-            articles.append(article)
-        }
-
-        return article
-    }
-}
-```
-
-### Control Flow
-
-```weft
-func processOrder(order: Order) {
-    if order.isValid {
-        if order.isPaid {
-            shipOrder(order)
-        } else {
-            sendPaymentReminder(order)
-        }
-    } else {
-        cancelOrder(order)
-    }
-}
-
-// Equivalent with indentation
-def processOrder(order: Order):
-    if order.isValid:
-        if order.isPaid:
-            shipOrder(order)
-        else:
-            sendPaymentReminder(order)
-    else:
-        cancelOrder(order)
-```
-
 ## Best Practices
 
-**Be consistent within a file**: While you can mix styles, it's clearer to stick to one approach per file.
-
-```weft
-// Good: Consistent style
-func functionOne() {
-    // body
-}
-
-func functionTwo() {
-    // body
-}
-
-// Less clear: Mixed styles
-func functionOne() {
-    // body
-}
-
-def functionTwo():
-    // body
-```
+**Be consistent within a project**: While you can mix styles, it's clearer to stick to one approach per project.
 
 **Use the style your team prefers**: Weft's flexibility means you can match your team's conventions.
 
