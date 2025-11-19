@@ -7,8 +7,8 @@ Weft provides multiple keywords to define types and structures. Use whichever fe
 Weft supports five primary definition keywords:
 
 - **`type`** - General-purpose, flexible type definition
-- **`class`** - Complex types with inheritance, state management, etc
-- **`struct`** - Data-centric types with helper methods
+- **`class`** - Complex types with inheritance, state management, reference semantics
+- **`struct`** - Data-centric types with helper methods, value semantics
 - **`data`** - Pure data containers
 - **`object`** - Stateless constant containers
 
