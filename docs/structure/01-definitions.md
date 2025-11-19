@@ -7,9 +7,9 @@ Weft provides multiple keywords to define types and structures. Use whichever fe
 Weft supports five primary definition keywords:
 
 - **`type`** - General-purpose, flexible type definition
-- **`class`** - Complex types with inheritance and state management
+- **`class`** - Complex types with inheritance, state management, etc
 - **`struct`** - Data-centric types with helper methods
-- **`data`** - Pure data containers (auto-generates boilerplate)
+- **`data`** - Pure data containers
 - **`object`** - Stateless constant containers
 
 Each keyword communicates different intent about how the type should be used and implemented.
@@ -129,7 +129,7 @@ struct Article {
 
 ## Data Keyword
 
-The `data` keyword indicates pure data containers with no custom methods. The translator auto-generates boilerplate like equality, hashing, string representation, and copying.
+The `data` keyword indicates pure data containers with no custom methods. 
 
 ```weft
 data ArticleMetadata {
@@ -143,19 +143,12 @@ data ArticleMetadata {
 
 **Use `data` when:**
 - The type is purely for holding data
-- You want automatic equality and hashing
 - You don't need custom methods
-- You're defining DTOs (Data Transfer Objects) or API models
-
-**Auto-generated functionality:**
-- Equality comparison (`==`, `!=`)
-- Hash code generation
-- String representation (`toString`, `description`)
-- Copy/clone functionality
+- You're defining DTOs (Data Transfer Objects), API models, or similar
 
 **Translates to:**
 - **Swift**: `struct` with `Equatable`, `Hashable`
-- **Kotlin**: `data class` (auto-generates all boilerplate)
+- **Kotlin**: `data class`
 - **TypeScript**: `interface` or `type`
 
 ## Object Keyword
@@ -182,7 +175,7 @@ object Colors {
 - You need a namespace for immutable values
 - No state will ever change
 
-**Note:** For stateful singletons (like repositories or services), use `@Lifecycle(singleton)` with `class`. See [Lifecycle & Scope](../architecture/04-lifecycle-scope.md) for managing object lifetimes with state.
+**Note:** For singletons (like repositories or services), use `@Lifecycle(singleton)` with `class`. See [Lifecycle & Scope](../architecture/04-lifecycle-scope.md) for managing object lifetimes.
 
 **Translates to:**
 - **Swift**: `enum` with static properties (no instances)
@@ -202,191 +195,13 @@ var primaryColor = Colors.PRIMARY
 
 ## Comparison
 
-| Keyword | Purpose | Methods | Inheritance | Semantics | Boilerplate |
-|---------|---------|---------|-------------|-----------|-------------|
-| `type` | General definition | Optional | No | Platform-specific | None |
-| `class` | Complex behavior | Yes | Yes | Reference | None |
-| `struct` | Data + methods | Yes | No | Value | None |
-| `data` | Pure data | No | No | Value | Auto-generated |
-| `object` | Singleton | Yes | No | Singleton | None |
-
-## Examples
-
-### API Response Model
-
-```weft
-// Pure data from API
-data ArticleResponse {
-    var id: string
-    var title: string
-    var content: string
-    var author_id: string
-    var published_at: string
-}
-
-// Domain model with methods
-struct Article {
-    var id: string
-    var title: string
-    var content: string
-    var authorId: string
-    var publishedDate: datetime
-
-    static func fromResponse(response: ArticleResponse) => Article {
-        return Article(
-            id: response.id,
-            title: response.title,
-            content: response.content,
-            authorId: response.author_id,
-            publishedDate: datetime.parse(response.published_at)
-        )
-    }
-
-    func wordCount() => int {
-        return content.split(" ").count
-    }
-}
-```
-
-### Configuration Constants
-
-```weft
-object AppConfig {
-    let ENVIRONMENT = "production"
-    let API_BASE_URL = "https://api.example.com"
-    let ENABLE_ANALYTICS = true
-    let LOG_LEVEL = "info"
-}
-
-object Theme {
-    let PRIMARY_COLOR = "#007AFF"
-    let SECONDARY_COLOR = "#5856D6"
-    let ERROR_COLOR = "#FF3B30"
-    let SUCCESS_COLOR = "#34C759"
-}
-```
-
-### Stateful Singleton
-
-```weft
-@Publisher
-@Lifecycle(singleton)
-class AppState {
-    private(set) var isAuthenticated: bool = false
-    private(set) var currentUser: User? = null
-
-    func login(user: User) {
-        self.currentUser = user
-        self.isAuthenticated = true
-    }
-
-    func logout() {
-        self.currentUser = null
-        self.isAuthenticated = false
-    }
-}
-```
-
-### Inheritance Hierarchy
-
-```weft
-class BaseRepository {
-    protected var database: Database
-
-    func init(database: Database) {
-        self.database = database
-    }
-
-    protected func logQuery(query: string) {
-        print("Query: \(query)")
-    }
-}
-
-class ArticleRepository: BaseRepository {
-    func getAll() => [Article] {
-        logQuery("SELECT * FROM articles")
-        return database.query("SELECT * FROM articles")
-    }
-
-    func getById(id: string) => Article? {
-        logQuery("SELECT * FROM articles WHERE id = \(id)")
-        return database.queryOne("SELECT * FROM articles WHERE id = ?", id)
-    }
-}
-```
-
-## Best Practices
-
-**Choose the right keyword for your intent**: Don't default to `class` for everything.
-
-```weft
-// Good: Clear intent
-data UserDTO {                    // Pure data from API
-    var id: string
-    var name: string
-}
-
-struct User {                     // Domain model with methods
-    var id: string
-    var name: string
-    func validate() => bool { }
-}
-
-class UserManager {               // Complex state management
-    private var users: [User]
-    func addUser(user: User) { }
-}
-```
-
-**Use `object` for constant namespaces**: Group related immutable values.
-
-```weft
-// Good: Organized constants
-object API {
-    let BASE_URL = "https://api.example.com"
-    let TIMEOUT = 30
-}
-
-// Avoid: Scattered constants
-let API_BASE_URL = "https://api.example.com"
-let API_TIMEOUT = 30
-```
-
-**Use `@Lifecycle(singleton)` for stateful singletons**: For mutable shared state.
-
-```weft
-// Good: Stateful singleton
-@Lifecycle(singleton)
-@Role(repository)
-class UserRepository {
-    private(set) var currentUser: User? = null
-}
-
-// Avoid: Mutable state in object
-object UserData {
-    var currentUser: User? = null  // Don't do this - throws error
-}
-```
-
-**Prefer `data` for simple DTOs**: Let the translator or target language compiler generate boilerplate.
-
-```weft
-// Good: Simple and clean
-data ArticleDTO {
-    var id: string
-    var title: string
-}
-
-// Unnecessary: Manual boilerplate
-class ArticleDTO {
-    var id: string
-    var title: string
-
-    func equals(other: ArticleDTO) => bool {
-        return self.id == other.id && self.title == other.title
-    }
-}
-```
+| Keyword | Purpose | Methods | Inheritance | Semantics |
+|---------|---------|---------|-------------|-----------|
+| `type` | General definition | Optional | No | Platform-specific |
+| `class` | Complex behavior | Yes | Yes | Reference |
+| `struct` | Data + methods | Yes | No | Value |
+| `data` | Pure data | No | No | Value |
+| `object` | Singleton | Yes | No | Singleton |
 
 ## See Also
 
