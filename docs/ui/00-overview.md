@@ -1,6 +1,6 @@
 # User Interface Overview
 
-Weft's UI system is **intentionally loose and flexible**. Unlike traditional frameworks with rigid APIs, Weft prioritizes **clear intent over strict syntax**. If your meaning is obvious, it will translate correctly.
+Weft's UI system is **intentionally loose and flexible**. Unlike traditional frameworks with rigid APIs, Weft prioritizes **clear intent over strict syntax**. If your meaning is obvious, it should translate correctly.
 
 ## Core Principles
 
@@ -56,25 +56,18 @@ All of these are valid. Choose what's comfortable.
 Both work. Use parentheses for quick params, trailing closure for complex styling:
 
 ```weft
-// Parentheses only
+// Parentheses
 Column(spacing: 16, padding: 20, isScrollable: true)
 
-// Trailing closure only
+// Trailing closure
 Column {
     spacing: 16
     padding: 20
     isScrollable: true
 }
-
-// Mix both
-Column(spacing: 16, isScrollable: true) {
-    padding: 20
-    backgroundColor: white
-    cornerRadius: 12
-}
 ```
 
-### 4. Reference System Components Freely
+### 4. Reference Native System Components Freely
 
 Don't worry if a system level/native UI component doesn't "officially" exist in Weft. Reference what you need:
 
@@ -100,7 +93,7 @@ view MapView {
 }
 ```
 
-The translator will map to the platform's native video player, map view, etc.
+The translator can map to the platform's native video player, map view, etc.
 
 ### 5. Use @Instruction for Clarity
 
@@ -219,82 +212,6 @@ blur, saturation, brightness, contrast
 ```weft
 onTap, onClick, onLongPress, onSwipe
 isDisabled, isHidden, isScrollable
-```
-
-## Flexibility in Practice
-
-### Example: Card Component
-
-Here are multiple valid ways to write the same card:
-
-```weft
-// Swift-style
-Card {
-    Image(photo) {
-        width: full
-        height: 200
-        scaleType: centerCrop
-    }
-
-    Text(title) {
-        font: h2
-        padding: 16
-    }
-}
-
-// Kotlin-style
-Card(
-    elevation = 4,
-    cornerRadius = 12,
-    padding = 16
-) {
-    Image(photo, scaleType = ScaleType.CenterCrop) {
-        width: full
-        height: 200
-    }
-
-    Text(text = title, style = h2)
-}
-
-// Custom component - defined elsewhere and imported
-FancyCard(
-    image: photo,
-    title: title,
-    elevation: medium,
-    style: rounded
-)
-
-// All valid - choose what communicates best
-```
-
-### Example: Mixing Styles
-
-```weft
-view ArticleCard {
-    var article: Article
-    @LocalState var isBookmarked = false  // Swift-style initialization
-
-    Column(onClick: () => navigateTo(DetailView(article))) {  // React-style
-        AsyncImage(article.coverImage) {  // Swift-style
-            width: full
-            height: 200
-            contentMode: aspectFill
-        }
-
-        VStack(spacing = 8, padding = 16) {  // Mix of styles
-            Text(article.title, fontSize: 18, fontWeight: .bold)
-            Text(article.excerpt, maxLines: 3)
-        }
-
-        Row {
-            Spacer()
-            IconButton(
-                icon: isBookmarked ? Icons.bookmarkFilled : Icons.bookmark,
-                onClick: { isBookmarked.toggle() }
-            )
-        }
-    }
-}
 ```
 
 ## Translation Examples
