@@ -1,6 +1,6 @@
 # API Integration
 
-Weft handles network requests with async/await patterns. Use the gateway/adapter pattern to separate interface definitions from concrete implementations.
+Weft handles network requests with async/await patterns. Use the gateway/adapter pattern to separate interface definitions from concrete implementations. This file puts forth a collection of examples that show how one could implement common API integration scenarios using Weft.
 
 ## Gateway Pattern
 
@@ -233,29 +233,6 @@ class ArticleRepositoryImpl: ArticleRepository {
         => convert to entity
         => save to database and cache
         => return entity or null
-    }
-}
-```
-
-## Optimistic Updates
-
-```weft
-@Role(adapter)
-@Lifecycle(singleton)
-@Publisher
-class TodoRepositoryImpl: TodoRepository {
-    @Subscriber private var gateway: TodoGateway
-    private var database: Database
-    private(set) var todos: [Todo] = []
-
-    func toggleComplete(todoId: string) async {
-        @SumFunc
-        => find todo in local array
-        => toggle its completed state immediately
-        => update UI via state change
-        => send update to gateway in background
-        => if gateway fails, revert local change
-        => show error to user
     }
 }
 ```

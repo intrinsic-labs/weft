@@ -1,6 +1,6 @@
 # Databases
 
-Weft separates domain entities from database schemas:
+Weft helps to separate domain entities from database schemas:
 
 - **`@Role(entity)`** - Core business objects in your domain layer
 - **`@Schema`** - Database table definitions in your framework layer

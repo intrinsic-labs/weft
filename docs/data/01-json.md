@@ -52,22 +52,6 @@ type User {
 // {"id":"...", "display_name":"...", "email_address":"...", "created_at":"..."}
 ```
 
-## Optional Fields
-
-```weft
-@JSON
-type Post {
-    var id: string
-    var title: string
-    var excerpt: string?           // optional in JSON
-    var coverImage: string? = null // optional with default
-    var tags: [string]? = null     // optional array
-}
-
-// Valid JSON with missing optionals:
-// {"id":"1","title":"Post"}
-```
-
 ## Nested Objects
 
 ```weft
@@ -83,24 +67,6 @@ type Article {
     var title: string
     var author: Author              // nested object
     var relatedArticles: [Article]  // array of objects
-}
-```
-
-## Collections
-
-```weft
-@JSON
-type Category {
-    var id: string
-    var name: string
-    var subcategories: [Category] = []
-}
-
-@JSON
-type Blog {
-    var posts: [Post]
-    var tags: [string]
-    var metadata: [string: string]  // dictionary/map
 }
 ```
 
@@ -139,38 +105,6 @@ type Event {
 }
 ```
 
-## Enums
-
-```weft
-enum Status {
-    pending
-    approved
-    rejected
-}
-
-@JSON
-type Request {
-    var id: string
-    var status: Status  // serializes as string
-}
-
-// JSON: {"id":"123","status":"approved"}
-```
-
-## Arrays and Lists
-
-```weft
-@JSON
-type Response {
-    var data: [Article]
-    var total: int
-    var page: int
-}
-
-// Parse array directly
-var articles = [Article].fromJSON(jsonArray)
-```
-
 ## Error Handling
 
 ```weft
@@ -182,30 +116,6 @@ func loadArticle(id: string) async => Article? {
         print("Failed to parse: \(error)")
         return null
     }
-}
-```
-
-## API Response Pattern
-
-```weft
-@JSON
-type APIResponse<T> {
-    var data: T
-    var message: string?
-    var error: string?
-}
-
-@JSON
-type ArticleResponse {
-    var articles: [Article]
-    var total: int
-    var page: int
-}
-
-func fetchArticles() async => [Article] {
-    var response = await api.get("/articles")
-    var parsed = APIResponse<ArticleResponse>.fromJSON(response)
-    return parsed.data.articles
 }
 ```
 
