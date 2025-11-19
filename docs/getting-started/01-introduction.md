@@ -38,17 +38,5 @@ Weft is built on several core principles:
 ## Learn More
 
 - [Read the original blog post](https://rocketbro.vercel.app/blog/weft)
-- [View the project on GitHub](https://github.com/asherpope/weft)
-
-## Documentation Structure
-
-This documentation is organized into the following sections:
-
-1. **Introduction** (you are here) - Overview and philosophy
-2. **Control Flow & Operators** - Conditionals, loops, functions, operators
-3. **Types & Collections** - Primitive types, arrays, dictionaries, sets
-4. **Annotations** - Special annotations for intent and metadata
-5. **Syntax** - Variables, enums, classes, structs, and more
-6. **User Interface** - Views and state management
-
-Start with the basics and work your way through, or jump to the section you need!
+- [View the project on GitHub](https://github.com/intrinsiclabs/weft)
+- [Explore the Quick Reference](../QUICK_REFERENCE.md)
