@@ -152,39 +152,6 @@ struct Comment {
 }
 ```
 
-## Indexes
-
-```weft
-@Schema
-struct Article {
-    @Id(generated)
-    var id: string
-
-    var title: string
-
-    @Index
-    var slug: string        // indexed for fast lookup
-
-    @Index
-    var publishedAt: datetime
-
-    var content: string
-}
-
-// Composite index (needs platform-specific implementation)
-@Schema
-@Index(["authorId", "publishedAt"])
-struct Post {
-    @Id(generated)
-    var id: string
-
-    @ForeignKey("users")
-    var authorId: string
-
-    var publishedAt: datetime
-}
-```
-
 ## Unique Constraints
 
 ```weft

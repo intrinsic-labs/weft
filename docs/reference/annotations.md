@@ -638,7 +638,7 @@ view ArticleListView {
 |------------|-------|---------|
 | `@Publisher` | Class | "This class has observable state" |
 | `@Subscriber` | Property | "I observe this publisher" |
-| `@Binding` | Property | "Two-way binding to parent" (sugar for `@Subscriber(writable: true)`) |
+| `@Binding` | Property | "Two-way binding to parent" (sugar for `@Subscriber(writable: true)` - views only) |
 | `@LocalState` | Property | "Ephemeral UI state" (views only) |
 
 ---
@@ -674,8 +674,6 @@ struct ArticleSchema {
 }
 ```
 
-**Note**: `@Schema` is a framework-layer concern. Core business entities (`@Role(entity)`) should NOT be marked with `@Schema`.
-
 ---
 
 #### `@Id(generated?)`
@@ -707,21 +705,6 @@ struct Comment {
     @ForeignKey("articles") var articleId: string
     @ForeignKey("users") var authorId: string
     var content: string
-}
-```
-
----
-
-#### `@Index`
-
-Marks a field for database indexing (improves query performance).
-
-```weft
-@Schema
-struct User {
-    @Id(generated) var id: string
-    @Index var email: string  // Fast lookups by email
-    @Index var username: string
 }
 ```
 
@@ -863,7 +846,7 @@ Marks the application entry point.
 
 ```weft
 @Main
-class MyApp: App {
+class MyApp {
     @LocalState var theme = Theme()
 
     var content: View {
@@ -898,17 +881,14 @@ class LocalDatabaseAdapter: Database
 // ❌ BAD - this should be a regular comment
 @Instruction("This fetches all articles")
 func fetchAll() -> [Article]
-
-// ✅ GOOD - use a regular comment for code documentation
-// Fetches all articles from the repository
-func fetchAll() -> [Article]
 ```
 
-**Use sparingly for**:
-- Platform-specific translation choices (iOS vs Android)
+**Use for**:
+- Platform-specific translation choices (iOS vs Android vs React etc)
 - API response ambiguities that affect mapping
 - Non-obvious translation decisions
 - Edge cases in translation logic
+- Complex UI decisions
 
 **DO NOT use for**:
 - Regular code documentation (use comments)
@@ -933,28 +913,6 @@ func processPayment(cart: ShoppingCart) async throws -> Receipt {
     => Send confirmation email
     => Return receipt with transaction details
 }
-// ✅ No implementation code - @SumFunc IS the implementation
-
-func calculateTotal(items: [CartItem]) -> decimal {
-    // ❌ WRONG - don't mix @SumFunc with actual implementation
-    @SumFunc
-    => Sum item prices
-    => Apply tax
-
-    var total = 0.0
-    for item in items {
-        total += item.price
-    }
-    return total
-}
-
-func calculateTotal(items: [CartItem]) -> decimal {
-    // ✅ CORRECT - either use @SumFunc OR write the code
-    @SumFunc
-    => Sum all item prices
-    => Apply tax rate based on location
-    => Return final total
-}
 ```
 
 **Use when**:
@@ -971,17 +929,23 @@ func calculateTotal(items: [CartItem]) -> decimal {
 
 ### `@Index`
 
-Documents directory contents and structure (placed in index files).
+Labels an index file documenting a directory's contents and purpose.
 
 ```weft
-@Index('''
-This directory contains all use cases for article management:
-- FetchArticlesUseCase: Retrieves and filters articles
-- PublishArticleUseCase: Publishes a draft article
-- DeleteArticleUseCase: Soft-deletes an article
-- ArchiveArticleUseCase: Archives an old article
-''')
+@Index('domain')
+
+# Domain Directory
+
+This directory contains the core business logic and domain models:
+
+- **Entities**: Core business objects (Article, User, Comment)
+- **UseCases**: Business operations (FetchArticles, PublishArticle)
+- **Repositories**: Abstract data access interfaces (ArticleRepository, UserRepository)
+
+All domain code is framework-agnostic and contains no external dependencies.
 ```
+
+**Usage:** Create an `index.weft` file in a directory with `@Index('directory_name')` at the top. Write context in markdown or plain text.
 
 ---
 
@@ -991,16 +955,36 @@ Marks deprecated code with migration guidance.
 
 ```weft
 @Deprecated(
-    message: "Use @Publisher instead",
-    since: "0.3.0",
-    replacement: "@Publisher"
+    message: "This method uses the old synchronous API. Use fetchArticlesAsync() instead.",
+    since: "2.1.0",
+    replacement: "fetchArticlesAsync()"
 )
-@Observable
-class OldViewModel { }
+func fetchArticlesSynchronously() -> [Article] {
+    // Old implementation
+    return []
+}
 
-@Deprecated("Use fetchArticles() instead")
-func getArticles() -> [Article] {
-    return fetchArticles()
+@Deprecated("Direct database access is deprecated. Use ArticleRepository instead")
+@Role(adapter)
+class LegacyDatabaseService {
+    func queryArticles() -> [Article] {
+        // Old implementation
+    }
+}
+
+@Role(entity)
+data User {
+    var id: string
+    var name: string
+
+    @Deprecated("Use fullName property instead", replacement: "fullName")
+    func getDisplayName() -> string {
+        return name
+    }
+
+    var fullName: string {
+        return name
+    }
 }
 ```
 
@@ -1137,167 +1121,6 @@ view ArticleListView {
 
 ---
 
-## Dependency Rules & Validation
-
-The LSP validates the following rules:
-
-### 1. Layer Dependencies
-
-```weft
-// ✅ VALID: Use case depends on entity
-@Role(usecase)
-class PublishArticle {
-    func execute(article: Article) { }  // Article is @Role(entity)
-}
-
-// ✅ VALID: Use case depends on repository interface
-@Role(usecase)
-class FetchArticles {
-    private var repository: ArticleRepository  // Interface
-}
-
-// ❌ INVALID: Entity depends on use case (wrong direction!)
-@Role(entity)
-data Article {
-    var useCase: PublishArticleUseCase  // ERROR
-}
-
-// ❌ INVALID: Use case depends on adapter (should depend on interface)
-@Role(usecase)
-class FetchArticles {
-    private var repository: ArticleRepositoryImpl  // ERROR: use interface instead
-}
-```
-
-### 2. Lifecycle Dependencies
-
-```weft
-// ✅ VALID: ViewScoped depends on Singleton
-@Role(viewmodel)
-@Lifecycle(view)
-class ArticleViewModel {
-    private var repository: ArticleRepository  // Singleton
-}
-
-// ❌ INVALID: Singleton depends on ViewScoped
-@Role(repository)
-@Lifecycle(singleton)
-class ArticleRepository {
-    private var viewModel: ArticleViewModel  // ERROR: can't inject shorter-lived dependency
-}
-```
-
-### 3. State Annotations
-
-```weft
-// ✅ VALID: @Subscriber on property that references @Publisher
-@Publisher
-class ViewModel { }
-
-view MyView {
-    @Subscriber var viewModel: ViewModel  // Valid
-}
-
-// ❌ INVALID: @Subscriber without @Publisher
-class RegularClass { }
-
-view MyView {
-    @Subscriber var obj: RegularClass  // ERROR: RegularClass is not @Publisher
-}
-
-// ❌ INVALID: @LocalState outside of view
-@Role(viewmodel)
-class ViewModel {
-    @LocalState var count: int = 0  // ERROR: @LocalState only allowed in views
-}
-```
-
-### Configuration
-
-Control validation strictness in `weft.settings.json`:
-
-```json
-{
-  "validation": {
-    "dependencyRule": "error",      // "error" | "warning" | "off"
-    "layerViolations": "error",     // Enforce Clean Architecture layers
-    "lifecycleViolations": "warning",
-    "stateAnnotations": "warning"
-  },
-  "architecture": {
-    "style": "clean"  // Future: support other architectural styles
-  }
-}
-```
-
----
-
-## Migration from v0.2.0
-
-### Deprecated Annotations
-
-| Old | New | Migration |
-|-----|-----|-----------|
-| `@Observable` | `@Publisher` | Replace all occurrences |
-| `@Singleton` | `@Lifecycle(singleton)` | Parameterized form |
-| `@ViewScoped` | `@Lifecycle(view)` | Parameterized form |
-| `@FeatureScoped` | `@Lifecycle(feature)` | Parameterized form |
-| `@SessionScoped` | `@Lifecycle(session)` | Parameterized form |
-| `@Repository` | `@Role(repository)` | Parameterized form |
-| `@ViewModel` | `@Role(viewmodel)` | Parameterized form |
-| `@Service` | `@Role(service)` | Parameterized form |
-| `@State` | `@LocalState` | More explicit naming |
-| `@Entity` (DB) | `@Schema` | Use `@Role(entity)` for business objects |
-
-### Example Migration
-
-**Before (v0.2.0)**:
-```weft
-@Observable
-@Repository
-@Singleton
-class ArticleRepository {
-    private(set) var articles: [Article] = []
-}
-
-@Observable
-@ViewModel
-@ViewScoped
-class ArticleListViewModel {
-    @State var errorMessage: string? = nil
-}
-
-view ArticleListView {
-
-    var viewModel: ArticleListViewModel
-    @State var showFilters: bool = false
-}
-```
-
-**After (v0.3.0)**:
-```weft
-@Role(repository)
-@Lifecycle(singleton)
-@Publisher
-class ArticleRepository {
-    var articles: [Article] = []  // Implicitly observable (public)
-}
-
-@Role(viewmodel)
-@Lifecycle(view)
-@Publisher
-class ArticleListViewModel {
-    @LocalState var errorMessage: string? = nil
-}
-
-view ArticleListView {
-    @Subscriber var viewModel: ArticleListViewModel  // Explicit subscription
-    @LocalState var showFilters: bool = false
-}
-```
-
----
-
 ## Quick Reference Table
 
 | Annotation | Category | Purpose | Example |
@@ -1319,13 +1142,12 @@ view ArticleListView {
 | **State & Reactivity** |
 | `@Publisher` | State | Has observable state | `@Publisher class ViewModel` |
 | `@Subscriber` | State | Observes publisher | `@Subscriber var vm: ViewModel` |
-| `@Binding` | State | Two-way binding | `@Binding var text: string` |
+| `@Binding` | State | Two-way UI binding | `@Binding var text: string` |
 | `@LocalState` | State | Ephemeral UI state | `@LocalState var expanded: bool` |
 | **Database** |
 | `@Schema` | Persistence | Database table | `@Schema struct UserSchema` |
 | `@Id(generated?)` | Persistence | Primary key | `@Id(generated) var id: string` |
 | `@ForeignKey("table")` | Persistence | Foreign key | `@ForeignKey("users") var userId` |
-| `@Index` | Persistence | Database index | `@Index var email: string` |
 | `@Unique` | Persistence | Unique constraint | `@Unique var email: string` |
 | `@Required` | Persistence | Non-null field | `@Required var name: string` |
 | `@Nullable` / `@Optional` | Persistence | Nullable field | `@Nullable var bio: string?` |
@@ -1336,10 +1158,10 @@ view ArticleListView {
 | `@JSONIgnore` | Serialization | Exclude from JSON | `@JSONIgnore var password` |
 | `@JSONFormat("format")` | Serialization | Date format | `@JSONFormat("yyyy-MM-dd") var date` |
 | **Documentation** |
-| `@Main` | Meta | App entry point | `@Main class MyApp: App` |
+| `@Main` | Meta | App entry point | `@Main class MyApp` |
 | `@Instruction(msg)` | Meta | Translation ambiguity clarification | `@Instruction("Use Realm for iOS, Room for Android")` |
 | `@SumFunc` | Meta | Function implementation in English | `@SumFunc => step 1 => step 2` |
-| `@Index` | Meta | Directory docs | `@Index('''contents''')` |
+| `@Index("dir_name")` | Meta | Directory docs | `@Index('directory_name')` |
 | `@Deprecated(msg)` | Meta | Deprecated code | `@Deprecated("Use X instead")` |
 
 ---
@@ -1352,8 +1174,3 @@ view ArticleListView {
 - [Data: JSON](../data/01-json.md) - JSON serialization
 - [Data: Databases](../data/02-databases.md) - Database schemas
 - [Language: Annotations](../language/07-annotations.md) - Core language annotations
-
----
-
-**Version:** 0.3.0
-**Last Updated:** January 2025
