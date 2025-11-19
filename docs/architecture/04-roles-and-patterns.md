@@ -39,7 +39,6 @@ Weft's architecture is built on **Clean Architecture** principles, which organiz
 - Scalability (easy to add features)
 - Enforced boundaries (LSP validates dependencies)
 
-Learn more: [Clean Architecture](10-clean-architecture.md)
 
 ## The 8 Role Annotations
 

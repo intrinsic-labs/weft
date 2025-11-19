@@ -1,6 +1,6 @@
-# Annotations
+# Language Annotations
 
-Annotations in Weft provide metadata and context to code, helping communicate intent to both developers and translators. They are prefixed with `@` and can be applied to types, functions, and properties.
+Language Annotations in Weft provide metadata and context to code, helping communicate intent to both developers and translators. They are prefixed with `@` and can be applied to types, functions, and properties.
 
 ## Core Annotations
 
@@ -10,7 +10,7 @@ Marks the entry point of the application.
 
 ```weft
 @Main
-class MyApp: App {
+class MyApp {
     @LocalState var theme = Theme()
     
     var content: View {
@@ -21,7 +21,7 @@ class MyApp: App {
 }
 ```
 
-**Usage:** Apply to a class or function that serves as the application entry point. For standard apps, annotate a class conforming to the `App` protocol.
+**Usage:** Apply to a class or function that serves as the application entry point. 
 
 ### @Instruction
 
@@ -53,7 +53,7 @@ class DatabaseAdapter: Database
 func fetchArticles() -> [Article]
 ```
 
-**Usage:** Apply to classes, functions, or properties. Pass a string with your clarification.
+**Usage:** Apply anywhere in the codebase where local context would help to navigate difficult or unclear translation choices. 
 
 ### @SumFunc
 
@@ -62,7 +62,6 @@ Replaces function implementation with a high-level natural language description.
 **Important:** `@SumFunc` IS the implementation. You don't need to write the actual code underneath it.
 
 ```weft
-// ✅ CORRECT: @SumFunc is the implementation
 func fetchAndProcessArticles() async -> [Article] {
     @SumFunc
     => fetch articles from API endpoint
@@ -70,36 +69,26 @@ func fetchAndProcessArticles() async -> [Article] {
     => sort by publication date descending
     => return processed article array
 }
-// Your work is done!
-
-// ❌ WRONG: Code under @SumFunc
-func processPayment(cart: Cart) async -> Receipt {
-    @SumFunc
-    => Process the payment
-    
-    let total = cart.calculateTotal()  // @SumFunc replaces this
-    return gateway.charge(total)       // Use regular comments to document regular functions
-}
 ```
 
-**Usage:** Place inside function body. Write what you want done, not how to do it. This is pseudocode's core feature—communicate intent, let the translator handle implementation.
+**Usage:** Place inside function body. Write what you want done, not how to do it. Write short, clear steps on each line.
 
 ### @Index
 
-Creates an index file documenting a directory's contents and purpose.
+Labels an index file documenting a directory's contents and purpose.
 
 ```weft
-@Index('models')
+@Index('domain')
 
-# Models Directory
+# Domain Directory
 
-This directory contains all data models for the application:
+This directory contains the core business logic and domain models:
 
-- **DTOs**: API response models (ArticleDTO, UserDTO)
-- **Domain**: Core domain models (Article, User, Comment)
-- **ViewModels**: Presentation models for UI
+- **Entities**: Core business objects (Article, User, Comment)
+- **UseCases**: Business operations (FetchArticles, PublishArticle)
+- **Repositories**: Abstract data access interfaces (ArticleRepository, UserRepository)
 
-All models follow the naming convention: EntityType + suffix.
+All domain code is framework-agnostic and contains no external dependencies.
 ```
 
 **Usage:** Create an `index.weft` file in a directory with `@Index('directory_name')` at the top. Write context in markdown or plain text.

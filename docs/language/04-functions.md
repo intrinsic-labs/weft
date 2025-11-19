@@ -33,6 +33,8 @@ func functionName(parameter: Type) => ReturnType {
 
 ### Parameters
 
+Weft requires function parameters to be explicitly declared, typed, and named. 
+
 ```weft
 // Single parameter
 func greet(name: string) => string {
@@ -84,7 +86,7 @@ func getActiveUsers() => [User] {
 
 ## Async Functions
 
-Use the `async` keyword for asynchronous functions. Call them with `await`:
+Use the `async` keyword for asynchronous functions. Call them with `await` in an async context.:
 
 ```weft
 // Async function declaration
@@ -109,15 +111,7 @@ async func loadData() {
     var articles = await fetchArticles()
     var user = await loadUserProfile("123")
 }
-
-// Or wrap in Task for async context
-Task {
-    var articles = await fetchArticles()
-    displayArticles(articles)
-}
 ```
-
-**Important:** Async functions must be called from an async context (another async function or a Task block).
 
 ## Function Shortcuts
 
@@ -158,86 +152,6 @@ var filtered = numbers.filter(n => {
 var combined = items.reduce((acc, item) => {
     return acc + item.value
 }, 0)
-```
-
-## Examples
-
-### Basic Function
-
-```weft
-func calculateDiscount(price: float, percentage: float) => float {
-    return price * (1 - percentage / 100)
-}
-
-// Usage
-var discountedPrice = calculateDiscount(100.0, 15.0)  // 85.0
-```
-
-### Function with Optional Return
-
-```weft
-func findArticleById(articles: [Article], id: string) => Article? {
-    for article in articles {
-        if article.id == id {
-            return article
-        }
-    }
-    return null
-}
-```
-
-### Async Data Fetching
-
-```weft
-async func fetchAndProcessArticles() => [Article] {
-    // Fetch raw data
-    var response = await apiClient.get("/articles")
-    
-    // Process the data
-    var articles: [Article] = []
-    for item in response.data {
-        var article = Article.fromJSON(item)
-        articles.append(article)
-    }
-    
-    return articles
-}
-```
-
-### Function with Multiple Return Paths
-
-```weft
-func getUserDisplayName(user: User) => string {
-    if let nickname = user.nickname {
-        return nickname
-    }
-    
-    if user.firstName != null && user.lastName != null {
-        return "\(user.firstName) \(user.lastName)"
-    }
-    
-    if let email = user.email {
-        return email.split("@")[0]
-    }
-    
-    return "Anonymous"
-}
-```
-
-### Higher-Order Functions
-
-```weft
-func applyOperation(numbers: [int], operation: (int) => int) => [int] {
-    var results: [int] = []
-    for num in numbers {
-        results.append(operation(num))
-    }
-    return results
-}
-
-// Usage
-var doubled = applyOperation([1, 2, 3], n => n * 2)
-var squared = applyOperation([1, 2, 3], n => n * n)
 ```
 
 ## Throwing Functions
@@ -283,10 +197,9 @@ func getAndValidateUser(id: string) throws => User {
 Functions can have access modifiers to control visibility:
 
 ```weft
-public func publicFunction() => void { }
-private func privateFunction() => void { }
-protected func protectedFunction() => void { }
-internal func internalFunction() => void { }
+public func publicFunction() => void { }        // default (implicit)
+private func privateFunction() => void { }      // only within the same file/module
+protected func protectedFunction() => void { }  // within class and subclasses
 ```
 
 ## Static Functions
@@ -312,42 +225,9 @@ var maximum = MathUtils.max(10, 20)
 
 **Keep functions focused**: Each function should do one thing well.
 
-```weft
-// Good: Single responsibility
-func validateEmail(email: string) => bool {
-    return email.contains("@") && email.contains(".")
-}
-
-func sendEmail(email: string, message: string) async => void {
-    if !validateEmail(email) {
-        throw ValidationError("Invalid email")
-    }
-    await emailService.send(email, message)
-}
-```
-
 **Use descriptive names**: Function names should clearly indicate what they do.
 
-```weft
-// Good: Clear intent
-func calculateMonthlyPayment(principal: float, rate: float, years: int) => float
-
-// Avoid: Vague names
-func calc(a: float, b: float, c: int) => float
-```
-
 **Handle errors appropriately**: Use try/catch for operations that can fail.
-
-```weft
-async func loadUserData(id: string) => User {
-    try {
-        return await api.fetchUser(id)
-    } catch error {
-        logError("Failed to load user: \(error)")
-        throw error
-    }
-}
-```
 
 ## See Also
 

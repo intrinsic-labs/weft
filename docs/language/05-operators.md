@@ -1,6 +1,6 @@
 # Operators
 
-Weft supports both symbol-based and word-based operators to accommodate developers from different language backgrounds. Use whichever style feels most natural to you—all variants are valid and translate correctly.
+Weft supports both symbol-based and word-based operators. 
 
 ## Boolean Logic Operators
 
@@ -144,8 +144,8 @@ var greeting = "Hello, \(name)!"              // Swift-style
 var message = "User ${user.id} has ${user.points} points"  // JS/TS/Kotlin-style
 var status = "Status: {isActive}"             // Natural style
 
-// All interpolation styles are equivalent - use what feels natural
-var mixed = "Hello \(firstName), you have ${points} points"
+// All interpolation styles are equivalent - use what works for you and your team
+// We do recommend being consistent within a project for the sake of clarity
 
 // Multiline strings
 var paragraph = """
@@ -240,11 +240,20 @@ var color = score >= 80 ? Color.green : Color.red
 
 ## Range Operators
 
-Create ranges for iteration:
+Create ranges for iteration. Exclusive or half-open ranges are declared as `..<` while inclusive ranges use `..` or `...`:
 
 ```weft
-// Inclusive range (0 to 9)
+// Inclusive range (0 to 10)
 for i in 0..10 {
+    // i goes from 0 to 10
+}
+
+for i in 0...10 {
+    // i goes from 0 to 10
+}
+
+// Exclusive range (0 to 10)
+for i in 0..<10 {
     // i goes from 0 to 9
 }
 
@@ -295,91 +304,13 @@ var text = value as string
 var optionalText = value as? string  // safe cast, returns null if fails
 ```
 
-## Operator Examples
-
-### Combining Operators
-
-```weft
-func calculateDiscount(price: float, user: User) => float {
-    var discount = user.isPremium ? 0.2 : 0.1
-    var finalPrice = price * (1 - discount)
-    return finalPrice >= 0 ? finalPrice : 0
-}
-```
-
-### Complex Conditionals
-
-```weft
-func canAccessResource(user: User, resource: Resource) => bool {
-    var isOwner = user.id == resource.ownerId
-    var isPublic = resource.visibility == "public"
-    var hasSharedAccess = user.id in resource.sharedWith
-    
-    return isOwner || isPublic || (hasSharedAccess && user.isActive)
-}
-```
-
-### Null Safety in Practice
-
-```weft
-func getUserInfo(userId: string) => string {
-    var user = findUser(userId)
-    
-    // Use optional chaining and null coalescing
-    var name = user?.profile?.displayName ?? user?.username ?? "Unknown User"
-    var email = user?.email ?? "No email"
-    var status = user?.isActive == true ? "Active" : "Inactive"
-    
-    return "\(name) (\(email)) - \(status)"
-}
-```
-
-### String Operations
-
-```weft
-func formatArticleTitle(article: Article) => string {
-    var prefix = article.isFeatured ? "[Featured] " : ""
-    var suffix = article.isPremium ? " (Premium)" : ""
-    var readTime = article.readTimeMinutes > 0 ? " - \(article.readTimeMinutes) min read" : ""
-    
-    return prefix + article.title + suffix + readTime
-}
-```
-
 ## Best Practices
 
 **Use word operators for readability**: When logic is complex, word operators can be clearer.
 
-```weft
-// More readable with words
-if user.isActive and not user.isBanned and user.role in allowedRoles {
-    // grant access
-}
-
-// Equivalent with symbols
-if user.isActive && !user.isBanned && user.role in allowedRoles {
-    // grant access
-}
-```
-
 **Prefer optional chaining over force unwrapping**: Avoid crashes by handling nulls gracefully.
 
-```weft
-// Good: Safe navigation
-var title = article?.title ?? "Untitled"
-
-// Avoid: Force unwrap (can crash)
-var title = article!.title
-```
-
 **Use parentheses for complex expressions**: Make operator precedence explicit.
-
-```weft
-// Clear intent
-if (age >= 18 && hasLicense) || isSupervised {
-    // can drive
-}
-```
 
 ## See Also
 

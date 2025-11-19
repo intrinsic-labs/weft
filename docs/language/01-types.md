@@ -11,7 +11,7 @@ var name: string             // declaration without assignment
 
 ## Primitive Types
 
-Weft supports the following primitive types. The canonical style is **lowercase**, but **PascalCase** is also supported for developers coming from Swift, Kotlin, or other statically-typed languages.
+Weft supports the following primitive types. The canonical style is **lowercase**, but **PascalCase** is also supported - write the way you like.
 
 ### Core Types
 
@@ -37,7 +37,7 @@ image / Image                       // image data/references
 void / Void                         // no return value (for functions)
 ```
 
-**Note:** Weft does not support `any` as a type, as it goes against the goal of clear intent and structure. For dynamic data, define a proper data transfer object (DTO), enums with associated values, or interfaces/protocols to capture expected structure.
+**Note:** Weft does not support `any` as a type, as it goes against the goal of clear intent and structure. For dynamic data, define a proper [data transfer object (DTO)](../architecture/04-roles-and-patterns.md), [enums with associated values](02-variables-enums.md), or interfaces/protocols to capture expected structure.
 
 ## Collections
 
@@ -100,6 +100,8 @@ var mutable: [Article]              // mutable binding - can modify or reassign
 let constMap: [string: int]         // cannot reassign this dictionary
 var mutMap: [string: int]           // can modify or reassign this dictionary
 ```
+
+[Read more](02-variables-enums.md) about mutability assignment and declaration. 
 
 ## Examples
 

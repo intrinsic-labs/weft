@@ -1,6 +1,6 @@
 # Control Flow
 
-Weft supports common control flow patterns with familiar variants from popular languages. Write using the syntax you're most comfortable with—all variants are valid and will be properly translated.
+Weft supports common control flow patterns with familiar variants from popular languages. Write using the syntax you're most comfortable with—all variants are valid.
 
 ## Supported Keywords
 
@@ -18,7 +18,7 @@ Weft accepts multiple keyword variants for control flow:
 **Pattern Matching:**
 - `switch`, `case`, `default`, `match`, `=>`, `_`
 
-All variants are equivalent—use whichever feels most natural to you.
+All variants are equivalent and communicate the same underlying intent. Below are details and examples on each category.
 
 ## Conditionals
 
@@ -115,80 +115,6 @@ match value {
     option1 => result1
     option2 => result2
     _ => defaultResult
-}
-```
-
-## Examples
-
-### Conditional Logic
-
-```weft
-func getUserStatus(user: User) => string {
-    if user.isActive && user.isPremium {
-        return "Premium Active"
-    } elif user.isActive {
-        return "Active"
-    } else {
-        return "Inactive"
-    }
-}
-```
-
-### Collection Iteration
-
-```weft
-func calculateTotal(items: [Item]) => float {
-    var total: float = 0.0
-    
-    for item in items {
-        total += item.price
-    }
-    
-    return total
-}
-```
-
-### Filtered Iteration
-
-```weft
-func getPublishedTitles(articles: [Article]) => [string] {
-    var titles: [string] = []
-    
-    for article in articles where article.isPublished {
-        titles.append(article.title)
-    }
-    
-    return titles
-}
-```
-
-### Switch Statement
-
-```weft
-func getStatusColor(status: Status) => Color {
-    switch status {
-        case SUCCESS:
-            return Color.green
-        case ERROR:
-            return Color.red
-        case PENDING:
-            return Color.yellow
-        default:
-            return Color.gray
-    }
-}
-```
-
-### Pattern Matching
-
-```weft
-func handleResponse(result: Result) => string {
-    match result {
-        SUCCESS(message) => message
-        ERROR(code, message) => "Error \(code): \(message)"
-        TIMEOUT => "Request timed out"
-        _ => "Unknown result"
-    }
 }
 ```
 

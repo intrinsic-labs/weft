@@ -8,7 +8,7 @@ Weft supports multiple keywords for declaring variables, allowing you to use the
 
 ### Mutable Variables
 
-Use these keywords to declare variables whose values can be changed:
+Use `var`, `mut`, or `mutable` to declare variables whose values can be changed:
 
 ```weft
 var someVariable = "initial value"
@@ -16,11 +16,11 @@ mut someMutable = 42
 mutable someOtherVar = true
 ```
 
-All three keywords are equivalent—use whichever feels most natural.
+All three keywords are equivalent.
 
 ### Immutable Variables
 
-Use these keywords to declare constants whose values cannot be changed after initialization:
+Use `const`, `let`, `val`, or `final` to declare constants whose values cannot be changed after initialization:
 
 ```weft
 const someConstant = "fixed value"
@@ -30,26 +30,6 @@ final someFinal = "immutable"
 ```
 
 All four keywords are equivalent—they all create immutable bindings.
-
-## Type Annotations
-
-Variables can have explicit type annotations or rely on type inference:
-
-```weft
-// Explicit type annotation
-var name: string = "Alice"
-var age: int = 30
-var isActive: bool = true
-
-// Type inference (type is inferred from value)
-var name = "Alice"        // inferred as string
-var age = 30              // inferred as int
-var isActive = true       // inferred as bool
-
-// Declaration without initialization (type required)
-var name: string
-var count: int
-```
 
 ## Examples
 
@@ -72,6 +52,8 @@ var tags: [string] = ["swift", "kotlin", "weft"]
 ```
 
 ### Optional Variables
+
+Optional types may or may not contain a value. Use the `?` suffix to declare an optional type.
 
 ```weft
 var username: string?        // optional string, initially null
@@ -123,16 +105,7 @@ enum Direction {
 }
 ```
 
-Case values are typically written in UPPERCASE, but lowercase or sentence case are also acceptable:
-
-```weft
-enum Status {
-    pending,
-    active,
-    completed,
-    cancelled
-}
-```
+Case values are typically written in UPPERCASE, but lowercase or sentence case are also acceptable.
 
 ### Enums with Associated Values
 
@@ -143,12 +116,6 @@ enum Result {
     SUCCESS(message),
     ERROR(code, message),
     TIMEOUT
-}
-
-enum NetworkResponse {
-    SUCCESS(data),
-    ERROR(statusCode, message),
-    NO_CONNECTION
 }
 
 enum LoadingState {
@@ -225,169 +192,15 @@ func handleResult(result: Result) {
 }
 ```
 
-### Enum Comparisons
-
-```weft
-var currentStatus = Status.ACTIVE
-
-if currentStatus == Status.ACTIVE {
-    // status is active
-}
-
-if currentStatus != Status.CANCELLED {
-    // status is not cancelled
-}
-```
-
-## Complete Examples
-
-### User State Management
-
-```weft
-enum UserState {
-    GUEST,
-    AUTHENTICATED(user),
-    ADMIN(user, permissions)
-}
-
-var currentState: UserState = UserState.GUEST
-
-func updateUserState(state: UserState) {
-    currentState = state
-    
-    match state {
-        GUEST => {
-            showLoginPrompt()
-        }
-        AUTHENTICATED(user) => {
-            loadUserProfile(user)
-        }
-        ADMIN(user, permissions) => {
-            loadAdminDashboard(user, permissions)
-        }
-    }
-}
-```
-
-### API Response Handling
-
-```weft
-enum APIResponse<T> {
-    SUCCESS(data: T),
-    ERROR(statusCode: int, message: string),
-    NETWORK_ERROR(message: string)
-}
-
-async func fetchArticles() => APIResponse<[Article]> {
-    try {
-        var response = await api.get("/articles")
-        return APIResponse.SUCCESS(response.data)
-    } catch error: NetworkError {
-        return APIResponse.NETWORK_ERROR(error.message)
-    } catch error {
-        return APIResponse.ERROR(500, error.message)
-    }
-}
-
-// Usage
-var response = await fetchArticles()
-match response {
-    SUCCESS(articles) => displayArticles(articles)
-    ERROR(code, message) => showError("Error \(code): \(message)")
-    NETWORK_ERROR(message) => showError("Network error: \(message)")
-}
-```
-
-### Form Validation
-
-```weft
-enum ValidationResult {
-    VALID,
-    INVALID(errors: [string])
-}
-
-func validateForm(form: RegistrationForm) => ValidationResult {
-    var errors: [string] = []
-    
-    if form.email.isEmpty {
-        errors.append("Email is required")
-    }
-    
-    if form.password.length < 8 {
-        errors.append("Password must be at least 8 characters")
-    }
-    
-    if form.age < 18 {
-        errors.append("Must be 18 or older")
-    }
-    
-    if errors.isEmpty {
-        return ValidationResult.VALID
-    } else {
-        return ValidationResult.INVALID(errors)
-    }
-}
-
-// Usage
-var result = validateForm(userForm)
-match result {
-    VALID => submitForm(userForm)
-    INVALID(errors) => displayErrors(errors)
-}
-```
-
 ## Best Practices
 
 **Use immutable variables by default**: Prefer `let`/`const` unless you need to mutate the value.
 
-```weft
-// Good: Clear that this won't change
-let apiKey = "abc123"
-let maxRetries = 3
-
-// Only use var when needed
-var currentAttempt = 0
-currentAttempt += 1
-```
-
 **Be explicit about optionals**: Make it clear when a value can be null.
-
-```weft
-// Clear: username might be null
-var username: string? = null
-
-// Clear: email is always present
-var email: string = "user@example.com"
-```
 
 **Use enums for fixed sets of values**: Instead of string constants, use enums.
 
-```weft
-// Good: Type-safe with autocomplete
-enum Status { PENDING, ACTIVE, COMPLETED }
-var status = Status.ACTIVE
-
-// Avoid: Prone to typos
-var status = "active"  // could be "Active", "ACTIVE", "activ", etc.
-```
-
 **Use associated values for contextual data**: When enum cases need additional information.
-
-```weft
-// Good: Error includes context
-enum LoadingState {
-    LOADING(progress: float),
-    ERROR(message: string),
-    SUCCESS(data: [Article])
-}
-
-// Less useful: No context
-enum LoadingState {
-    LOADING,
-    ERROR,
-    SUCCESS
-}
-```
 
 ## See Also
 
