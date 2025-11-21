@@ -23,7 +23,7 @@ Column(isScrollable: true, spacing: 8) {
 }
 ```
 
-**Common parameters:** `spacing`, `padding`, `alignment`, `isScrollable`, `backgroundColor`, `cornerRadius`
+**Common parameters:** `spacing`, `padding`, `alignment`, `isScrollable`, `backgroundColor`, `cornerRadius`, etc
 
 ### Row
 
@@ -38,7 +38,7 @@ Row(spacing: 12, alignment: center) {
 }
 ```
 
-**Common parameters:** `spacing`, `padding`, `alignment`, `verticalAlignment`, `horizontalAlignment`
+**Common parameters:** `spacing`, `padding`, `alignment`, `verticalAlignment`, `horizontalAlignment`, etc
 
 ### ZStack
 
@@ -304,21 +304,16 @@ LoadingSpinner {
 
 **Size values:** `small`, `medium`, `large`
 
-### Icon
+### SystemIcon
 
 Display icons from system icon sets.
 
 ```weft
-Icon(name: "star")
+SystemIcon(name: "star")
 
-Icon(name: "heart") {
+SystemIcon(name: "heart") {
     size: 24
     color: red
-}
-
-Icon(Icons.bookmark) {
-    size: 20
-    color: theme.accent
 }
 ```
 
@@ -472,9 +467,6 @@ WebView(url: websiteUrl) {
 
 // Camera
 CameraView(onCapture: handlePhoto)
-
-// QR Scanner
-QRScannerView(onScan: handleQRCode)
 ```
 
 The translator will map these to platform equivalents (AVPlayerViewController, MapKit, Google Maps, WebView, Camera APIs, etc.).
