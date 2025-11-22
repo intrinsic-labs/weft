@@ -178,7 +178,7 @@ Application entry point:
 
 ```weft
 @Main
-class MyApp: App {
+class MyApp {
     @LocalState var theme = Theme()
 
     var content: View {
@@ -193,7 +193,7 @@ class MyApp: App {
 
 ### `@Instruction`
 
-**Clarifies translation ambiguity** - not a regular comment!
+**Clarifies translation ambiguity** - not a regular comment.
 
 Use only when you need to specify how to translate Weft to target language in a non-obvious way.
 
@@ -205,7 +205,7 @@ During translation, map the plain featured_image value (not featured_image_full)
 func fetchArticle(id: string) async -> Article
 
 @Role(adapter)
-@Instruction("Use Realm for iOS, Room for Android")
+@Instruction("Use SwiftData for iOS, Room for Android")
 class LocalDatabaseAdapter: Database
 
 // ✅ Use regular comments for code documentation
@@ -214,15 +214,14 @@ func fetchAll() -> [Article]
 ```
 
 **Use sparingly**: Platform-specific choices, API ambiguities, edge cases
-**Don't use**: Regular documentation (use comments instead)
 
 ---
 
 ### `@SumFunc`
 
-**Replaces function implementation** - write logic in English instead of code!
+**Summary Function. Replaces function implementation** - write logic in English instead of code.
 
-The translator converts English directly to target language. Don't write code underneath.
+The translator converts English directly to target language. Don't write a code implementation after the summary function.
 
 ```weft
 func processPayment(cart: ShoppingCart) async throws -> Receipt {
@@ -258,7 +257,7 @@ Mark deprecated code:
     since: "0.3.0",
     replacement: "@Publisher"
 )
-@Observable  // n
+@Observable 
 class MyClass { }
 ```
 
@@ -323,7 +322,7 @@ struct ArticleDTO {
 
 ```weft
 @Role(entity)
-data Article {
+struct Article {
     var id: string
     var title: string
     var content: string
