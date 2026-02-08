@@ -61,7 +61,7 @@ class Parser {
       }
     }
 
-    const end = this.previous().range.end;
+    const end = this.previous()?.range.end ?? this.current().range.end;
 
     return {
       document: {
