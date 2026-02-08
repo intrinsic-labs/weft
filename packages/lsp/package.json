@@ -4,12 +4,18 @@
   "description": "Language Server Protocol implementation for Weft",
   "type": "module",
   "main": "dist/server.js",
+  "exports": {
+    ".": "./dist/server.js",
+    "./dist/parser.js": "./dist/parser.js",
+    "./dist/analyzer.js": "./dist/analyzer.js",
+    "./dist/ast.js": "./dist/ast.js"
+  },
   "bin": {
     "weft": "./dist/cli.js",
     "weft-lsp": "./dist/server.js"
   },
   "scripts": {
-    "build": "tsup src/server.ts src/cli.ts --format esm --dts",
+    "build": "tsup src/server.ts src/cli.ts src/parser.ts src/analyzer.ts src/ast.ts --format esm --dts",
     "dev": "tsup src/server.ts src/cli.ts --format esm --watch",
     "test": "vitest",
     "typecheck": "tsc --noEmit"

@@ -35,6 +35,7 @@
     "package": "vsce package"
   },
   "dependencies": {
+    "@weft/lsp": "*",
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {

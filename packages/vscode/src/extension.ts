@@ -15,10 +15,8 @@ import {
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-  // Path to the LSP server
-  const serverModule = context.asAbsolutePath(
-    path.join("..", "lsp", "dist", "server.js")
-  );
+  // Find the LSP server from @weft/lsp package
+  const serverModule = require.resolve("@weft/lsp/dist/server.js");
 
   const serverOptions: ServerOptions = {
     run: { module: serverModule, transport: TransportKind.ipc },
