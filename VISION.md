@@ -258,8 +258,12 @@ The core value. Must validate as you type.
 - Orphan detection (defined but never referenced)
 - Cross-file validation
 
-#### 8. VSCode Extension
+#### 8. Editor Extensions (VSCode + Zed)
 One-click install. Zero configuration. Just works on .weft files.
+
+Both editors supported via the same LSP server:
+- **VSCode**: Extension wraps LSP with syntax highlighting
+- **Zed**: Extension points to LSP binary with language config
 
 ---
 

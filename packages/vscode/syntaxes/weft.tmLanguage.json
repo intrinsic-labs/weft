@@ -1,0 +1,148 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Weft",
+  "scopeName": "source.weft",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#docstrings" },
+    { "include": "#annotations" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.weft",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.weft",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "docstrings": {
+      "patterns": [
+        {
+          "name": "string.quoted.triple.weft",
+          "begin": "\"\"\"",
+          "end": "\"\"\"",
+          "patterns": [
+            { "include": "#docstring-references" }
+          ]
+        },
+        {
+          "name": "string.quoted.triple.weft",
+          "begin": "'''",
+          "end": "'''",
+          "patterns": [
+            { "include": "#docstring-references" }
+          ]
+        }
+      ]
+    },
+    "docstring-references": {
+      "patterns": [
+        {
+          "name": "entity.name.tag.weft",
+          "match": "@(Rule|Definition|Decision|OpenQuestion)\\(\"[^\"]+\"\\)"
+        },
+        {
+          "name": "entity.name.type.weft",
+          "match": "`[A-Z][a-zA-Z0-9]*`"
+        },
+        {
+          "name": "variable.other.weft",
+          "match": "`[a-z][a-zA-Z0-9.]*`"
+        }
+      ]
+    },
+    "annotations": {
+      "patterns": [
+        {
+          "name": "entity.name.function.annotation.weft",
+          "match": "@(Rule|Definition|Decision|OpenQuestion|Implements|See|Constraint|Example|Assumption)"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.declaration.weft",
+          "match": "\\b(type|struct|data|protocol|interface|service|view|enum)\\b"
+        },
+        {
+          "name": "keyword.other.weft",
+          "match": "\\b(func|fn|function|var|let|const|async|throws)\\b"
+        },
+        {
+          "name": "constant.language.weft",
+          "match": "\\b(true|false|null)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "support.type.primitive.weft",
+          "match": "\\b(string|int|float|double|bool|date|datetime|url|void|any)\\b"
+        },
+        {
+          "name": "entity.name.type.weft",
+          "match": "\\b[A-Z][a-zA-Z0-9]*\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.weft",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.weft",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.weft",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.weft",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.weft",
+          "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.arrow.weft",
+          "match": "->"
+        },
+        {
+          "name": "keyword.operator.optional.weft",
+          "match": "\\?"
+        }
+      ]
+    }
+  }
+}

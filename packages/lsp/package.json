@@ -1,0 +1,25 @@
+{
+  "name": "@weft/lsp",
+  "version": "0.1.0",
+  "description": "Language Server Protocol implementation for Weft",
+  "main": "dist/server.js",
+  "bin": {
+    "weft-lsp": "./dist/server.js"
+  },
+  "scripts": {
+    "build": "tsup src/server.ts --format cjs --dts",
+    "dev": "tsup src/server.ts --format cjs --watch",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  }
+}
