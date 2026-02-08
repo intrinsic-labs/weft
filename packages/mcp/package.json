@@ -1,0 +1,24 @@
+{
+  "name": "@weft/mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Weft specifications",
+  "type": "module",
+  "main": "dist/server.js",
+  "bin": {
+    "weft-mcp": "./dist/server.js"
+  },
+  "scripts": {
+    "build": "tsup src/server.ts --format esm",
+    "dev": "tsup src/server.ts --format esm --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.24.0",
+    "@weft/lsp": "*",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  }
+}

@@ -79,7 +79,64 @@ export interface SeeAnnotation extends Node {
   target: string;
 }
 
-export type TypeAnnotation = ImplementsAnnotation | SeeAnnotation;
+// Clean Architecture role annotation
+export type RoleKind =
+  | "entity"
+  | "usecase"
+  | "repository"
+  | "service"
+  | "viewmodel"
+  | "gateway"
+  | "dto"
+  | "adapter";
+
+export interface RoleAnnotation extends Node {
+  kind: "Role";
+  role: RoleKind;
+}
+
+// Lifecycle scope annotation
+export type LifecycleKind = "singleton" | "session" | "feature" | "view";
+
+export interface LifecycleAnnotation extends Node {
+  kind: "Lifecycle";
+  scope: LifecycleKind;
+}
+
+// Schema annotation for persistence
+export interface SchemaAnnotation extends Node {
+  kind: "Schema";
+}
+
+export type TypeAnnotation =
+  | ImplementsAnnotation
+  | SeeAnnotation
+  | RoleAnnotation
+  | LifecycleAnnotation
+  | SchemaAnnotation;
+
+// ============================================
+// Field-level annotations (for schema)
+// ============================================
+
+export interface IdAnnotation extends Node {
+  kind: "Id";
+  generated: boolean;
+}
+
+export interface UniqueAnnotation extends Node {
+  kind: "Unique";
+}
+
+export interface IndexAnnotation extends Node {
+  kind: "Index";
+}
+
+export interface RequiredAnnotation extends Node {
+  kind: "Required";
+}
+
+export type FieldAnnotation = IdAnnotation | UniqueAnnotation | IndexAnnotation | RequiredAnnotation;
 
 // ============================================
 // Type declarations
@@ -128,6 +185,7 @@ export interface Field extends Node {
   kind: "Field";
   name: string;
   docstring?: string;
+  annotations: FieldAnnotation[];
   type: TypeExpr;
   defaultValue?: Literal;
 }
@@ -247,4 +305,44 @@ export const PRIMITIVES = new Set([
 
 export function isPrimitive(name: string): boolean {
   return PRIMITIVES.has(name);
+}
+
+// ============================================
+// Clean Architecture Helpers
+// ============================================
+
+/**
+ * Role layers from innermost (0) to outermost (3).
+ * Inner layers cannot depend on outer layers.
+ */
+export const ROLE_LAYERS: Record<RoleKind, number> = {
+  entity: 0,      // Enterprise Business Rules (innermost)
+  usecase: 1,     // Application Business Rules
+  repository: 2,  // Interface Adapters (interfaces)
+  service: 2,     // Interface Adapters (interfaces)
+  viewmodel: 2,   // Interface Adapters
+  gateway: 2,     // Interface Adapters
+  dto: 2,         // Interface Adapters
+  adapter: 3,     // Frameworks & Drivers (outermost)
+};
+
+/**
+ * Lifecycle scopes from longest (0) to shortest (3).
+ * Longer-lived scopes can inject into shorter-lived, not vice versa.
+ */
+export const LIFECYCLE_ORDER: Record<LifecycleKind, number> = {
+  singleton: 0,
+  session: 1,
+  feature: 2,
+  view: 3,
+};
+
+export function canDependOn(fromRole: RoleKind, toRole: RoleKind): boolean {
+  // Inner layers can only depend on same or more inner layers
+  return ROLE_LAYERS[fromRole] >= ROLE_LAYERS[toRole];
+}
+
+export function canInjectInto(fromScope: LifecycleKind, toScope: LifecycleKind): boolean {
+  // Longer-lived can inject into shorter-lived
+  return LIFECYCLE_ORDER[fromScope] <= LIFECYCLE_ORDER[toScope];
 }

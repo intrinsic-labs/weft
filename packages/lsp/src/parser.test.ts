@@ -289,3 +289,129 @@ describe("Full Example", () => {
     ]);
   });
 });
+
+describe("Architecture Annotations", () => {
+  it("parses @Role annotation", () => {
+    const { document, errors } = parse(`
+      @Role(entity)
+      type User {
+        id: string
+      }
+    `);
+
+    expect(errors).toHaveLength(0);
+
+    const decl = document.declarations[0];
+    if (decl.kind === "TypeDeclaration") {
+      expect(decl.annotations).toHaveLength(1);
+      expect(decl.annotations[0].kind).toBe("Role");
+      if (decl.annotations[0].kind === "Role") {
+        expect(decl.annotations[0].role).toBe("entity");
+      }
+    }
+  });
+
+  it("parses @Lifecycle annotation", () => {
+    const { document, errors } = parse(`
+      @Lifecycle(singleton)
+      @Role(repository)
+      type UserRepository {
+        users: [User]
+      }
+    `);
+
+    expect(errors).toHaveLength(0);
+
+    const decl = document.declarations[0];
+    if (decl.kind === "TypeDeclaration") {
+      expect(decl.annotations).toHaveLength(2);
+      const lifecycle = decl.annotations.find(a => a.kind === "Lifecycle");
+      if (lifecycle?.kind === "Lifecycle") {
+        expect(lifecycle.scope).toBe("singleton");
+      }
+    }
+  });
+
+  it("parses @Schema annotation", () => {
+    const { document, errors } = parse(`
+      @Schema
+      type UserRecord {
+        id: string
+        email: string
+      }
+    `);
+
+    expect(errors).toHaveLength(0);
+
+    const decl = document.declarations[0];
+    if (decl.kind === "TypeDeclaration") {
+      expect(decl.annotations).toHaveLength(1);
+      expect(decl.annotations[0].kind).toBe("Schema");
+    }
+  });
+
+  it("parses field annotations", () => {
+    const { document, errors } = parse(`
+      @Schema
+      type UserRecord {
+        @Id(generated) id: string
+        @Unique email: string
+        @Index createdAt: datetime
+        @Required name: string
+      }
+    `);
+
+    expect(errors).toHaveLength(0);
+
+    const decl = document.declarations[0];
+    if (decl.kind === "TypeDeclaration") {
+      const idField = decl.members[0];
+      if (idField.kind === "Field") {
+        expect(idField.annotations).toHaveLength(1);
+        expect(idField.annotations[0].kind).toBe("Id");
+        if (idField.annotations[0].kind === "Id") {
+          expect(idField.annotations[0].generated).toBe(true);
+        }
+      }
+
+      const emailField = decl.members[1];
+      if (emailField.kind === "Field") {
+        expect(emailField.annotations[0].kind).toBe("Unique");
+      }
+    }
+  });
+
+  it("parses complete Clean Architecture example", () => {
+    const source = `
+      @Role(entity)
+      type User {
+        id: string
+        email: string
+      }
+
+      @Role(usecase)
+      @Lifecycle(singleton)
+      service CreateUserUseCase {
+        func execute(email: string) -> User throws
+      }
+
+      @Role(repository)
+      protocol UserRepository {
+        func findById(id: string) -> User?
+        func save(user: User) throws
+      }
+
+      @Role(adapter)
+      @Lifecycle(singleton)
+      service UserRepositoryImpl {
+        func findById(id: string) -> User?
+        func save(user: User) throws
+      }
+    `;
+
+    const { document, errors } = parse(source);
+
+    expect(errors).toHaveLength(0);
+    expect(document.declarations).toHaveLength(4);
+  });
+});

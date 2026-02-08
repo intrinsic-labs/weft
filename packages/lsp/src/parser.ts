@@ -17,6 +17,7 @@ import type {
   DecisionDeclaration,
   OpenQuestionDeclaration,
   TypeAnnotation,
+  FieldAnnotation,
   Member,
   Field,
   Method,
@@ -26,6 +27,8 @@ import type {
   Literal,
   Range,
   TypeKeyword,
+  RoleKind,
+  LifecycleKind,
 } from "./ast.js";
 import { isPrimitive } from "./ast.js";
 
@@ -176,7 +179,7 @@ class Parser {
   private typeAnnotations(): TypeAnnotation[] {
     const annotations: TypeAnnotation[] = [];
 
-    while (this.check("@Implements", "@See")) {
+    while (this.check("@Implements", "@See", "@Role", "@Lifecycle", "@Schema")) {
       if (this.match("@Implements")) {
         const start = this.previous().range.start;
         this.expect("(");
@@ -195,6 +198,32 @@ class Parser {
         annotations.push({
           kind: "See",
           target,
+          range: { start, end: this.previous().range.end },
+        });
+      } else if (this.match("@Role")) {
+        const start = this.previous().range.start;
+        this.expect("(");
+        const role = this.expectIdentifier() as RoleKind;
+        this.expect(")");
+        annotations.push({
+          kind: "Role",
+          role,
+          range: { start, end: this.previous().range.end },
+        });
+      } else if (this.match("@Lifecycle")) {
+        const start = this.previous().range.start;
+        this.expect("(");
+        const scope = this.expectIdentifier() as LifecycleKind;
+        this.expect(")");
+        annotations.push({
+          kind: "Lifecycle",
+          scope,
+          range: { start, end: this.previous().range.end },
+        });
+      } else if (this.match("@Schema")) {
+        const start = this.previous().range.start;
+        annotations.push({
+          kind: "Schema",
           range: { start, end: this.previous().range.end },
         });
       }
@@ -319,6 +348,9 @@ class Parser {
   }
 
   private member(): Member {
+    // Parse field annotations first
+    const fieldAnnotations = this.fieldAnnotations();
+
     // Check if it's a method (starts with func/fn/function or identifier followed by ()
     if (this.check("func", "fn", "function")) {
       return this.method();
@@ -330,15 +362,53 @@ class Parser {
       if (next?.kind === "(") {
         return this.method();
       }
-      return this.field();
+      return this.field(fieldAnnotations);
     }
 
     this.error("Expected field or method");
     throw new Error("Parse error");
   }
 
-  private field(): Field {
-    const start = this.current().range.start;
+  private fieldAnnotations(): FieldAnnotation[] {
+    const annotations: FieldAnnotation[] = [];
+
+    while (this.check("@Id", "@Unique", "@Index", "@Required")) {
+      if (this.match("@Id")) {
+        const start = this.previous().range.start;
+        let generated = false;
+        if (this.match("(")) {
+          const value = this.expectIdentifier();
+          generated = value === "generated";
+          this.expect(")");
+        }
+        annotations.push({
+          kind: "Id",
+          generated,
+          range: { start, end: this.previous().range.end },
+        });
+      } else if (this.match("@Unique")) {
+        annotations.push({
+          kind: "Unique",
+          range: this.previous().range,
+        });
+      } else if (this.match("@Index")) {
+        annotations.push({
+          kind: "Index",
+          range: this.previous().range,
+        });
+      } else if (this.match("@Required")) {
+        annotations.push({
+          kind: "Required",
+          range: this.previous().range,
+        });
+      }
+    }
+
+    return annotations;
+  }
+
+  private field(annotations: FieldAnnotation[] = []): Field {
+    const start = annotations[0]?.range.start ?? this.current().range.start;
     const name = this.expectIdentifier();
     this.expect(":");
     const type = this.type();
@@ -351,6 +421,7 @@ class Parser {
     return {
       kind: "Field",
       name,
+      annotations,
       type,
       defaultValue,
       range: { start, end: this.previous().range.end },

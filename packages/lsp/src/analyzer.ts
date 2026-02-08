@@ -1,6 +1,6 @@
 /**
  * Semantic analyzer for Weft specifications.
- * Builds symbol table and validates references.
+ * Builds symbol table and validates references, architecture, and lifecycle.
  */
 
 import type {
@@ -10,14 +10,13 @@ import type {
   ServiceDeclaration,
   EnumDeclaration,
   ViewDeclaration,
-  RuleDeclaration,
-  DefinitionDeclaration,
-  DecisionDeclaration,
-  OpenQuestionDeclaration,
   TypeExpr,
   Member,
   Range,
+  RoleKind,
+  LifecycleKind,
 } from "./ast.js";
+import { canDependOn, canInjectInto, ROLE_LAYERS } from "./ast.js";
 
 // ============================================
 // Symbol Table
@@ -31,6 +30,10 @@ export interface Symbol {
   range: Range;
   docstring?: string;
   members?: Map<string, Symbol>;
+  role?: RoleKind;
+  lifecycle?: LifecycleKind;
+  isSchema?: boolean;
+  dependencies?: string[]; // Types this symbol depends on
 }
 
 export interface SymbolTable {
@@ -51,6 +54,7 @@ export interface Diagnostic {
   message: string;
   range: Range;
   severity: DiagnosticSeverity;
+  code?: string;
 }
 
 // ============================================
@@ -82,10 +86,13 @@ export function analyze(document: Document): AnalysisResult {
     collectSymbol(decl, symbols, diagnostics);
   }
 
-  // Second pass: validate references
+  // Second pass: validate references and architecture
   for (const decl of document.declarations) {
     validateReferences(decl, symbols, diagnostics);
   }
+
+  // Third pass: validate architectural constraints
+  validateArchitecture(symbols, diagnostics);
 
   return { symbols, diagnostics };
 }
@@ -128,25 +135,39 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
       }, diagnostics);
       break;
 
-    case "TypeDeclaration":
+    case "TypeDeclaration": {
+      const { role, lifecycle, isSchema } = extractAnnotations(decl.annotations);
+      const dependencies = collectDependencies(decl.members);
       addSymbol(symbols.types, decl.name, {
         name: decl.name,
         kind: "type",
         range: decl.range,
         docstring: decl.docstring,
         members: collectMembers(decl.members),
+        role,
+        lifecycle,
+        isSchema,
+        dependencies,
       }, diagnostics);
       break;
+    }
 
-    case "ServiceDeclaration":
+    case "ServiceDeclaration": {
+      const { role, lifecycle, isSchema } = extractAnnotations(decl.annotations);
+      const dependencies = collectServiceDependencies(decl.methods);
       addSymbol(symbols.types, decl.name, {
         name: decl.name,
         kind: "service",
         range: decl.range,
         docstring: decl.docstring,
         members: collectMethods(decl.methods),
+        role,
+        lifecycle,
+        isSchema,
+        dependencies,
       }, diagnostics);
       break;
+    }
 
     case "EnumDeclaration":
       addSymbol(symbols.types, decl.name, {
@@ -158,14 +179,90 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
       }, diagnostics);
       break;
 
-    case "ViewDeclaration":
+    case "ViewDeclaration": {
+      const dependencies = collectDependencies(decl.members);
       addSymbol(symbols.types, decl.name, {
         name: decl.name,
         kind: "view",
         range: decl.range,
         docstring: decl.docstring,
         members: collectMembers(decl.members),
+        lifecycle: "view", // Views are implicitly view-scoped
+        dependencies,
       }, diagnostics);
+      break;
+    }
+  }
+}
+
+function extractAnnotations(annotations: TypeDeclaration["annotations"]): {
+  role?: RoleKind;
+  lifecycle?: LifecycleKind;
+  isSchema: boolean;
+} {
+  let role: RoleKind | undefined;
+  let lifecycle: LifecycleKind | undefined;
+  let isSchema = false;
+
+  for (const ann of annotations) {
+    if (ann.kind === "Role") {
+      role = ann.role;
+    } else if (ann.kind === "Lifecycle") {
+      lifecycle = ann.scope;
+    } else if (ann.kind === "Schema") {
+      isSchema = true;
+    }
+  }
+
+  return { role, lifecycle, isSchema };
+}
+
+function collectDependencies(members: Member[]): string[] {
+  const deps: string[] = [];
+  for (const member of members) {
+    if (member.kind === "Field") {
+      collectTypeDependencies(member.type, deps);
+    } else {
+      for (const param of member.parameters) {
+        collectTypeDependencies(param.type, deps);
+      }
+      if (member.returnType) {
+        collectTypeDependencies(member.returnType, deps);
+      }
+    }
+  }
+  return [...new Set(deps)];
+}
+
+function collectServiceDependencies(methods: Member[]): string[] {
+  const deps: string[] = [];
+  for (const method of methods) {
+    if (method.kind === "Method") {
+      for (const param of method.parameters) {
+        collectTypeDependencies(param.type, deps);
+      }
+      if (method.returnType) {
+        collectTypeDependencies(method.returnType, deps);
+      }
+    }
+  }
+  return [...new Set(deps)];
+}
+
+function collectTypeDependencies(type: TypeExpr, deps: string[]): void {
+  switch (type.kind) {
+    case "NamedType":
+      deps.push(type.name);
+      break;
+    case "ArrayType":
+      collectTypeDependencies(type.elementType, deps);
+      break;
+    case "DictionaryType":
+      collectTypeDependencies(type.keyType, deps);
+      collectTypeDependencies(type.valueType, deps);
+      break;
+    case "OptionalType":
+      collectTypeDependencies(type.innerType, deps);
       break;
   }
 }
@@ -176,6 +273,7 @@ function addSymbol(map: Map<string, Symbol>, name: string, symbol: Symbol, diagn
       message: `Duplicate symbol: ${name}`,
       range: symbol.range,
       severity: "error",
+      code: "duplicate-symbol",
     });
     return;
   }
@@ -254,6 +352,27 @@ function validateTypeDeclaration(decl: TypeDeclaration, symbols: SymbolTable, di
           message: `Unknown rule: ${ann.ruleId}`,
           range: ann.range,
           severity: "error",
+          code: "unknown-rule",
+        });
+      }
+    } else if (ann.kind === "Role") {
+      const validRoles: RoleKind[] = ["entity", "usecase", "repository", "service", "viewmodel", "gateway", "dto", "adapter"];
+      if (!validRoles.includes(ann.role)) {
+        diagnostics.push({
+          message: `Invalid role: ${ann.role}. Valid roles: ${validRoles.join(", ")}`,
+          range: ann.range,
+          severity: "error",
+          code: "invalid-role",
+        });
+      }
+    } else if (ann.kind === "Lifecycle") {
+      const validScopes: LifecycleKind[] = ["singleton", "session", "feature", "view"];
+      if (!validScopes.includes(ann.scope)) {
+        diagnostics.push({
+          message: `Invalid lifecycle: ${ann.scope}. Valid scopes: ${validScopes.join(", ")}`,
+          range: ann.range,
+          severity: "error",
+          code: "invalid-lifecycle",
         });
       }
     }
@@ -291,6 +410,7 @@ function validateServiceDeclaration(decl: ServiceDeclaration, symbols: SymbolTab
           message: `Unknown rule: ${ann.ruleId}`,
           range: ann.range,
           severity: "error",
+          code: "unknown-rule",
         });
       }
     }
@@ -348,6 +468,7 @@ function validateType(type: TypeExpr, symbols: SymbolTable, diagnostics: Diagnos
           message: `Unknown type: ${type.name}`,
           range: type.range,
           severity: "error",
+          code: "unknown-type",
         });
       }
       break;
@@ -361,6 +482,48 @@ function validateType(type: TypeExpr, symbols: SymbolTable, diagnostics: Diagnos
     case "OptionalType":
       validateType(type.innerType, symbols, diagnostics);
       break;
+  }
+}
+
+// ============================================
+// Architecture Validation
+// ============================================
+
+function validateArchitecture(symbols: SymbolTable, diagnostics: Diagnostic[]): void {
+  for (const [name, symbol] of symbols.types) {
+    if (!symbol.role || !symbol.dependencies) continue;
+
+    // Check dependency rule: inner layers cannot depend on outer layers
+    for (const depName of symbol.dependencies) {
+      const depSymbol = symbols.types.get(depName);
+      if (!depSymbol || !depSymbol.role) continue;
+
+      if (!canDependOn(symbol.role, depSymbol.role)) {
+        diagnostics.push({
+          message: `Architecture violation: ${name} (@Role(${symbol.role})) cannot depend on ${depName} (@Role(${depSymbol.role})). Inner layers cannot depend on outer layers.`,
+          range: symbol.range,
+          severity: "error",
+          code: "dependency-violation",
+        });
+      }
+    }
+
+    // Check lifecycle rule: longer-lived cannot depend on shorter-lived
+    if (symbol.lifecycle) {
+      for (const depName of symbol.dependencies) {
+        const depSymbol = symbols.types.get(depName);
+        if (!depSymbol || !depSymbol.lifecycle) continue;
+
+        if (!canInjectInto(depSymbol.lifecycle, symbol.lifecycle)) {
+          diagnostics.push({
+            message: `Lifecycle violation: ${name} (@Lifecycle(${symbol.lifecycle})) cannot depend on ${depName} (@Lifecycle(${depSymbol.lifecycle})). Shorter-lived objects cannot be injected into longer-lived ones.`,
+            range: symbol.range,
+            severity: "error",
+            code: "lifecycle-violation",
+          });
+        }
+      }
+    }
   }
 }
 
@@ -409,6 +572,7 @@ function validateProseReferences(prose: string, range: Range, symbols: SymbolTab
           message: `Unknown ${kind}: ${ref}`,
           range, // TODO: calculate precise position within prose
           severity: "warning",
+          code: `unknown-${kind}-ref`,
         });
       }
     }
@@ -424,6 +588,16 @@ export interface CoverageReport {
   unimplementedRules: string[];
   unreferencedDefinitions: string[];
   openQuestions: string[];
+  typesWithoutRole: string[];
+  architectureStats: {
+    entities: number;
+    usecases: number;
+    repositories: number;
+    services: number;
+    viewmodels: number;
+    adapters: number;
+    other: number;
+  };
 }
 
 export function coverage(symbols: SymbolTable, document: Document): CoverageReport {
@@ -432,12 +606,36 @@ export function coverage(symbols: SymbolTable, document: Document): CoverageRepo
     unimplementedRules: [],
     unreferencedDefinitions: [],
     openQuestions: [],
+    typesWithoutRole: [],
+    architectureStats: {
+      entities: 0,
+      usecases: 0,
+      repositories: 0,
+      services: 0,
+      viewmodels: 0,
+      adapters: 0,
+      other: 0,
+    },
   };
 
-  // Find types without docstrings
+  // Find types without docstrings and count by role
   for (const [name, sym] of symbols.types) {
     if (!sym.docstring) {
       report.undocumentedTypes.push(name);
+    }
+    if (!sym.role && sym.kind !== "enum") {
+      report.typesWithoutRole.push(name);
+    }
+
+    // Count by role
+    switch (sym.role) {
+      case "entity": report.architectureStats.entities++; break;
+      case "usecase": report.architectureStats.usecases++; break;
+      case "repository": report.architectureStats.repositories++; break;
+      case "service": report.architectureStats.services++; break;
+      case "viewmodel": report.architectureStats.viewmodels++; break;
+      case "adapter": report.architectureStats.adapters++; break;
+      default: report.architectureStats.other++; break;
     }
   }
 
@@ -458,14 +656,52 @@ export function coverage(symbols: SymbolTable, document: Document): CoverageRepo
     }
   }
 
-  // Find definitions never referenced (simplified check)
-  // In a full implementation, we'd scan all prose for references
-  // For now, just report all definitions as potentially unreferenced
-
   // List all open questions
   for (const name of symbols.questions.keys()) {
     report.openQuestions.push(name);
   }
 
   return report;
+}
+
+// ============================================
+// Query Helpers
+// ============================================
+
+export function getTypesByRole(symbols: SymbolTable, role: RoleKind): Symbol[] {
+  const result: Symbol[] = [];
+  for (const sym of symbols.types.values()) {
+    if (sym.role === role) {
+      result.push(sym);
+    }
+  }
+  return result;
+}
+
+export function getTypesByLifecycle(symbols: SymbolTable, lifecycle: LifecycleKind): Symbol[] {
+  const result: Symbol[] = [];
+  for (const sym of symbols.types.values()) {
+    if (sym.lifecycle === lifecycle) {
+      result.push(sym);
+    }
+  }
+  return result;
+}
+
+export function getDependencyGraph(symbols: SymbolTable): Map<string, string[]> {
+  const graph = new Map<string, string[]>();
+  for (const [name, sym] of symbols.types) {
+    graph.set(name, sym.dependencies ?? []);
+  }
+  return graph;
+}
+
+export function getSchemaTypes(symbols: SymbolTable): Symbol[] {
+  const result: Symbol[] = [];
+  for (const sym of symbols.types.values()) {
+    if (sym.isSchema) {
+      result.push(sym);
+    }
+  }
+  return result;
 }

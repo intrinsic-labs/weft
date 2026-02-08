@@ -36,6 +36,13 @@ export type TokenKind =
   | "@Constraint"
   | "@Example"
   | "@Assumption"
+  | "@Role"
+  | "@Lifecycle"
+  | "@Schema"
+  | "@Id"
+  | "@Unique"
+  | "@Index"
+  | "@Required"
   // Punctuation
   | ":"
   | "?"
@@ -96,6 +103,13 @@ const ANNOTATIONS = new Set([
   "@Constraint",
   "@Example",
   "@Assumption",
+  "@Role",
+  "@Lifecycle",
+  "@Schema",
+  "@Id",
+  "@Unique",
+  "@Index",
+  "@Required",
 ]);
 
 export class Lexer {

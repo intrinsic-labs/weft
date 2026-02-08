@@ -75,6 +75,7 @@ Should messages be end-to-end encrypted?
 // Types
 // ============================================
 
+@Role(entity)
 type User {
     """
     Core identity in the system.
@@ -89,6 +90,7 @@ type User {
     deletedAt: datetime?
 }
 
+@Role(entity)
 type Message {
     """
     A direct message between two users.
@@ -104,6 +106,7 @@ type Message {
     deletedAt: datetime?
 }
 
+@Role(entity)
 type Conversation {
     """
     Represents the message thread between two users.
@@ -133,6 +136,8 @@ enum MessageStatus {
 // Services
 // ============================================
 
+@Role(usecase)
+@Lifecycle(singleton)
 @Implements("verification-required")
 @Implements("message-retention")
 service Messaging {
@@ -151,6 +156,8 @@ service Messaging {
     func deleteMessage(userId: User, messageId: string) throws
 }
 
+@Role(usecase)
+@Lifecycle(singleton)
 service ConversationList {
     """
     Manages the list of conversations for a user.
