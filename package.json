@@ -1,0 +1,21 @@
+{
+  "name": "weft",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Structured specification language with real-time validation",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "dev": "npm run dev --workspace=@weft/lsp",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/intrinsic-labs/weft"
+  },
+  "author": "Intrinsic Labs",
+  "license": "MIT"
+}
