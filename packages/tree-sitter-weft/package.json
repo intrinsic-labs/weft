@@ -1,0 +1,32 @@
+{
+  "name": "tree-sitter-weft",
+  "version": "0.1.0",
+  "description": "Tree-sitter grammar for Weft specification language",
+  "main": "bindings/node",
+  "keywords": ["tree-sitter", "parser", "weft"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/intrinsic-labs/weft"
+  },
+  "author": "Intrinsic Labs",
+  "license": "MIT",
+  "dependencies": {
+    "nan": "^2.18.0"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.22.0"
+  },
+  "scripts": {
+    "build": "tree-sitter generate",
+    "test": "tree-sitter test",
+    "parse": "tree-sitter parse"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.weft",
+      "injection-regex": "weft",
+      "file-types": ["weft"],
+      "highlights": "queries/highlights.scm"
+    }
+  ]
+}

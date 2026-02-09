@@ -7,10 +7,5 @@ schema_version = 1
 authors = ["Intrinsic Labs"]
 repository = "https://github.com/intrinsic-labs/weft"
 
-[language_servers.weft]
-name = "Weft Language Server"
-language = "Weft"
-
 [grammars.weft]
-repository = "https://github.com/intrinsic-labs/weft"
-commit = "main"
+path = "grammars/weft"
