@@ -5,6 +5,9 @@
  * Provides real-time validation for Weft specification files.
  */
 
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
 import {
   createConnection,
   TextDocuments,
@@ -29,6 +32,24 @@ import { analyze, type SymbolTable, type Diagnostic, type Symbol } from "./analy
 import type { Document } from "./ast.js";
 
 // ============================================
+// Logging
+// ============================================
+
+const LOG_FILE = path.join(os.tmpdir(), "weft-lsp.log");
+
+function log(message: string): void {
+  const timestamp = new Date().toISOString();
+  const line = `[${timestamp}] ${message}\n`;
+  fs.appendFileSync(LOG_FILE, line);
+  // Also write to stderr for immediate feedback
+  console.error(`[weft-lsp] ${message}`);
+}
+
+log(`Server starting. Log file: ${LOG_FILE}`);
+log(`Process args: ${process.argv.join(" ")}`);
+log(`Working directory: ${process.cwd()}`);
+
+// ============================================
 // Server Setup
 // ============================================
 
@@ -38,8 +59,13 @@ const documents = new TextDocuments(TextDocument);
 // Cache parsed documents and symbols
 const documentCache = new Map<string, { document: Document; symbols: SymbolTable }>();
 
-connection.onInitialize((_params: InitializeParams): InitializeResult => {
-  return {
+connection.onInitialize((params: InitializeParams): InitializeResult => {
+  log(`onInitialize called`);
+  log(`  Client: ${params.clientInfo?.name ?? "unknown"} ${params.clientInfo?.version ?? ""}`);
+  log(`  Root URI: ${params.rootUri ?? "none"}`);
+  log(`  Capabilities: ${JSON.stringify(Object.keys(params.capabilities))}`);
+
+  const result: InitializeResult = {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       hoverProvider: true,
@@ -49,6 +75,9 @@ connection.onInitialize((_params: InitializeParams): InitializeResult => {
       definitionProvider: true,
     },
   };
+
+  log(`  Responding with capabilities: ${JSON.stringify(Object.keys(result.capabilities))}`);
+  return result;
 });
 
 // ============================================
@@ -56,12 +85,22 @@ connection.onInitialize((_params: InitializeParams): InitializeResult => {
 // ============================================
 
 documents.onDidChangeContent((change) => {
+  log(`onDidChangeContent: ${change.document.uri}`);
   validateDocument(change.document);
+});
+
+documents.onDidOpen((event) => {
+  log(`onDidOpen: ${event.document.uri}`);
+});
+
+documents.onDidClose((event) => {
+  log(`onDidClose: ${event.document.uri}`);
 });
 
 function validateDocument(textDocument: TextDocument): void {
   const text = textDocument.getText();
   const uri = textDocument.uri;
+  log(`validateDocument: ${uri} (${text.length} chars)`);
 
   // Parse
   const { document, errors: parseErrors } = parse(text);
@@ -277,7 +316,9 @@ connection.onDefinition((params): Definition | null => {
 // Start Server
 // ============================================
 
+log("Setting up connection listeners...");
 documents.listen(connection);
 connection.listen();
 
-console.error("Weft Language Server started");
+log("Weft Language Server is now listening");
+console.error(`Weft Language Server started. Log file: ${LOG_FILE}`);
