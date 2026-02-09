@@ -1,4 +1,3 @@
-[extension]
 id = "weft"
 name = "Weft"
 description = "Language support for Weft specification files"
@@ -7,5 +6,16 @@ schema_version = 1
 authors = ["Intrinsic Labs"]
 repository = "https://github.com/intrinsic-labs/weft"
 
+# Zed language extensions require grammars to be declared with a repository + rev.
+# For local/dev, use a file:// URL pointing at the grammar directory within this extension.
+#
+# Use an absolute file:// URL so Zed can resolve it reliably regardless of the current working directory.
 [grammars.weft]
-path = "grammars/weft"
+repository = "file:///Users/asherpope/dev/ai/weft/packages/zed/grammars/weft"
+rev = "dev"
+
+# Register the language server and the languages it applies to.
+# The entries in `languages` must match `name` in `languages/<lang>/config.toml`.
+[language_servers.weft-lsp]
+name = "weft-lsp"
+languages = ["Weft"]

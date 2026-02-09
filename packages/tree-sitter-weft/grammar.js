@@ -8,6 +8,21 @@
 module.exports = grammar({
   name: 'weft',
 
+  // Disambiguate cases like:
+  // enum X { """doc""" Case }
+  // where the docstring could be interpreted as belonging to the enum body
+  // or to the following enum_case.
+  //
+  // Also disambiguate method docstrings inside service bodies:
+  // service S { """doc""" foo() }
+  // where the docstring could be parsed as the service_body docstring
+  // or the method docstring.
+  conflicts: $ => [
+    [$.enum_case],
+    [$.method],
+    [$.field],
+  ],
+
   extras: $ => [
     /\s/,
     $.line_comment,
@@ -305,10 +320,10 @@ module.exports = grammar({
       $._type,
     ),
 
-    throws_clause: $ => seq(
+    throws_clause: $ => prec.right(seq(
       'throws',
       optional($._type),
-    ),
+    )),
 
     // ========================================
     // Types
@@ -379,8 +394,10 @@ module.exports = grammar({
     ),
 
     docstring: $ => choice(
-      seq('"""', /[^]*?/, '"""'),
-      seq("'''", /[^]*?/, "'''"),
+      // Tree-sitter uses Rust's `regex` crate, which does NOT support `[^]` to mean "any character".
+      // Use `[\s\S]` instead to match any char including newlines, and keep it non-greedy.
+      seq('"""', /[\s\S]*?/, '"""'),
+      seq("'''", /[\s\S]*?/, "'''"),
     ),
 
     number: $ => /\d+(\.\d+)?/,
