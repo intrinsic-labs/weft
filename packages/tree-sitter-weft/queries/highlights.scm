@@ -42,32 +42,32 @@
 
 ; Type/service/enum/view names
 (type_declaration
-  name: (identifier) @type.definition)
+  (identifier) @type.definition)
 
 (service_declaration
-  name: (identifier) @type.definition)
+  (identifier) @type.definition)
 
 (enum_declaration
-  name: (identifier) @type.definition)
+  (identifier) @type.definition)
 
 (view_declaration
-  name: (identifier) @type.definition)
+  (identifier) @type.definition)
 
 ; Enum cases
 (enum_case
-  name: (identifier) @constant)
+  (identifier) @constant)
 
 ; Field names
 (field
-  name: (identifier) @property)
+  (identifier) @property)
 
 ; Method names
 (method
-  name: (identifier) @function)
+  (identifier) @function)
 
 ; Parameter names
 (parameter
-  name: (identifier) @variable.parameter)
+  (identifier) @variable.parameter)
 
 ; Strings
 (string) @string
