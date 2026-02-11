@@ -1,12 +1,14 @@
-[package]
-name = "weft"
+id = "weft"
+name = "Weft"
 version = "0.1.0"
+schema_version = 1
 description = "Language support for Weft specification files"
 authors = ["Intrinsic Labs"]
 repository = "https://github.com/intrinsic-labs/weft"
 
-[grammars.weft]
+[grammars.weft_spec]
 repository = "https://github.com/intrinsic-labs/weft"
+rev = "c0d629dd7f3ee712de0f79f099129d97ca7b6b4c"
 path = "packages/tree-sitter-weft"
 
 [language_servers.weft-lsp]
