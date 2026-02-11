@@ -4,3 +4,5 @@ dist/
 *.log
 .DS_Store
 package-lock.json
+packages/zed/extension.wasm
+packages/zed/grammars/
