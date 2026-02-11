@@ -180,6 +180,9 @@ function collectWorkspaceSources(triggerUri?: string): Array<{ uri: string; text
 
   // Open buffers are source-of-truth for unsaved edits.
   for (const doc of documents.all()) {
+    if (isIgnoredWeftUri(doc.uri)) {
+      continue;
+    }
     if (doc.languageId === "weft" || doc.uri.endsWith(".weft")) {
       byUri.set(doc.uri, doc.getText());
       if (isUriInRoot(doc.uri)) {
@@ -228,16 +231,32 @@ function listWeftFiles(dirPath: string): string[] {
     for (const entry of entries) {
       const fullPath = path.join(current, entry.name);
       if (entry.isDirectory()) {
-        if (!ignoredDirs.has(entry.name)) {
+        if (!ignoredDirs.has(entry.name) && !isIgnoredWeftPath(fullPath)) {
           stack.push(fullPath);
         }
-      } else if (entry.isFile() && entry.name.endsWith(".weft")) {
+      } else if (entry.isFile() && entry.name.endsWith(".weft") && !isIgnoredWeftPath(fullPath)) {
         result.push(fullPath);
       }
     }
   }
 
   return result;
+}
+
+function isIgnoredWeftUri(uri: string): boolean {
+  if (!uri.startsWith("file://")) {
+    return false;
+  }
+  try {
+    return isIgnoredWeftPath(fileURLToPath(uri));
+  } catch {
+    return false;
+  }
+}
+
+function isIgnoredWeftPath(filePath: string): boolean {
+  const normalized = filePath.split(path.sep).join("/");
+  return normalized.includes("/packages/zed/grammars/");
 }
 
 function isUriInRoot(uri: string): boolean {
