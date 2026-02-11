@@ -18,21 +18,21 @@
 ; Type identifiers
 (type_identifier) @type
 
-; Annotations
+; Annotation nodes
 [
-  "@Rule"
-  "@Definition"
-  "@Decision"
-  "@OpenQuestion"
-  "@Role"
-  "@Lifecycle"
-  "@Implements"
-  "@See"
-  "@Schema"
-  "@Id"
-  "@Unique"
-  "@Index"
-  "@Required"
+  (rule_annotation)
+  (definition_annotation)
+  (decision_annotation)
+  (open_question_annotation)
+  (role_annotation)
+  (lifecycle_annotation)
+  (implements_annotation)
+  (see_annotation)
+  (schema_annotation)
+  (id_annotation)
+  (unique_annotation)
+  (index_annotation)
+  (required_annotation)
 ] @attribute
 
 ; Role and lifecycle kinds
