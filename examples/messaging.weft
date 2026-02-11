@@ -1,203 +1,203 @@
-// ============================================
-// Domain Definitions
-// ============================================
+//// ============================================
+//// Domain Definitions
+//// ============================================
 
-@Definition("verified-user", '''
-A user who has completed email verification.
-Represented by `User.isVerified == true`.
+//@Definition("verified-user", '''
+//A user who has completed email verification.
+//Represented by `User.isVerified == true`.
 
-## Requirements
-- Email verification link must be clicked
-- Verification expires after 24 hours
-- Re-verification required if email changes
-''')
+//## Requirements
+//- Email verification link must be clicked
+//- Verification expires after 24 hours
+//- Re-verification required if email changes
+//''')
 
-@Definition("soft-delete", '''
-Records are marked deleted but never physically removed.
-All entities have `deletedAt: datetime?` field.
-All queries filter `deletedAt == null` by default.
-''')
+//@Definition("soft-delete", '''
+//Records are marked deleted but never physically removed.
+//All entities have `deletedAt: datetime?` field.
+//All queries filter `deletedAt == null` by default.
+//''')
 
-// ============================================
-// Rules
-// ============================================
+//// ============================================
+//// Rules
+//// ============================================
 
-@Rule("verification-required", '''
-All social features require `User.isVerified == true`.
+//@Rule("verification-required", '''
+//All social features require `User.isVerified == true`.
 
-**No exceptions**, including:
-- Admin users
-- Test accounts
-- Internal users
+//**No exceptions**, including:
+//- Admin users
+//- Test accounts
+//- Internal users
 
-See @Definition("verified-user") for verification requirements.
-''')
+//See @Definition("verified-user") for verification requirements.
+//''')
 
-@Rule("message-retention", '''
-All messages must be retained for 7 years per compliance.
-Uses @Definition("soft-delete") pattern.
-''')
+//@Rule("message-retention", '''
+//All messages must be retained for 7 years per compliance.
+//Uses @Definition("soft-delete") pattern.
+//''')
 
-// ============================================
-// Decisions
-// ============================================
+//// ============================================
+//// Decisions
+//// ============================================
 
-@Decision("no-group-messages", '''
-MVP does not support group messaging.
+//@Decision("no-group-messages", '''
+//MVP does not support group messaging.
 
-**Considered:**
-1. Group messages - complex moderation, threading issues
-2. Channels (Slack-style) - significant scope increase
-3. 1:1 only - simple, covers core use case
+//**Considered:**
+//1. Group messages - complex moderation, threading issues
+//2. Channels (Slack-style) - significant scope increase
+//3. 1:1 only - simple, covers core use case
 
-**Chose 1:1 only** because:
-- Faster to market
-- Simpler moderation
-- Can add groups in v2 if needed
-''')
+//**Chose 1:1 only** because:
+//- Faster to market
+//- Simpler moderation
+//- Can add groups in v2 if needed
+//''')
 
-// ============================================
-// Open Questions
-// ============================================
+//// ============================================
+//// Open Questions
+//// ============================================
 
-@OpenQuestion("message-encryption", '''
-Should messages be end-to-end encrypted?
+//@OpenQuestion("message-encryption", '''
+//Should messages be end-to-end encrypted?
 
-**Considerations:**
-- E2E: better privacy, but no server-side search/moderation
-- At-rest only: searchable, but less private
+//**Considerations:**
+//- E2E: better privacy, but no server-side search/moderation
+//- At-rest only: searchable, but less private
 
-**Stakeholders:** Security team, Legal
-**Decide by:** Before beta launch
-''')
+//**Stakeholders:** Security team, Legal
+//**Decide by:** Before beta launch
+//''')
 
-// ============================================
-// Types
-// ============================================
+//// ============================================
+//// Types
+//// ============================================
 
-@Role(entity)
-type User {
-    """
-    Core identity in the system.
-    See @Definition("verified-user") for verification semantics.
-    """
+//@Role(entity)
+//type User {
+//    """
+//    Core identity in the system.
+//    See @Definition("verified-user") for verification semantics.
+//    """
 
-    id: string
-    email: string
-    displayName: string
-    isVerified: bool = false
-    createdAt: datetime
-    deletedAt: datetime?
-}
+//    id: string
+//    email: string
+//    displayName: string
+//    isVerified: bool = false
+//    createdAt: datetime
+//    deletedAt: datetime?
+//}
 
-@Role(entity)
-type Message {
-    """
-    A direct message between two users.
-    Subject to @Rule("message-retention").
-    """
+//@Role(entity)
+//type Message {
+//    """
+//    A direct message between two users.
+//    Subject to @Rule("message-retention").
+//    """
 
-    id: string
-    sender: User
-    recipient: User
-    content: string
-    sentAt: datetime
-    readAt: datetime?
-    deletedAt: datetime?
-}
+//    id: string
+//    sender: User
+//    recipient: User
+//    content: string
+//    sentAt: datetime
+//    readAt: datetime?
+//    deletedAt: datetime?
+//}
 
-@Role(entity)
-type Conversation {
-    """
-    Represents the message thread between two users.
-    Ordered by most recent message.
-    """
+//@Role(entity)
+//type Conversation {
+//    """
+//    Represents the message thread between two users.
+//    Ordered by most recent message.
+//    """
 
-    id: string
-    participants: [User]
-    lastMessage: Message?
-    unreadCount: int = 0
-    updatedAt: datetime
-}
+//    id: string
+//    participants: [User]
+//    lastMessage: Message?
+//    unreadCount: int = 0
+//    updatedAt: datetime
+//}
 
-enum MessageStatus {
-    """
-    Delivery status of a message.
-    """
+//enum MessageStatus {
+//    """
+//    Delivery status of a message.
+//    """
 
-    sending
-    sent
-    delivered
-    read
-    failed(reason: string)
-}
+//    sending
+//    sent
+//    delivered
+//    read
+//    failed(reason: string)
+//}
 
-// ============================================
-// Services
-// ============================================
+//// ============================================
+//// Services
+//// ============================================
 
-@Role(usecase)
-@Lifecycle(singleton)
-@Implements("verification-required")
-@Implements("message-retention")
-service Messaging {
-    """
-    Handles all user-to-user messaging.
+//@Role(usecase)
+//@Lifecycle(singleton)
+//@Implements("verification-required")
+//@Implements("message-retention")
+//service Messaging {
+//    """
+//    Handles all user-to-user messaging.
 
-    ## Permissions
-    - Sender must be verified per @Rule("verification-required")
-    - Cannot message blocked users
-    - Cannot message self
-    """
+//    ## Permissions
+//    - Sender must be verified per @Rule("verification-required")
+//    - Cannot message blocked users
+//    - Cannot message self
+//    """
 
-    func sendMessage(sender: User, recipient: User, content: string) -> Message throws
-    func getConversation(userA: User, userB: User, limit: int = 50) -> [Message]
-    func markAsRead(userId: User, messageId: string) throws
-    func deleteMessage(userId: User, messageId: string) throws
-}
+//    func sendMessage(sender: User, recipient: User, content: string) -> Message throws
+//    func getConversation(userA: User, userB: User, limit: int = 50) -> [Message]
+//    func markAsRead(userId: User, messageId: string) throws
+//    func deleteMessage(userId: User, messageId: string) throws
+//}
 
-@Role(usecase)
-@Lifecycle(singleton)
-service ConversationList {
-    """
-    Manages the list of conversations for a user.
-    """
+//@Role(usecase)
+//@Lifecycle(singleton)
+//service ConversationList {
+//    """
+//    Manages the list of conversations for a user.
+//    """
 
-    func getConversations(user: User, limit: int = 20) -> [Conversation]
-    func archiveConversation(user: User, conversationId: string) throws
-    func unarchiveConversation(user: User, conversationId: string) throws
-}
+//    func getConversations(user: User, limit: int = 20) -> [Conversation]
+//    func archiveConversation(user: User, conversationId: string) throws
+//    func unarchiveConversation(user: User, conversationId: string) throws
+//}
 
-// ============================================
-// Views
-// ============================================
+//// ============================================
+//// Views
+//// ============================================
 
-view ConversationListScreen {
-    """
-    Displays all conversations for the current user.
-    Shows unread indicators and last message preview.
-    """
+//view ConversationListScreen {
+//    """
+//    Displays all conversations for the current user.
+//    Shows unread indicators and last message preview.
+//    """
 
-    currentUser: User
-    conversations: [Conversation]
-    isLoading: bool = false
+//    currentUser: User
+//    conversations: [Conversation]
+//    isLoading: bool = false
 
-    func onRefresh()
-    func onSelectConversation(conversation: Conversation)
-}
+//    func onRefresh()
+//    func onSelectConversation(conversation: Conversation)
+//}
 
-view MessageThread {
-    """
-    Displays messages in a conversation.
-    Supports sending new messages and loading history.
-    """
+//view MessageThread {
+//    """
+//    Displays messages in a conversation.
+//    Supports sending new messages and loading history.
+//    """
 
-    currentUser: User
-    otherUser: User
-    messages: [Message]
-    draftMessage: string = ""
-    isLoading: bool = false
+//    currentUser: User
+//    otherUser: User
+//    messages: [Message]
+//    draftMessage: string = ""
+//    isLoading: bool = false
 
-    func onSend()
-    func onLoadMore()
-}
+//    func onSend()
+//    func onLoadMore()
+//}
