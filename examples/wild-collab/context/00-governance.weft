@@ -1,0 +1,35 @@
+@Definition("verified-account", '''
+A verified account has completed email ownership checks.
+Use `User.isVerified` to gate write actions.
+''')
+
+@Definition("moderation-policy", '''
+Messages pass `Moderation` before delivery.
+Flagged users are reviewed by operations within one business day.
+''')
+
+@Rule("verified-sender", '''
+Only verified users can send first-contact messages.
+See @Definition("verified-account") for exact semantics.
+''')
+
+@Rule("soft-delete-retention", '''
+Records are soft-deleted first and retained for audit.
+Use nullable `deletedAt` fields across persistence models.
+''')
+
+@Rule("moderation-required", '''
+All outbound messages are checked by `Moderation`.
+Blocked content is never persisted as delivered.
+''')
+
+@Decision("single-workspace-mvp", '''
+The MVP supports one workspace per account.
+Multi-workspace support is deferred until enterprise onboarding.
+''')
+
+@OpenQuestion("edit-window-duration", '''
+How long can a sender edit a message after sending?
+Candidates: 2 minutes, 15 minutes, or unlimited for same day.
+''')
+

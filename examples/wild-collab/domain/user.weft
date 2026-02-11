@@ -1,0 +1,33 @@
+@Role(entity)
+@Schema
+type User {
+    """
+    Account identity for messaging.
+    See @Definition("verified-account") and field `User.isVerified`.
+    """
+    @Id(generated)
+    id: string
+    @Unique
+    email: string
+    displayName: string
+    isVerified: bool = false
+    createdAt: datetime
+    deletedAt: datetime?
+}
+
+enum UserStatus {
+    active
+    flagged
+    suspended
+}
+
+@Role(entity)
+@Schema
+type ModerationProfile {
+    @Id(generated)
+    id: string
+    userId: string
+    status: UserStatus
+    strikeCount: int = 0
+    lastReviewAt: datetime?
+}

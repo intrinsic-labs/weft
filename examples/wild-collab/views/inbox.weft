@@ -1,0 +1,28 @@
+@Role(viewmodel)
+@Lifecycle(view)
+type ThreadPreview {
+    """
+    UI projection of thread state for list rendering.
+    """
+    thread: Thread
+    lastMessage: Message?
+    unreadCount: int = 0
+}
+
+@Role(viewmodel)
+@Lifecycle(view)
+view InboxScreen {
+    """
+    Main inbox surface.
+    Backed by `Threading` and moderation-aware message visibility.
+    """
+    currentUser: User
+    threads: [ThreadPreview]
+    query: string = ""
+    isLoading: bool = false
+
+    func onAppear()
+    func onSearchChanged(nextQuery: string)
+    func onOpenThread(threadId: string)
+}
+

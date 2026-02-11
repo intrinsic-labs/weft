@@ -1,0 +1,14 @@
+@Role(usecase)
+@Lifecycle(singleton)
+@Implements("moderation-required")
+@See("moderation-policy")
+service Moderation {
+    """
+    Applies policy checks before message delivery.
+    Uses account state from `UserStatus`.
+    """
+    func canPost(sender: User, thread: Thread) -> bool
+    func evaluateMessage(sender: User, message: Message) -> bool
+    func flagUser(actor: User, target: User, reason: string) throws
+}
+

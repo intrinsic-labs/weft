@@ -1,0 +1,39 @@
+@Role(entity)
+@Schema
+type Thread {
+    """
+    Conversation stream between participants.
+    """
+    @Id(generated)
+    id: string
+    participantIds: [string]
+    title: string?
+    lastMessageAt: datetime?
+    archivedAt: datetime?
+}
+
+enum MessageState {
+    queued
+    sent
+    delivered
+    read
+    failed(reason: string)
+}
+
+@Role(entity)
+@Schema
+type Message {
+    """
+    Message record tied to one thread and one sender.
+    Enforced by @Rule("moderation-required").
+    """
+    @Id(generated)
+    id: string
+    threadId: string
+    senderId: string
+    body: string
+    state: MessageState
+    sentAt: datetime
+    editedAt: datetime?
+    deletedAt: datetime?
+}

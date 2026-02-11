@@ -1,0 +1,16 @@
+@Role(usecase)
+@Lifecycle(singleton)
+@Implements("verified-sender")
+@Implements("soft-delete-retention")
+@See("moderation-policy")
+service Threading {
+    """
+    Core use-case service for thread and message flows.
+    Depends on `User`, `Thread`, and `Message`.
+    """
+    func createThread(owner: User, participantEmails: [string], title: string = "") -> Thread throws
+    func sendMessage(sender: User, thread: Thread, body: string) -> Message throws
+    func markRead(reader: User, message: Message) throws
+    func archiveThread(actor: User, thread: Thread) throws
+}
+
