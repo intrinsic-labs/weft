@@ -11,7 +11,7 @@
     "dev": "npm run dev --workspace=@weft/lsp",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "sync:zed-grammar": "cp packages/tree-sitter-weft/grammar.js packages/zed/grammars/weft/grammar.js && cp packages/tree-sitter-weft/src/parser.c packages/zed/grammars/weft/src/parser.c"
+    "sync:zed-grammar": "echo \"Zed grammar is sourced via extension.toml repository/rev/path\""
   },
   "repository": {
     "type": "git",

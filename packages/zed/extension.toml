@@ -6,7 +6,7 @@ description = "Language support for Weft specification files"
 authors = ["Intrinsic Labs"]
 repository = "https://github.com/intrinsic-labs/weft"
 
-[grammars.weft_spec]
+[grammars.weft]
 repository = "https://github.com/intrinsic-labs/weft"
 rev = "c0d629dd7f3ee712de0f79f099129d97ca7b6b4c"
 path = "packages/tree-sitter-weft"

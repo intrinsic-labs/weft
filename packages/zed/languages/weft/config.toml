@@ -1,5 +1,5 @@
 name = "Weft"
-grammar = "weft_spec"
+grammar = "weft"
 path_suffixes = ["weft"]
 line_comments = ["//"]
 block_comment = ["/*", "*/"]
