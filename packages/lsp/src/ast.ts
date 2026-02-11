@@ -165,6 +165,7 @@ export interface EnumDeclaration extends Node {
   kind: "EnumDeclaration";
   name: string;
   docstring?: string;
+  annotations: TypeAnnotation[];
   cases: EnumCase[];
 }
 
@@ -172,6 +173,7 @@ export interface ViewDeclaration extends Node {
   kind: "ViewDeclaration";
   name: string;
   docstring?: string;
+  annotations: TypeAnnotation[];
   members: Member[];
 }
 

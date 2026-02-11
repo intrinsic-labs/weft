@@ -28,7 +28,12 @@ async, throws
 ```
 @Rule, @Definition, @Decision, @OpenQuestion
 @Implements, @See
-@Constraint, @Example, @Assumption  // v1.1
+```
+
+Planned but not parsed yet:
+
+```
+@Constraint, @Example, @Assumption
 ```
 
 ### Primitives

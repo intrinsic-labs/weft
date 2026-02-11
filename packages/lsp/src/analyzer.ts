@@ -11,6 +11,7 @@ import type {
   EnumDeclaration,
   ViewDeclaration,
   TypeExpr,
+  TypeAnnotation,
   Member,
   Range,
   RoleKind,
@@ -28,6 +29,7 @@ export interface Symbol {
   name: string;
   kind: SymbolKind;
   range: Range;
+  uri?: string;
   docstring?: string;
   members?: Map<string, Symbol>;
   role?: RoleKind;
@@ -53,6 +55,7 @@ export type DiagnosticSeverity = "error" | "warning" | "info";
 export interface Diagnostic {
   message: string;
   range: Range;
+  uri?: string;
   severity: DiagnosticSeverity;
   code?: string;
 }
@@ -66,11 +69,20 @@ export interface AnalysisResult {
   diagnostics: Diagnostic[];
 }
 
+export interface AnalysisDocument {
+  uri?: string;
+  document: Document;
+}
+
 // ============================================
 // Analyzer
 // ============================================
 
 export function analyze(document: Document): AnalysisResult {
+  return analyzeWorkspace([{ document }]);
+}
+
+export function analyzeWorkspace(documents: AnalysisDocument[]): AnalysisResult {
   const symbols: SymbolTable = {
     types: new Map(),
     rules: new Map(),
@@ -82,13 +94,17 @@ export function analyze(document: Document): AnalysisResult {
   const diagnostics: Diagnostic[] = [];
 
   // First pass: collect all symbols
-  for (const decl of document.declarations) {
-    collectSymbol(decl, symbols, diagnostics);
+  for (const { document, uri } of documents) {
+    for (const decl of document.declarations) {
+      collectSymbol(decl, symbols, diagnostics, uri);
+    }
   }
 
   // Second pass: validate references and architecture
-  for (const decl of document.declarations) {
-    validateReferences(decl, symbols, diagnostics);
+  for (const { document, uri } of documents) {
+    for (const decl of document.declarations) {
+      validateReferences(decl, symbols, diagnostics, uri);
+    }
   }
 
   // Third pass: validate architectural constraints
@@ -97,13 +113,14 @@ export function analyze(document: Document): AnalysisResult {
   return { symbols, diagnostics };
 }
 
-function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Diagnostic[]): void {
+function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Diagnostic[], uri?: string): void {
   switch (decl.kind) {
     case "Rule":
       addSymbol(symbols.rules, decl.id, {
         name: decl.id,
         kind: "rule",
         range: decl.range,
+        uri,
         docstring: decl.prose,
       }, diagnostics);
       break;
@@ -113,6 +130,7 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
         name: decl.id,
         kind: "definition",
         range: decl.range,
+        uri,
         docstring: decl.prose,
       }, diagnostics);
       break;
@@ -122,6 +140,7 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
         name: decl.id,
         kind: "decision",
         range: decl.range,
+        uri,
         docstring: decl.prose,
       }, diagnostics);
       break;
@@ -131,6 +150,7 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
         name: decl.id,
         kind: "question",
         range: decl.range,
+        uri,
         docstring: decl.prose,
       }, diagnostics);
       break;
@@ -142,6 +162,7 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
         name: decl.name,
         kind: "type",
         range: decl.range,
+        uri,
         docstring: decl.docstring,
         members: collectMembers(decl.members),
         role,
@@ -159,6 +180,7 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
         name: decl.name,
         kind: "service",
         range: decl.range,
+        uri,
         docstring: decl.docstring,
         members: collectMethods(decl.methods),
         role,
@@ -169,25 +191,35 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
       break;
     }
 
-    case "EnumDeclaration":
+    case "EnumDeclaration": {
+      const { role, lifecycle, isSchema } = extractAnnotations(decl.annotations);
       addSymbol(symbols.types, decl.name, {
         name: decl.name,
         kind: "enum",
         range: decl.range,
+        uri,
         docstring: decl.docstring,
         members: collectEnumCases(decl),
+        role,
+        lifecycle,
+        isSchema,
       }, diagnostics);
       break;
+    }
 
     case "ViewDeclaration": {
+      const { role, lifecycle, isSchema } = extractAnnotations(decl.annotations);
       const dependencies = collectDependencies(decl.members);
       addSymbol(symbols.types, decl.name, {
         name: decl.name,
         kind: "view",
         range: decl.range,
+        uri,
         docstring: decl.docstring,
         members: collectMembers(decl.members),
-        lifecycle: "view", // Views are implicitly view-scoped
+        role,
+        lifecycle: lifecycle ?? "view", // Views are view-scoped by default
+        isSchema,
         dependencies,
       }, diagnostics);
       break;
@@ -272,6 +304,7 @@ function addSymbol(map: Map<string, Symbol>, name: string, symbol: Symbol, diagn
     diagnostics.push({
       message: `Duplicate symbol: ${name}`,
       range: symbol.range,
+      uri: symbol.uri,
       severity: "error",
       code: "duplicate-symbol",
     });
@@ -323,141 +356,174 @@ function collectEnumCases(decl: EnumDeclaration): Map<string, Symbol> {
 // Reference Validation
 // ============================================
 
-function validateReferences(decl: Declaration, symbols: SymbolTable, diagnostics: Diagnostic[]): void {
+function validateReferences(decl: Declaration, symbols: SymbolTable, diagnostics: Diagnostic[], uri?: string): void {
   switch (decl.kind) {
     case "TypeDeclaration":
-      validateTypeDeclaration(decl, symbols, diagnostics);
+      validateTypeDeclaration(decl, symbols, diagnostics, uri);
       break;
     case "ServiceDeclaration":
-      validateServiceDeclaration(decl, symbols, diagnostics);
+      validateServiceDeclaration(decl, symbols, diagnostics, uri);
+      break;
+    case "EnumDeclaration":
+      validateEnumDeclaration(decl, symbols, diagnostics, uri);
       break;
     case "ViewDeclaration":
-      validateViewDeclaration(decl, symbols, diagnostics);
+      validateViewDeclaration(decl, symbols, diagnostics, uri);
       break;
     case "Rule":
     case "Definition":
     case "Decision":
     case "OpenQuestion":
-      validateProseReferences(decl.prose, decl.range, symbols, diagnostics);
+      validateProseReferences(decl.prose, decl.range, symbols, diagnostics, uri);
       break;
   }
 }
 
-function validateTypeDeclaration(decl: TypeDeclaration, symbols: SymbolTable, diagnostics: Diagnostic[]): void {
-  // Validate @Implements annotations
-  for (const ann of decl.annotations) {
+function validateTypeDeclaration(decl: TypeDeclaration, symbols: SymbolTable, diagnostics: Diagnostic[], uri?: string): void {
+  validateTypeAnnotations(decl.annotations, symbols, diagnostics, uri);
+
+  // Validate docstring references
+  if (decl.docstring) {
+    validateProseReferences(decl.docstring, decl.range, symbols, diagnostics, uri);
+  }
+
+  // Validate member types
+  for (const member of decl.members) {
+    if (member.kind === "Field") {
+      validateType(member.type, symbols, diagnostics, uri);
+    } else {
+      for (const param of member.parameters) {
+        validateType(param.type, symbols, diagnostics, uri);
+      }
+      if (member.returnType) {
+        validateType(member.returnType, symbols, diagnostics, uri);
+      }
+    }
+    if (member.docstring) {
+      validateProseReferences(member.docstring, member.range, symbols, diagnostics, uri);
+    }
+  }
+}
+
+function validateServiceDeclaration(decl: ServiceDeclaration, symbols: SymbolTable, diagnostics: Diagnostic[], uri?: string): void {
+  validateTypeAnnotations(decl.annotations, symbols, diagnostics, uri);
+
+  // Validate docstring references
+  if (decl.docstring) {
+    validateProseReferences(decl.docstring, decl.range, symbols, diagnostics, uri);
+  }
+
+  // Validate method types
+  for (const method of decl.methods) {
+    for (const param of method.parameters) {
+      validateType(param.type, symbols, diagnostics, uri);
+    }
+    if (method.returnType) {
+      validateType(method.returnType, symbols, diagnostics, uri);
+    }
+    if (method.docstring) {
+      validateProseReferences(method.docstring, method.range, symbols, diagnostics, uri);
+    }
+  }
+}
+
+function validateEnumDeclaration(decl: EnumDeclaration, symbols: SymbolTable, diagnostics: Diagnostic[], uri?: string): void {
+  validateTypeAnnotations(decl.annotations, symbols, diagnostics, uri);
+
+  if (decl.docstring) {
+    validateProseReferences(decl.docstring, decl.range, symbols, diagnostics, uri);
+  }
+
+  for (const c of decl.cases) {
+    if (c.docstring) {
+      validateProseReferences(c.docstring, c.range, symbols, diagnostics, uri);
+    }
+    for (const value of c.associatedValues ?? []) {
+      validateType(value.type, symbols, diagnostics, uri);
+    }
+  }
+}
+
+function validateViewDeclaration(decl: ViewDeclaration, symbols: SymbolTable, diagnostics: Diagnostic[], uri?: string): void {
+  validateTypeAnnotations(decl.annotations, symbols, diagnostics, uri);
+
+  if (decl.docstring) {
+    validateProseReferences(decl.docstring, decl.range, symbols, diagnostics, uri);
+  }
+
+  for (const member of decl.members) {
+    if (member.kind === "Field") {
+      validateType(member.type, symbols, diagnostics, uri);
+    } else {
+      for (const param of member.parameters) {
+        validateType(param.type, symbols, diagnostics, uri);
+      }
+      if (member.returnType) {
+        validateType(member.returnType, symbols, diagnostics, uri);
+      }
+    }
+    if (member.docstring) {
+      validateProseReferences(member.docstring, member.range, symbols, diagnostics, uri);
+    }
+  }
+}
+
+function validateTypeAnnotations(annotations: TypeAnnotation[], symbols: SymbolTable, diagnostics: Diagnostic[], uri?: string): void {
+  const validRoles: RoleKind[] = ["entity", "usecase", "repository", "service", "viewmodel", "gateway", "dto", "adapter"];
+  const validScopes: LifecycleKind[] = ["singleton", "session", "feature", "view"];
+
+  for (const ann of annotations) {
     if (ann.kind === "Implements") {
       if (!symbols.rules.has(ann.ruleId)) {
         diagnostics.push({
           message: `Unknown rule: ${ann.ruleId}`,
           range: ann.range,
+          uri,
           severity: "error",
           code: "unknown-rule",
         });
       }
+    } else if (ann.kind === "See") {
+      const found =
+        symbols.types.has(ann.target) ||
+        symbols.rules.has(ann.target) ||
+        symbols.definitions.has(ann.target) ||
+        symbols.decisions.has(ann.target) ||
+        symbols.questions.has(ann.target);
+      if (!found) {
+        diagnostics.push({
+          message: `Unknown @See target: ${ann.target}`,
+          range: ann.range,
+          uri,
+          severity: "warning",
+          code: "unknown-see-target",
+        });
+      }
     } else if (ann.kind === "Role") {
-      const validRoles: RoleKind[] = ["entity", "usecase", "repository", "service", "viewmodel", "gateway", "dto", "adapter"];
       if (!validRoles.includes(ann.role)) {
         diagnostics.push({
           message: `Invalid role: ${ann.role}. Valid roles: ${validRoles.join(", ")}`,
           range: ann.range,
+          uri,
           severity: "error",
           code: "invalid-role",
         });
       }
     } else if (ann.kind === "Lifecycle") {
-      const validScopes: LifecycleKind[] = ["singleton", "session", "feature", "view"];
       if (!validScopes.includes(ann.scope)) {
         diagnostics.push({
           message: `Invalid lifecycle: ${ann.scope}. Valid scopes: ${validScopes.join(", ")}`,
           range: ann.range,
+          uri,
           severity: "error",
           code: "invalid-lifecycle",
         });
       }
     }
   }
-
-  // Validate docstring references
-  if (decl.docstring) {
-    validateProseReferences(decl.docstring, decl.range, symbols, diagnostics);
-  }
-
-  // Validate member types
-  for (const member of decl.members) {
-    if (member.kind === "Field") {
-      validateType(member.type, symbols, diagnostics);
-    } else {
-      for (const param of member.parameters) {
-        validateType(param.type, symbols, diagnostics);
-      }
-      if (member.returnType) {
-        validateType(member.returnType, symbols, diagnostics);
-      }
-    }
-    if (member.docstring) {
-      validateProseReferences(member.docstring, member.range, symbols, diagnostics);
-    }
-  }
 }
 
-function validateServiceDeclaration(decl: ServiceDeclaration, symbols: SymbolTable, diagnostics: Diagnostic[]): void {
-  // Validate @Implements annotations
-  for (const ann of decl.annotations) {
-    if (ann.kind === "Implements") {
-      if (!symbols.rules.has(ann.ruleId)) {
-        diagnostics.push({
-          message: `Unknown rule: ${ann.ruleId}`,
-          range: ann.range,
-          severity: "error",
-          code: "unknown-rule",
-        });
-      }
-    }
-  }
-
-  // Validate docstring references
-  if (decl.docstring) {
-    validateProseReferences(decl.docstring, decl.range, symbols, diagnostics);
-  }
-
-  // Validate method types
-  for (const method of decl.methods) {
-    for (const param of method.parameters) {
-      validateType(param.type, symbols, diagnostics);
-    }
-    if (method.returnType) {
-      validateType(method.returnType, symbols, diagnostics);
-    }
-    if (method.docstring) {
-      validateProseReferences(method.docstring, method.range, symbols, diagnostics);
-    }
-  }
-}
-
-function validateViewDeclaration(decl: ViewDeclaration, symbols: SymbolTable, diagnostics: Diagnostic[]): void {
-  if (decl.docstring) {
-    validateProseReferences(decl.docstring, decl.range, symbols, diagnostics);
-  }
-
-  for (const member of decl.members) {
-    if (member.kind === "Field") {
-      validateType(member.type, symbols, diagnostics);
-    } else {
-      for (const param of member.parameters) {
-        validateType(param.type, symbols, diagnostics);
-      }
-      if (member.returnType) {
-        validateType(member.returnType, symbols, diagnostics);
-      }
-    }
-    if (member.docstring) {
-      validateProseReferences(member.docstring, member.range, symbols, diagnostics);
-    }
-  }
-}
-
-function validateType(type: TypeExpr, symbols: SymbolTable, diagnostics: Diagnostic[]): void {
+function validateType(type: TypeExpr, symbols: SymbolTable, diagnostics: Diagnostic[], uri?: string): void {
   switch (type.kind) {
     case "PrimitiveType":
       // Always valid
@@ -467,20 +533,21 @@ function validateType(type: TypeExpr, symbols: SymbolTable, diagnostics: Diagnos
         diagnostics.push({
           message: `Unknown type: ${type.name}`,
           range: type.range,
+          uri,
           severity: "error",
           code: "unknown-type",
         });
       }
       break;
     case "ArrayType":
-      validateType(type.elementType, symbols, diagnostics);
+      validateType(type.elementType, symbols, diagnostics, uri);
       break;
     case "DictionaryType":
-      validateType(type.keyType, symbols, diagnostics);
-      validateType(type.valueType, symbols, diagnostics);
+      validateType(type.keyType, symbols, diagnostics, uri);
+      validateType(type.valueType, symbols, diagnostics, uri);
       break;
     case "OptionalType":
-      validateType(type.innerType, symbols, diagnostics);
+      validateType(type.innerType, symbols, diagnostics, uri);
       break;
   }
 }
@@ -502,6 +569,7 @@ function validateArchitecture(symbols: SymbolTable, diagnostics: Diagnostic[]): 
         diagnostics.push({
           message: `Architecture violation: ${name} (@Role(${symbol.role})) cannot depend on ${depName} (@Role(${depSymbol.role})). Inner layers cannot depend on outer layers.`,
           range: symbol.range,
+          uri: symbol.uri,
           severity: "error",
           code: "dependency-violation",
         });
@@ -518,6 +586,7 @@ function validateArchitecture(symbols: SymbolTable, diagnostics: Diagnostic[]): 
           diagnostics.push({
             message: `Lifecycle violation: ${name} (@Lifecycle(${symbol.lifecycle})) cannot depend on ${depName} (@Lifecycle(${depSymbol.lifecycle})). Shorter-lived objects cannot be injected into longer-lived ones.`,
             range: symbol.range,
+            uri: symbol.uri,
             severity: "error",
             code: "lifecycle-violation",
           });
@@ -539,7 +608,38 @@ const REFERENCE_PATTERNS = [
   { pattern: /`([A-Z][a-zA-Z0-9]*)`/g, kind: "type" as const },
 ];
 
-function validateProseReferences(prose: string, range: Range, symbols: SymbolTable, diagnostics: Diagnostic[]): void {
+const FIELD_REFERENCE_PATTERN = /`([A-Z][a-zA-Z0-9]*)\.([a-zA-Z_][a-zA-Z0-9_]*)`/g;
+
+function validateProseReferences(prose: string, range: Range, symbols: SymbolTable, diagnostics: Diagnostic[], uri?: string): void {
+  FIELD_REFERENCE_PATTERN.lastIndex = 0;
+  let fieldMatch;
+  while ((fieldMatch = FIELD_REFERENCE_PATTERN.exec(prose)) !== null) {
+    const typeName = fieldMatch[1];
+    const fieldName = fieldMatch[2];
+    const typeSymbol = symbols.types.get(typeName);
+
+    if (!typeSymbol) {
+      diagnostics.push({
+        message: `Unknown type: ${typeName}`,
+        range,
+        uri,
+        severity: "warning",
+        code: "unknown-type-ref",
+      });
+      continue;
+    }
+
+    if (!typeSymbol.members?.has(fieldName)) {
+      diagnostics.push({
+        message: `Unknown field reference: ${typeName}.${fieldName}`,
+        range,
+        uri,
+        severity: "warning",
+        code: "unknown-field-ref",
+      });
+    }
+  }
+
   for (const { pattern, kind } of REFERENCE_PATTERNS) {
     // Reset regex state
     pattern.lastIndex = 0;
@@ -571,6 +671,7 @@ function validateProseReferences(prose: string, range: Range, symbols: SymbolTab
         diagnostics.push({
           message: `Unknown ${kind}: ${ref}`,
           range, // TODO: calculate precise position within prose
+          uri,
           severity: "warning",
           code: `unknown-${kind}-ref`,
         });
@@ -656,12 +757,84 @@ export function coverage(symbols: SymbolTable, document: Document): CoverageRepo
     }
   }
 
+  // Find definitions that are never referenced in prose or @See annotations
+  const referencedDefinitions = new Set<string>();
+  for (const prose of collectAllProse(document)) {
+    REFERENCE_PATTERNS[1].pattern.lastIndex = 0; // @Definition("...")
+    let match;
+    while ((match = REFERENCE_PATTERNS[1].pattern.exec(prose)) !== null) {
+      referencedDefinitions.add(match[1]);
+    }
+  }
+  for (const decl of document.declarations) {
+    const annotations = getDeclarationAnnotations(decl);
+    for (const ann of annotations) {
+      if (ann.kind === "See" && symbols.definitions.has(ann.target)) {
+        referencedDefinitions.add(ann.target);
+      }
+    }
+  }
+  for (const name of symbols.definitions.keys()) {
+    if (!referencedDefinitions.has(name)) {
+      report.unreferencedDefinitions.push(name);
+    }
+  }
+
   // List all open questions
   for (const name of symbols.questions.keys()) {
     report.openQuestions.push(name);
   }
 
   return report;
+}
+
+function getDeclarationAnnotations(decl: Declaration): TypeAnnotation[] {
+  if (
+    decl.kind === "TypeDeclaration" ||
+    decl.kind === "ServiceDeclaration" ||
+    decl.kind === "EnumDeclaration" ||
+    decl.kind === "ViewDeclaration"
+  ) {
+    return decl.annotations;
+  }
+  return [];
+}
+
+function collectAllProse(document: Document): string[] {
+  const prose: string[] = [];
+
+  for (const decl of document.declarations) {
+    if (decl.kind === "Rule" || decl.kind === "Definition" || decl.kind === "Decision" || decl.kind === "OpenQuestion") {
+      prose.push(decl.prose);
+      continue;
+    }
+
+    if (decl.docstring) {
+      prose.push(decl.docstring);
+    }
+
+    if (decl.kind === "TypeDeclaration" || decl.kind === "ViewDeclaration") {
+      for (const member of decl.members) {
+        if (member.docstring) {
+          prose.push(member.docstring);
+        }
+      }
+    } else if (decl.kind === "ServiceDeclaration") {
+      for (const method of decl.methods) {
+        if (method.docstring) {
+          prose.push(method.docstring);
+        }
+      }
+    } else if (decl.kind === "EnumDeclaration") {
+      for (const c of decl.cases) {
+        if (c.docstring) {
+          prose.push(c.docstring);
+        }
+      }
+    }
+  }
+
+  return prose;
 }
 
 // ============================================

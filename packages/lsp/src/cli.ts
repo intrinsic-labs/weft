@@ -150,6 +150,14 @@ function runCoverage(file: string): void {
     console.log("");
   }
 
+  if (report.unreferencedDefinitions.length > 0) {
+    console.log("Unreferenced Definitions:");
+    for (const d of report.unreferencedDefinitions) {
+      console.log(`  - ${d}`);
+    }
+    console.log("");
+  }
+
   if (report.undocumentedTypes.length > 0) {
     console.log("Undocumented Types:");
     for (const t of report.undocumentedTypes) {
@@ -169,6 +177,7 @@ function runCoverage(file: string): void {
   const total =
     report.openQuestions.length +
     report.unimplementedRules.length +
+    report.unreferencedDefinitions.length +
     report.undocumentedTypes.length +
     report.typesWithoutRole.length;
 

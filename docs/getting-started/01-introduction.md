@@ -1,42 +1,31 @@
 # Introduction to Weft
 
-## What is Weft?
+## What Weft Is
 
-Weft is an interpretable, non-rigid, cooperative pseudocode language designed for cross-platform development that allows generation of fully native implementations for iOS, Android, web, and desktop. Unlike traditional frameworks that use a runtime layer or bridge, Weft is **structured, actionable documentation** that translates into idiomatic native code for each target platform.
+Weft is a specification language for writing software design docs that are **machine-checkable**.
 
-Think of Weft as a metalanguage that sits between natural language specifications and executable code. You write your application once in clear, flexible pseudocode, and then generate pure idiomatic Swift, Kotlin, TypeScript, or other target languages. The result: native performance everywhere, with no runtime dependencies.
+Instead of free-form markdown that drifts over time, you write typed declarations plus structured annotations like `@Rule`, `@Definition`, and `@Decision`. The LSP validates consistency as you edit.
 
-Weft captures semantic concept and intent in source code form. It reads like a developer's thoughts, formalized enough that an implementer can act on them.
+## Why This Exists
 
-## Key Benefits
+Specs usually fail from drift:
 
-- **Native Performance**: No bridge, no runtime overhead — just pure native code
-- **Flexible Syntax**: Use syntax from whatever language you're most comfortable with
-- **Clear Intent**: Annotations and structured flow communicate your reasoning, not just actions
-- **Human-in-the-Loop**: You maintain control and understanding of your codebase
-- **No Lock-in**: Generated code is yours — remove the Weft layer anytime and maintain native codebases independently
+- references to renamed types
+- rules that are declared but never implemented
+- contradictory prose vs declarations
+- architecture decisions that are lost in docs
 
-Weft is perfect for solo developers and small teams who need native performance across multiple platforms but can't afford to maintain separate codebases from scratch.
+Weft aims to catch these while you are writing, before implementation.
 
-## Philosophy
+## What Matters Most
 
-Weft is built on several core principles:
+- Fast authoring (close to code-like syntax)
+- Strong validation (type + reference + architecture checks)
+- Prose support (docstrings with markdown)
+- Good editor loop (LSP diagnostics in VS Code/Zed)
 
-1. **Structured enough to parse, loose enough to be creative** - Write in the syntax you're most comfortable with
-2. **Higher bandwidth per token** - Communicate more semantic meaning with less code
-3. **Forces clear thinking** - The act of writing structured code helps you design better systems
-4. **Human + AI collaboration** - Humans focus on logic and intent, AI handles syntax translation
-5. **Strictly typed** - Every variable, parameter, and return value has a defined type for clarity
+## Current Direction
 
-## How It Works
+The active product direction is in `/Users/asherpope/dev/ai/weft/VISION.md`.
 
-1. **Write Weft code** - Define your application logic, data models, and UI in clear pseudocode
-2. **Translate to native** - Use language models or human translators to generate idiomatic platform code
-3. **Review and refine** - Stay in control by reviewing all generated code
-4. **Ship native apps** - Deploy pure Swift for iOS, Kotlin for Android, TypeScript for web
-
-## Learn More
-
-- [Read the original blog post](https://rocketbro.vercel.app/blog/weft)
-- [View the project on GitHub](https://github.com/intrinsiclabs/weft)
-- [Explore the Quick Reference](../QUICK_REFERENCE.md)
+For exact implementation status, see `/Users/asherpope/dev/ai/weft/docs/STATUS.md`.

@@ -8,6 +8,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
+import { fileURLToPath, pathToFileURL } from "url";
 import {
   createConnection,
   TextDocuments,
@@ -28,8 +29,7 @@ import {
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { parse } from "./parser.js";
-import { analyze, type SymbolTable, type Diagnostic, type Symbol } from "./analyzer.js";
-import type { Document } from "./ast.js";
+import { analyzeWorkspace, type SymbolTable, type Diagnostic, type Symbol, type AnalysisDocument } from "./analyzer.js";
 
 // ============================================
 // Logging
@@ -56,14 +56,19 @@ log(`Working directory: ${process.cwd()}`);
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 
-// Cache parsed documents and symbols
-const documentCache = new Map<string, { document: Document; symbols: SymbolTable }>();
+let rootPath: string | undefined;
+let workspaceSymbols: SymbolTable | undefined;
+const publishedUris = new Set<string>();
 
 connection.onInitialize((params: InitializeParams): InitializeResult => {
   log(`onInitialize called`);
   log(`  Client: ${params.clientInfo?.name ?? "unknown"} ${params.clientInfo?.version ?? ""}`);
   log(`  Root URI: ${params.rootUri ?? "none"}`);
   log(`  Capabilities: ${JSON.stringify(Object.keys(params.capabilities))}`);
+
+  if (params.rootUri?.startsWith("file://")) {
+    rootPath = fileURLToPath(params.rootUri);
+  }
 
   const result: InitializeResult = {
     capabilities: {
@@ -86,48 +91,58 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 
 documents.onDidChangeContent((change) => {
   log(`onDidChangeContent: ${change.document.uri}`);
-  validateDocument(change.document);
+  validateWorkspace(change.document.uri);
 });
 
 documents.onDidOpen((event) => {
   log(`onDidOpen: ${event.document.uri}`);
+  validateWorkspace(event.document.uri);
 });
 
 documents.onDidClose((event) => {
   log(`onDidClose: ${event.document.uri}`);
+  validateWorkspace(event.document.uri);
 });
 
-function validateDocument(textDocument: TextDocument): void {
-  const text = textDocument.getText();
-  const uri = textDocument.uri;
-  log(`validateDocument: ${uri} (${text.length} chars)`);
+function validateWorkspace(triggerUri?: string): void {
+  const sources = collectWorkspaceSources(triggerUri);
+  log(`validateWorkspace: ${sources.length} source(s)`);
 
-  // Parse
-  const { document, errors: parseErrors } = parse(text);
+  const analysisDocs: AnalysisDocument[] = [];
+  const parseErrorsByUri = new Map<string, ReturnType<typeof parse>["errors"]>();
 
-  // Analyze
-  const { symbols, diagnostics: analyzerDiagnostics } = analyze(document);
+  for (const { uri, text } of sources) {
+    const { document, errors } = parse(text);
+    analysisDocs.push({ uri, document });
+    parseErrorsByUri.set(uri, errors);
+  }
 
-  // Cache for other features
-  documentCache.set(uri, { document, symbols });
+  const { symbols, diagnostics: analyzerDiagnostics } = analyzeWorkspace(analysisDocs);
+  workspaceSymbols = symbols;
+  const diagnosticsByUri = new Map<string, LspDiagnostic[]>();
 
-  // Convert to LSP diagnostics
-  const diagnostics: LspDiagnostic[] = [];
-
-  for (const error of parseErrors) {
-    diagnostics.push({
-      severity: DiagnosticSeverity.Error,
-      range: {
-        start: { line: error.range.start.line - 1, character: error.range.start.column - 1 },
-        end: { line: error.range.end.line - 1, character: error.range.end.column - 1 },
-      },
-      message: error.message,
-      source: "weft",
-    });
+  for (const [uri, errors] of parseErrorsByUri) {
+    const bucket = diagnosticsByUri.get(uri) ?? [];
+    for (const error of errors) {
+      bucket.push({
+        severity: DiagnosticSeverity.Error,
+        range: {
+          start: { line: error.range.start.line - 1, character: error.range.start.column - 1 },
+          end: { line: error.range.end.line - 1, character: error.range.end.column - 1 },
+        },
+        message: error.message,
+        source: "weft",
+      });
+    }
+    diagnosticsByUri.set(uri, bucket);
   }
 
   for (const diag of analyzerDiagnostics) {
-    diagnostics.push({
+    if (!diag.uri) {
+      continue;
+    }
+    const bucket = diagnosticsByUri.get(diag.uri) ?? [];
+    bucket.push({
       severity: mapSeverity(diag.severity),
       range: {
         start: { line: diag.range.start.line - 1, character: diag.range.start.column - 1 },
@@ -135,10 +150,108 @@ function validateDocument(textDocument: TextDocument): void {
       },
       message: diag.message,
       source: "weft",
+      code: diag.code,
     });
+    diagnosticsByUri.set(diag.uri, bucket);
   }
 
-  connection.sendDiagnostics({ uri, diagnostics });
+  const currentUris = new Set<string>();
+  for (const { uri } of sources) {
+    currentUris.add(uri);
+    connection.sendDiagnostics({ uri, diagnostics: diagnosticsByUri.get(uri) ?? [] });
+    publishedUris.add(uri);
+  }
+
+  const staleUris: string[] = [];
+  for (const uri of publishedUris) {
+    if (!currentUris.has(uri)) {
+      connection.sendDiagnostics({ uri, diagnostics: [] });
+      staleUris.push(uri);
+    }
+  }
+  for (const uri of staleUris) {
+    publishedUris.delete(uri);
+  }
+}
+
+function collectWorkspaceSources(triggerUri?: string): Array<{ uri: string; text: string }> {
+  const byUri = new Map<string, string>();
+  let hasOpenWorkspaceDoc = false;
+
+  // Open buffers are source-of-truth for unsaved edits.
+  for (const doc of documents.all()) {
+    if (doc.languageId === "weft" || doc.uri.endsWith(".weft")) {
+      byUri.set(doc.uri, doc.getText());
+      if (isUriInRoot(doc.uri)) {
+        hasOpenWorkspaceDoc = true;
+      }
+    }
+  }
+
+  // Include on-disk .weft files for cross-file resolution.
+  const shouldScanWorkspaceFiles =
+    rootPath &&
+    (triggerUri === undefined ? hasOpenWorkspaceDoc : isUriInRoot(triggerUri)) &&
+    hasOpenWorkspaceDoc;
+
+  if (shouldScanWorkspaceFiles && rootPath) {
+    for (const filePath of listWeftFiles(rootPath)) {
+      const uri = pathToFileURL(filePath).toString();
+      if (byUri.has(uri)) continue;
+      try {
+        byUri.set(uri, fs.readFileSync(filePath, "utf8"));
+      } catch (error) {
+        log(`Failed to read ${filePath}: ${String(error)}`);
+      }
+    }
+  }
+
+  return [...byUri.entries()].map(([uri, text]) => ({ uri, text }));
+}
+
+function listWeftFiles(dirPath: string): string[] {
+  const result: string[] = [];
+  const ignoredDirs = new Set([".git", "node_modules", "dist", "target", ".zed"]);
+
+  const stack = [dirPath];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current) continue;
+
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        if (!ignoredDirs.has(entry.name)) {
+          stack.push(fullPath);
+        }
+      } else if (entry.isFile() && entry.name.endsWith(".weft")) {
+        result.push(fullPath);
+      }
+    }
+  }
+
+  return result;
+}
+
+function isUriInRoot(uri: string): boolean {
+  if (!rootPath || !uri.startsWith("file://")) {
+    return false;
+  }
+
+  try {
+    const filePath = fileURLToPath(uri);
+    const relative = path.relative(rootPath, filePath);
+    return relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative);
+  } catch {
+    return false;
+  }
 }
 
 function mapSeverity(severity: Diagnostic["severity"]): DiagnosticSeverity {
@@ -154,8 +267,7 @@ function mapSeverity(severity: Diagnostic["severity"]): DiagnosticSeverity {
 // ============================================
 
 connection.onHover((params): Hover | null => {
-  const cached = documentCache.get(params.textDocument.uri);
-  if (!cached) return null;
+  if (!workspaceSymbols) return null;
 
   const document = documents.get(params.textDocument.uri);
   if (!document) return null;
@@ -169,7 +281,7 @@ connection.onHover((params): Hover | null => {
   if (!word) return null;
 
   // Look up in symbol table
-  const symbol = findSymbol(word, cached.symbols);
+  const symbol = findSymbol(word, workspaceSymbols);
   if (!symbol) return null;
 
   return {
@@ -237,8 +349,7 @@ function formatSymbolHover(symbol: Symbol): string {
 // ============================================
 
 connection.onCompletion((params): CompletionItem[] => {
-  const cached = documentCache.get(params.textDocument.uri);
-  if (!cached) return [];
+  if (!workspaceSymbols) return [];
 
   const document = documents.get(params.textDocument.uri);
   if (!document) return [];
@@ -266,7 +377,7 @@ connection.onCompletion((params): CompletionItem[] => {
 
   // After @Implements(" or @See(", suggest existing rules/symbols
   if (/@Implements\("$/.test(lineText)) {
-    for (const [name] of cached.symbols.rules) {
+    for (const [name] of workspaceSymbols.rules) {
       items.push({ label: name, kind: CompletionItemKind.Reference });
     }
   }
@@ -278,7 +389,7 @@ connection.onCompletion((params): CompletionItem[] => {
       items.push({ label: prim, kind: CompletionItemKind.TypeParameter });
     }
     // User types
-    for (const [name] of cached.symbols.types) {
+    for (const [name] of workspaceSymbols.types) {
       items.push({ label: name, kind: CompletionItemKind.Class });
     }
   }
@@ -291,8 +402,7 @@ connection.onCompletion((params): CompletionItem[] => {
 // ============================================
 
 connection.onDefinition((params): Definition | null => {
-  const cached = documentCache.get(params.textDocument.uri);
-  if (!cached) return null;
+  if (!workspaceSymbols) return null;
 
   const document = documents.get(params.textDocument.uri);
   if (!document) return null;
@@ -303,7 +413,7 @@ connection.onDefinition((params): Definition | null => {
   const word = getWordAtOffset(text, offset);
   if (!word) return null;
 
-  const symbol = findSymbol(word, cached.symbols);
+  const symbol = findSymbol(word, workspaceSymbols);
   if (!symbol) return null;
 
   return Location.create(params.textDocument.uri, {

@@ -197,6 +197,14 @@ server.tool(
         result += "\n";
       }
 
+      if (report.unreferencedDefinitions.length > 0) {
+        result += `Unreferenced Definitions (${report.unreferencedDefinitions.length}):\n`;
+        for (const d of report.unreferencedDefinitions) {
+          result += `  - ${d}\n`;
+        }
+        result += "\n";
+      }
+
       if (report.typesWithoutRole.length > 0) {
         result += `Types Without @Role (${report.typesWithoutRole.length}):\n`;
         for (const t of report.typesWithoutRole) {
@@ -216,6 +224,7 @@ server.tool(
       const total =
         report.openQuestions.length +
         report.unimplementedRules.length +
+        report.unreferencedDefinitions.length +
         report.undocumentedTypes.length +
         report.typesWithoutRole.length;
 

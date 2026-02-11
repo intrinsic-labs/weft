@@ -5,6 +5,9 @@ use zed_extension_api::{self as zed, Command, LanguageServerId, Result, Worktree
 /// Provides LSP support for Weft specification files via the weft-lsp server.
 struct WeftExtension;
 
+const LSP_NPM_PACKAGE: &str = "@weft/lsp";
+const LSP_BINARY: &str = "weft-lsp";
+
 impl zed::Extension for WeftExtension {
     fn new() -> Self {
         WeftExtension
@@ -15,33 +18,20 @@ impl zed::Extension for WeftExtension {
         _language_server_id: &LanguageServerId,
         worktree: &Worktree,
     ) -> Result<Command> {
-        // Try to find node in the PATH
-        let node_path = worktree
-            .which("node")
-            .ok_or_else(|| "node must be installed and in PATH".to_string())?;
+        // Keep the language server package installed at the latest npm version.
+        let latest = zed::npm_package_latest_version(LSP_NPM_PACKAGE)?;
+        let installed = zed::npm_package_installed_version(LSP_NPM_PACKAGE)?;
+        if installed.as_deref() != Some(latest.as_str()) {
+            zed::npm_install_package(LSP_NPM_PACKAGE, latest.as_str())?;
+        }
 
-        // The LSP server path - users should set this in their settings
-        // or we could look for it in node_modules
-        //
-        // For now, we expect users to either:
-        // 1. Have weft-lsp installed globally (npm install -g @weft/lsp)
-        // 2. Configure the path in their Zed settings
-        //
-        // Try to find the server script via npx or global install
-        let server_path = worktree
-            .which("weft-lsp")
-            .or_else(|| {
-                // Try to find in common locations
-                // This is a fallback - ideally users install globally
-                None
-            })
-            .ok_or_else(|| {
-                "weft-lsp not found. Install with: npm install -g @weft/lsp".to_string()
-            })?;
+        let server_path = worktree.which(LSP_BINARY).ok_or_else(|| {
+            format!("{LSP_BINARY} was not found after installing {LSP_NPM_PACKAGE}")
+        })?;
 
         Ok(Command {
-            command: node_path,
-            args: vec![server_path, "--stdio".to_string()],
+            command: server_path,
+            args: vec!["--stdio".to_string()],
             env: Default::default(),
         })
     }

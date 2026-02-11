@@ -91,8 +91,8 @@ class Parser {
       return this.typeDeclaration(annotations);
     }
     if (this.check("service")) return this.serviceDeclaration(annotations);
-    if (this.check("enum")) return this.enumDeclaration();
-    if (this.check("view")) return this.viewDeclaration();
+    if (this.check("enum")) return this.enumDeclaration(annotations);
+    if (this.check("view")) return this.viewDeclaration(annotations);
 
     // Unknown token
     this.error(`Unexpected token: ${this.current().value}`);
@@ -286,8 +286,8 @@ class Parser {
     };
   }
 
-  private enumDeclaration(): EnumDeclaration {
-    const start = this.current().range.start;
+  private enumDeclaration(annotations: TypeAnnotation[] = []): EnumDeclaration {
+    const start = annotations[0]?.range.start ?? this.current().range.start;
     this.expect("enum");
     const name = this.expectIdentifier();
     this.expect("{");
@@ -305,13 +305,14 @@ class Parser {
       kind: "EnumDeclaration",
       name,
       docstring,
+      annotations,
       cases,
       range: { start, end: this.previous().range.end },
     };
   }
 
-  private viewDeclaration(): ViewDeclaration {
-    const start = this.current().range.start;
+  private viewDeclaration(annotations: TypeAnnotation[] = []): ViewDeclaration {
+    const start = annotations[0]?.range.start ?? this.current().range.start;
     this.expect("view");
     const name = this.expectIdentifier();
     this.expect("{");
@@ -325,6 +326,7 @@ class Parser {
       kind: "ViewDeclaration",
       name,
       docstring,
+      annotations,
       members,
       range: { start, end: this.previous().range.end },
     };
