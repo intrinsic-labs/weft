@@ -4,17 +4,18 @@
  * Weft CLI - Command-line interface for analyzing Weft specifications.
  *
  * Commands:
- *   weft check <file>           - Validate a spec file and report errors
- *   weft stats <file>           - Show architecture statistics
- *   weft coverage <file>        - Show coverage report
- *   weft query <file> <query>   - Query the spec (types, rules, etc.)
- *   weft deps <file>            - Show dependency graph
+ *   weft check [path]                 - Validate spec file(s) and report errors
+ *   weft stats [path]                 - Show architecture statistics
+ *   weft coverage [path]              - Show coverage report
+ *   weft query [path] <query> [args]  - Query spec file(s)
+ *   weft deps [path]                  - Show dependency graph
  */
 
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, readdirSync, statSync, type Dirent } from "fs";
+import * as path from "path";
 import { parse } from "./parser.js";
 import {
-  analyze,
+  analyzeWorkspace,
   coverage,
   getTypesByRole,
   getTypesByLifecycle,
@@ -37,6 +38,7 @@ if (args.length === 0) {
 }
 
 const command = args[0];
+const QUERY_NAMES = new Set(["types", "rules", "definitions", "decisions", "questions", "role", "lifecycle", "schemas"]);
 
 switch (command) {
   case "check":
@@ -48,9 +50,11 @@ switch (command) {
   case "coverage":
     runCoverage(args[1]);
     break;
-  case "query":
-    runQuery(args[1], args[2], args.slice(3));
+  case "query": {
+    const { targetPath, query, queryArgs } = parseQueryCommandArgs(args.slice(1));
+    runQuery(targetPath, query, queryArgs);
     break;
+  }
   case "deps":
     runDeps(args[1]);
     break;
@@ -69,19 +73,19 @@ switch (command) {
 // Commands
 // ============================================
 
-function runCheck(file: string): void {
-  const { document, symbols, diagnostics } = loadAndAnalyze(file);
+function runCheck(targetPath?: string): void {
+  const { diagnostics, sourceFiles } = loadAndAnalyze(targetPath);
 
   if (diagnostics.length === 0) {
-    console.log("✓ No errors found");
+    console.log(`✓ No errors found (${sourceFiles.length} file(s) analyzed)`);
     process.exit(0);
   }
 
-  console.log(`Found ${diagnostics.length} issue(s):\n`);
+  console.log(`Found ${diagnostics.length} issue(s) across ${sourceFiles.length} file(s):\n`);
 
   for (const diag of diagnostics) {
     const severity = diag.severity === "error" ? "ERROR" : diag.severity === "warning" ? "WARN" : "INFO";
-    const loc = `${diag.range.start.line}:${diag.range.start.column}`;
+    const loc = formatDiagnosticLocation(diag);
     console.log(`  ${severity} [${loc}] ${diag.message}`);
     if (diag.code) {
       console.log(`         (${diag.code})`);
@@ -94,8 +98,8 @@ function runCheck(file: string): void {
   }
 }
 
-function runStats(file: string): void {
-  const { document, symbols, diagnostics } = loadAndAnalyze(file);
+function runStats(targetPath?: string): void {
+  const { document, symbols, diagnostics } = loadAndAnalyze(targetPath);
   const report = coverage(symbols, document);
 
   console.log("=== Specification Statistics ===\n");
@@ -128,8 +132,8 @@ function runStats(file: string): void {
   console.log(`  Warnings: ${warnings}`);
 }
 
-function runCoverage(file: string): void {
-  const { document, symbols, diagnostics } = loadAndAnalyze(file);
+function runCoverage(targetPath?: string): void {
+  const { document, symbols } = loadAndAnalyze(targetPath);
   const report = coverage(symbols, document);
 
   console.log("=== Coverage Report ===\n");
@@ -186,8 +190,8 @@ function runCoverage(file: string): void {
   }
 }
 
-function runQuery(file: string, query: string, queryArgs: string[]): void {
-  const { document, symbols, diagnostics } = loadAndAnalyze(file);
+function runQuery(targetPath: string | undefined, query: string, queryArgs: string[]): void {
+  const { symbols } = loadAndAnalyze(targetPath);
 
   switch (query) {
     case "types":
@@ -207,7 +211,7 @@ function runQuery(file: string, query: string, queryArgs: string[]): void {
       break;
     case "role":
       if (!queryArgs[0]) {
-        console.error("Usage: weft query <file> role <role>");
+        console.error("Usage: weft query [path] role <role>");
         console.error("Roles: entity, usecase, repository, service, viewmodel, gateway, dto, adapter");
         process.exit(1);
       }
@@ -215,7 +219,7 @@ function runQuery(file: string, query: string, queryArgs: string[]): void {
       break;
     case "lifecycle":
       if (!queryArgs[0]) {
-        console.error("Usage: weft query <file> lifecycle <scope>");
+        console.error("Usage: weft query [path] lifecycle <scope>");
         console.error("Scopes: singleton, session, feature, view");
         process.exit(1);
       }
@@ -231,8 +235,8 @@ function runQuery(file: string, query: string, queryArgs: string[]): void {
   }
 }
 
-function runDeps(file: string): void {
-  const { document, symbols, diagnostics } = loadAndAnalyze(file);
+function runDeps(targetPath?: string): void {
+  const { symbols } = loadAndAnalyze(targetPath);
   const graph = getDependencyGraph(symbols);
 
   console.log("=== Dependency Graph ===\n");
@@ -359,38 +363,166 @@ function listSchemas(symbols: SymbolTable): void {
 // Utilities
 // ============================================
 
-function loadAndAnalyze(file: string): {
+function loadAndAnalyze(targetPath?: string): {
   document: Document;
   symbols: SymbolTable;
-  diagnostics: ReturnType<typeof analyze>["diagnostics"];
+  diagnostics: ReturnType<typeof analyzeWorkspace>["diagnostics"];
+  sourceFiles: string[];
 } {
-  if (!file) {
-    console.error("Error: No file specified");
-    printUsage();
+  const sourceFiles = resolveSourceFiles(targetPath);
+
+  if (sourceFiles.length === 0) {
+    const scope = targetPath ? path.resolve(targetPath) : process.cwd();
+    console.error(`Error: No .weft files found under: ${scope}`);
     process.exit(1);
   }
 
-  if (!existsSync(file)) {
-    console.error(`Error: File not found: ${file}`);
-    process.exit(1);
-  }
+  const parsedDocs = sourceFiles.map((filePath) => {
+    const source = readFileSync(filePath, "utf-8");
+    const { document, errors } = parse(source);
+    return { filePath, document, errors };
+  });
 
-  const source = readFileSync(file, "utf-8");
-  const { document, errors } = parse(source);
-  const { symbols, diagnostics } = analyze(document);
+  const { symbols, diagnostics } = analyzeWorkspace(
+    parsedDocs.map(({ filePath, document }) => ({ uri: filePath, document })),
+  );
 
-  // Add parse errors to diagnostics
-  const allDiagnostics = [
-    ...errors.map((e) => ({
+  // Add parse errors to diagnostics.
+  const parseDiagnostics = parsedDocs.flatMap(({ filePath, errors }) => (
+    errors.map((e) => ({
       message: e.message,
       range: e.range,
+      uri: filePath,
       severity: "error" as const,
       code: "parse-error",
-    })),
-    ...diagnostics,
-  ];
+    }))
+  ));
 
-  return { document, symbols, diagnostics: allDiagnostics };
+  const allDiagnostics = [...parseDiagnostics, ...diagnostics].sort((a, b) => {
+    const aUri = a.uri ?? "";
+    const bUri = b.uri ?? "";
+    if (aUri !== bUri) return aUri.localeCompare(bUri);
+    if (a.range.start.line !== b.range.start.line) return a.range.start.line - b.range.start.line;
+    return a.range.start.column - b.range.start.column;
+  });
+
+  return {
+    document: combineDocuments(parsedDocs.map(({ document }) => document)),
+    symbols,
+    diagnostics: allDiagnostics,
+    sourceFiles,
+  };
+}
+
+function parseQueryCommandArgs(args: string[]): { targetPath?: string; query: string; queryArgs: string[] } {
+  if (args.length === 0) {
+    console.error("Usage: weft query [path] <query> [args]");
+    process.exit(1);
+  }
+
+  const first = args[0];
+  if (QUERY_NAMES.has(first)) {
+    return { query: first, queryArgs: args.slice(1) };
+  }
+
+  if (args.length < 2) {
+    console.error(`Error: Missing query after path '${first}'`);
+    console.error("Usage: weft query [path] <query> [args]");
+    process.exit(1);
+  }
+
+  return { targetPath: first, query: args[1], queryArgs: args.slice(2) };
+}
+
+function resolveSourceFiles(targetPath?: string): string[] {
+  const resolved = targetPath ? path.resolve(targetPath) : process.cwd();
+
+  if (!existsSync(resolved)) {
+    console.error(`Error: Path not found: ${resolved}`);
+    process.exit(1);
+  }
+
+  if (statSync(resolved).isDirectory()) {
+    return listWeftFiles(resolved);
+  }
+
+  if (!resolved.endsWith(".weft")) {
+    console.error(`Error: Expected a .weft file or directory: ${resolved}`);
+    process.exit(1);
+  }
+
+  return [resolved];
+}
+
+function listWeftFiles(dirPath: string): string[] {
+  const result: string[] = [];
+  const ignoredDirs = new Set([".git", "node_modules", "dist", "target", ".zed"]);
+
+  const stack = [dirPath];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current) continue;
+
+    let entries: Dirent[];
+    try {
+      entries = readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (isIgnoredWeftPath(fullPath)) {
+        continue;
+      }
+      if (entry.isDirectory()) {
+        if (!ignoredDirs.has(entry.name)) {
+          stack.push(fullPath);
+        }
+      } else if (entry.isFile() && entry.name.endsWith(".weft")) {
+        result.push(fullPath);
+      }
+    }
+  }
+
+  result.sort((a, b) => a.localeCompare(b));
+  return result;
+}
+
+function isIgnoredWeftPath(filePath: string): boolean {
+  const normalized = filePath.split(path.sep).join("/");
+  return normalized.includes("/packages/zed/grammars/");
+}
+
+function combineDocuments(documents: Document[]): Document {
+  if (documents.length === 1) {
+    return documents[0];
+  }
+
+  const declarations = documents.flatMap((d) => d.declarations);
+  const first = documents[0];
+  const last = documents[documents.length - 1];
+
+  return {
+    kind: "Document",
+    declarations,
+    range: {
+      start: first.range.start,
+      end: last.range.end,
+    },
+  };
+}
+
+function formatDiagnosticLocation(diag: { uri?: string; range: { start: { line: number; column: number } } }): string {
+  const pos = `${diag.range.start.line}:${diag.range.start.column}`;
+  if (!diag.uri) {
+    return pos;
+  }
+
+  const displayPath = path.isAbsolute(diag.uri)
+    ? path.relative(process.cwd(), diag.uri) || path.basename(diag.uri)
+    : diag.uri;
+  return `${displayPath}:${pos}`;
 }
 
 function printUsage(): void {
@@ -401,11 +533,11 @@ USAGE:
   weft <command> [args]
 
 COMMANDS:
-  check <file>                  Validate a spec and report errors
-  stats <file>                  Show architecture statistics
-  coverage <file>               Show coverage gaps (undocumented types, etc.)
-  query <file> <query> [args]   Query the specification
-  deps <file>                   Show dependency graph
+  check [path]                  Validate spec file(s) from path (default: current directory)
+  stats [path]                  Show architecture statistics
+  coverage [path]               Show coverage gaps (undocumented types, etc.)
+  query [path] <query> [args]   Query spec file(s)
+  deps [path]                   Show dependency graph
 
 QUERIES:
   types                         List all types
@@ -419,10 +551,13 @@ QUERIES:
 
 EXAMPLES:
   weft check spec.weft
+  weft check                    # scan all .weft files under current directory
+  weft check ./domain           # scan all .weft files under ./domain
   weft stats spec.weft
-  weft query spec.weft types
-  weft query spec.weft role entity
-  weft query spec.weft lifecycle singleton
+  weft query rules              # all rules from current directory downward
+  weft query ./domain rules     # all rules under ./domain
+  weft query spec.weft types    # query one file
+  weft query lifecycle singleton
   weft deps spec.weft
 `);
 }

@@ -203,7 +203,16 @@ class Parser {
       } else if (this.match("@Role")) {
         const start = this.previous().range.start;
         this.expect("(");
-        const role = this.expectIdentifier() as RoleKind;
+        const role = this.expectAnnotationValue([
+          "entity",
+          "usecase",
+          "repository",
+          "service",
+          "viewmodel",
+          "gateway",
+          "dto",
+          "adapter",
+        ]) as RoleKind;
         this.expect(")");
         annotations.push({
           kind: "Role",
@@ -213,7 +222,7 @@ class Parser {
       } else if (this.match("@Lifecycle")) {
         const start = this.previous().range.start;
         this.expect("(");
-        const scope = this.expectIdentifier() as LifecycleKind;
+        const scope = this.expectAnnotationValue(["singleton", "session", "feature", "view"]) as LifecycleKind;
         this.expect(")");
         annotations.push({
           kind: "Lifecycle",
@@ -671,6 +680,19 @@ class Parser {
       return this.previous().value;
     }
     this.error("Expected string or docstring");
+    throw new Error("Parse error");
+  }
+
+  private expectAnnotationValue(allowedValues: string[]): string {
+    if (this.match("identifier")) {
+      return this.previous().value;
+    }
+    if (allowedValues.includes(this.current().value)) {
+      const value = this.current().value;
+      this.advance();
+      return value;
+    }
+    this.error(`Expected one of: ${allowedValues.join(", ")}`);
     throw new Error("Parse error");
   }
 

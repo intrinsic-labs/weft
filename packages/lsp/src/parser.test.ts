@@ -128,6 +128,26 @@ describe("Parser", () => {
     }
   });
 
+  it("parses role/lifecycle annotations that use keyword-like values", () => {
+    const { document, errors } = parse(`
+      @Role(service)
+      @Lifecycle(view)
+      type ServiceViewType {
+        id: string
+      }
+    `);
+
+    expect(errors).toHaveLength(0);
+    expect(document.declarations).toHaveLength(1);
+
+    const decl = document.declarations[0];
+    if (decl.kind === "TypeDeclaration") {
+      expect(decl.annotations).toHaveLength(2);
+      expect(decl.annotations[0].kind).toBe("Role");
+      expect(decl.annotations[1].kind).toBe("Lifecycle");
+    }
+  });
+
   it("parses service with methods", () => {
     const { document, errors } = parse(`
       service UserService {

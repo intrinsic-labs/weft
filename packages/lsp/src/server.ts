@@ -75,7 +75,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       hoverProvider: true,
       completionProvider: {
-        triggerCharacters: ["@", '"', "`"],
+        triggerCharacters: ["@", '"', "`", "("],
       },
       definitionProvider: true,
     },
@@ -389,9 +389,26 @@ connection.onCompletion((params): CompletionItem[] => {
       { label: "Definition", kind: CompletionItemKind.Keyword, insertText: 'Definition("$1", \'\'\'\n$2\n\'\'\')' },
       { label: "Decision", kind: CompletionItemKind.Keyword, insertText: 'Decision("$1", \'\'\'\n$2\n\'\'\')' },
       { label: "OpenQuestion", kind: CompletionItemKind.Keyword, insertText: 'OpenQuestion("$1", \'\'\'\n$2\n\'\'\')' },
+      { label: "Role", kind: CompletionItemKind.Keyword, insertText: "Role(entity)" },
+      { label: "Lifecycle", kind: CompletionItemKind.Keyword, insertText: "Lifecycle(singleton)" },
+      { label: "Schema", kind: CompletionItemKind.Keyword, insertText: "Schema" },
       { label: "Implements", kind: CompletionItemKind.Keyword, insertText: 'Implements("$1")' },
       { label: "See", kind: CompletionItemKind.Keyword, insertText: 'See("$1")' },
     );
+  }
+
+  // Inside @Role(...), suggest valid role values.
+  if (/@Role\([^)]*$/.test(lineText)) {
+    for (const role of ["entity", "usecase", "repository", "service", "viewmodel", "gateway", "dto", "adapter"]) {
+      items.push({ label: role, kind: CompletionItemKind.EnumMember });
+    }
+  }
+
+  // Inside @Lifecycle(...), suggest valid lifecycle values.
+  if (/@Lifecycle\([^)]*$/.test(lineText)) {
+    for (const scope of ["singleton", "session", "feature", "view"]) {
+      items.push({ label: scope, kind: CompletionItemKind.EnumMember });
+    }
   }
 
   // After @Implements(" or @See(", suggest existing rules/symbols
