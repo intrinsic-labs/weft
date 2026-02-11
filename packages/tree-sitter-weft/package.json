@@ -53,7 +53,8 @@
       "file-types": [
         "weft"
       ],
-      "highlights": "queries/highlights.scm"
+      "highlights": "queries/highlights.scm",
+      "injections": "queries/injections.scm"
     }
   ]
 }

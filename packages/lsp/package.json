@@ -11,8 +11,8 @@
     "./dist/ast.js": "./dist/ast.js"
   },
   "bin": {
-    "weft": "./dist/cli.js",
-    "weft-lsp": "./dist/server.js"
+    "weft": "dist/cli.js",
+    "weft-lsp": "dist/server.js"
   },
   "scripts": {
     "build": "tsup src/server.ts src/cli.ts src/parser.ts src/analyzer.ts src/ast.ts --format esm --dts",
