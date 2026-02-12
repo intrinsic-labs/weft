@@ -189,17 +189,7 @@
   {
     "type": "docstring",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "docstring_content",
-          "named": true
-        }
-      ]
-    }
+    "fields": {}
   },
   {
     "type": "enum_body",
@@ -1006,10 +996,6 @@
   {
     "type": "datetime",
     "named": false
-  },
-  {
-    "type": "docstring_content",
-    "named": true
   },
   {
     "type": "double",

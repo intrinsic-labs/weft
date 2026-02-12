@@ -83,3 +83,5 @@ Treat non-zero exit as a failed spec gate.
   After query/grammar changes, reinstall or reload the dev extension.
 - Ignore generated Zed grammar artifacts in project scans:
   `packages/zed/grammars/` should not be treated as source specs.
+- Markdown syntax highlighting inside Weft docstrings is currently disabled.
+  Treat docstrings as plain text for now.

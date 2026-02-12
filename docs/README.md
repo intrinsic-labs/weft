@@ -26,6 +26,13 @@ The implemented language currently supports:
 - Field annotations: `@Id`, `@Unique`, `@Index`, `@Required`
 - Real-time validation in the LSP (including cross-file validation)
 
+## Current Limitations
+
+- Markdown-in-docstring syntax highlighting is not enabled in editor extensions yet.
+  Docstrings are treated as plain Weft docstring text for now.
+- VS Code and Zed share the same `@weft/lsp` backend behavior, but syntax highlighting stacks differ:
+  Zed uses Tree-sitter queries and VS Code uses TextMate grammar rules.
+
 ## Legacy Docs
 
 Many files under `/Users/asherpope/dev/ai/weft/docs/language`, `/Users/asherpope/dev/ai/weft/docs/ui`, `/Users/asherpope/dev/ai/weft/docs/data`, and related architecture docs describe the older cross-platform pseudocode direction.

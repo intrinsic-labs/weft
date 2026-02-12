@@ -73,7 +73,7 @@
 (string) @string
 
 ; Docstrings
-(docstring) @comment.doc
+(docstring) @string.documentation
 
 ; Numbers
 (number) @number

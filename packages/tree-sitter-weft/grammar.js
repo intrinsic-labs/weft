@@ -396,8 +396,8 @@ module.exports = grammar({
     docstring: $ => choice(
       // Tree-sitter uses Rust's `regex` crate, which does NOT support `[^]` to mean "any character".
       // Use `[\s\S]` instead to match any char including newlines, and keep it non-greedy.
-      seq('"""', alias(token(/[\s\S]*?/), $.docstring_content), '"""'),
-      seq("'''", alias(token(/[\s\S]*?/), $.docstring_content), "'''"),
+      seq('"""', /[\s\S]*?/, '"""'),
+      seq("'''", /[\s\S]*?/, "'''"),
     ),
 
     number: $ => /\d+(\.\d+)?/,

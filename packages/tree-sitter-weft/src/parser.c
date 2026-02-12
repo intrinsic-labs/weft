@@ -207,7 +207,7 @@ static const char * const ts_symbol_names[] = {
   [anon_sym_SQUOTE] = "'",
   [aux_sym_string_token2] = "string_token2",
   [anon_sym_DQUOTE_DQUOTE_DQUOTE] = "\"\"\"",
-  [aux_sym_docstring_token1] = "docstring_content",
+  [aux_sym_docstring_token1] = "docstring_token1",
   [anon_sym_SQUOTE_SQUOTE_SQUOTE] = "'''",
   [sym_number] = "number",
   [anon_sym_true] = "true",
@@ -653,8 +653,8 @@ static const TSSymbolMetadata ts_symbol_metadata[] = {
     .named = false,
   },
   [aux_sym_docstring_token1] = {
-    .visible = true,
-    .named = true,
+    .visible = false,
+    .named = false,
   },
   [anon_sym_SQUOTE_SQUOTE_SQUOTE] = {
     .visible = true,

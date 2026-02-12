@@ -21,6 +21,7 @@ Last updated: 2026-02-11
 - Full expression language
 - `@Constraint`, `@Example`, `@Assumption` (planned, not implemented)
 - Precise range mapping for prose reference diagnostics (currently declaration-level ranges)
+- Markdown parsing/highlighting inside Weft docstrings in editor extensions
 
 ## Guidance
 
