@@ -1171,8 +1171,16 @@
               "value": "\"\"\""
             },
             {
-              "type": "PATTERN",
-              "value": "[\\s\\S]*?"
+              "type": "ALIAS",
+              "content": {
+                "type": "TOKEN",
+                "content": {
+                  "type": "PATTERN",
+                  "value": "[\\s\\S]*?"
+                }
+              },
+              "named": true,
+              "value": "docstring_content"
             },
             {
               "type": "STRING",
@@ -1188,8 +1196,16 @@
               "value": "'''"
             },
             {
-              "type": "PATTERN",
-              "value": "[\\s\\S]*?"
+              "type": "ALIAS",
+              "content": {
+                "type": "TOKEN",
+                "content": {
+                  "type": "PATTERN",
+                  "value": "[\\s\\S]*?"
+                }
+              },
+              "named": true,
+              "value": "docstring_content"
             },
             {
               "type": "STRING",
