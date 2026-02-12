@@ -8,7 +8,7 @@ repository = "https://github.com/intrinsic-labs/weft"
 
 [grammars.weft]
 repository = "https://github.com/intrinsic-labs/weft"
-rev = "b2a7ef7b7a130e52a48c1223558be6d2ae6a5839"
+rev = "b2a7ef7f5900e666b7f66cfb411596e85262fe63"
 path = "packages/tree-sitter-weft"
 
 [language_servers.weft-lsp]
