@@ -12,7 +12,7 @@ This index tracks the current spec-first direction.
 - `docs/RELEASING_NPM.md` - Publish workflow for CLI/LSP
 - `docs/getting-started/01-introduction.md`
 - `docs/getting-started/02-quick-start.md`
-- `examples/messaging.weft`
+- `examples/workflow-annotations.weft`
 
 ## Legacy Material
 

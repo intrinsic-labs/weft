@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parse } from "./parser.js";
-import { analyze, analyzeWorkspace, coverage } from "./analyzer.js";
+import { analyze, analyzeWorkspace, coverage, getTodos, getTypesByBoundary, getTypesByPriority } from "./analyzer.js";
 
 describe("Analyzer", () => {
   it("resolves cross-file type references in workspace analysis", () => {
@@ -72,5 +72,41 @@ describe("Analyzer", () => {
 
     expect(report.unreferencedDefinitions).toContain("orphan-def");
     expect(report.unreferencedDefinitions).not.toContain("used-def");
+  });
+
+  it("extracts boundary/priority/todo metadata for query helpers", () => {
+    const document = parse(`
+      @Boundary(database, "primary")
+      @Priority(p1)
+      @TODO("Backfill indexes", status: open, priority: p0, owner: "platform")
+      type UserStore {
+        id: string
+      }
+    `).document;
+
+    const { symbols } = analyze(document);
+    const dbTypes = getTypesByBoundary(symbols, "database");
+    expect(dbTypes.map((s) => s.name)).toContain("UserStore");
+
+    const p1Types = getTypesByPriority(symbols, "p1");
+    expect(p1Types.map((s) => s.name)).toContain("UserStore");
+
+    const todos = getTodos(symbols);
+    expect(todos).toHaveLength(1);
+    expect(todos[0].todo.summary).toBe("Backfill indexes");
+    expect(todos[0].todo.status).toBe("open");
+    expect(todos[0].todo.priority).toBe("p0");
+  });
+
+  it("validates TODO due date format", () => {
+    const document = parse(`
+      @TODO("Ship v1", due: "03-20-2026")
+      type LaunchPlan {
+        ready: bool
+      }
+    `).document;
+
+    const { diagnostics } = analyze(document);
+    expect(diagnostics.some((d) => d.code === "invalid-todo-due")).toBe(true);
   });
 });

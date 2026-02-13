@@ -14,7 +14,7 @@ The product direction is defined in `VISION.md`.
 2. [Quick Start](getting-started/02-quick-start.md)
 3. [Current Status](STATUS.md)
 4. [Grammar](GRAMMAR.md)
-5. [Example Spec](../examples/messaging.weft)
+5. [Example Spec](../examples/workflow-annotations.weft)
 
 ## Current Scope
 
@@ -22,7 +22,7 @@ The implemented language currently supports:
 
 - Top-level spec annotations: `@Rule`, `@Definition`, `@Decision`, `@OpenQuestion`
 - Declarations: `type`, `struct`, `data`, `protocol`, `interface`, `service`, `enum`, `view`
-- Type-level annotations: `@Implements`, `@See`, `@Role`, `@Lifecycle`, `@Schema`
+- Type-level annotations: `@Implements`, `@See`, `@Role`, `@Lifecycle`, `@Schema`, `@Boundary`, `@Priority`, `@TODO`
 - Field annotations: `@Id`, `@Unique`, `@Index`, `@Required`
 - Real-time validation in the LSP (including cross-file validation)
 

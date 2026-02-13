@@ -1,0 +1,39 @@
+@Rule("outbound-idempotent", '''
+All outbound write operations should use idempotency keys.
+''')
+
+@Role(usecase)
+@Lifecycle(singleton)
+@Boundary(api, "billing-gateway")
+@Priority(critical)
+@TODO("Implement idempotency key cache eviction policy", id: "BILL-112", owner: "platform", due: "2026-05-01", status: blocked, priority: p0)
+@Implements("outbound-idempotent")
+service BillingGateway {
+    func charge(accountId: string, amountCents: int) -> bool throws
+}
+
+@Role(entity)
+@Schema
+@Boundary(db, "payments-db")
+@Priority(p1)
+@TODO("Backfill historical settlement timestamps", owner: "data", status: in_progress, priority: high)
+type PaymentRecord {
+    @Id(generated)
+    id: string
+    accountId: string
+    amountCents: int
+    settledAt: datetime?
+}
+
+@Role(viewmodel)
+@Lifecycle(view)
+@Boundary(ui, "billing-console")
+@Priority(low)
+@TODO("Add failed charge retry affordance", status: open, priority: p3)
+view BillingViewModel {
+    accountId: string
+    isCharging: bool = false
+    lastChargeSucceeded: bool?
+
+    fn onCharge(amountCents: int)
+}

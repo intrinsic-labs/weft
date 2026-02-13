@@ -24,7 +24,30 @@ which weft-lsp
 weft --help
 ```
 
-## 3. Use Weft in Any Project
+## 3. Local Dev Install (From This Repository)
+
+For local development without publishing, link the workspace package:
+
+```bash
+npm run build --workspace=@weft/lsp
+npm link --workspace=@weft/lsp
+```
+
+Verify:
+
+```bash
+which weft
+which weft-lsp
+weft --help
+```
+
+Remove the global link later if needed:
+
+```bash
+npm unlink -g @weft/lsp
+```
+
+## 4. Use Weft in Any Project
 
 From any project directory:
 
@@ -35,6 +58,9 @@ weft query ./domain rules
 weft stats
 weft coverage
 weft deps
+weft contract --format json
+weft bootstrap --target typescript --format json
+weft docs query lifecycle singleton --limit 5
 ```
 
 Behavior:
@@ -43,7 +69,7 @@ Behavior:
 - Passing a path scopes analysis to that subtree.
 - Passing a file analyzes only that file.
 
-## 4. Zed Setup (Current Recommended Path)
+## 5. Zed Setup (Current Recommended Path)
 
 Until marketplace publishing is complete, use the dev extension install path:
 
@@ -59,7 +85,7 @@ Then open a repository containing `.weft` files. You should get:
 - completion
 - go-to-definition
 
-## 5. Suggested Real-Project Validation
+## 6. Suggested Real-Project Validation
 
 Start with a small folder (3-10 files), then scale:
 
@@ -69,7 +95,7 @@ Start with a small folder (3-10 files), then scale:
 4. Confirm `weft query rules` and `weft deps` are useful for navigation.
 5. Integrate `weft check` into CI.
 
-## 6. CI Gate (Minimal)
+## 7. CI Gate (Minimal)
 
 ```bash
 weft check .
@@ -77,7 +103,7 @@ weft check .
 
 Treat non-zero exit as a failed spec gate.
 
-## 7. Common Gotchas
+## 8. Common Gotchas
 
 - Restarting the language server is not the same as reloading syntax queries.
   After query/grammar changes, reinstall or reload the dev extension.

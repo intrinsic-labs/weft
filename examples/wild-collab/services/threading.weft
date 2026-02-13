@@ -1,5 +1,8 @@
 @Role(usecase)
 @Lifecycle(singleton)
+@Boundary(api, "threading-core")
+@Priority(high)
+@TODO("Enforce idempotency keys on sendMessage write path", owner: "core", status: in_progress, priority: p1)
 @Implements("verified-sender")
 @Implements("soft-delete-retention")
 @See("moderation-policy")
@@ -13,4 +16,3 @@ service Threading {
     func markRead(reader: User, message: Message) throws
     func archiveThread(actor: User, thread: Thread) throws
 }
-

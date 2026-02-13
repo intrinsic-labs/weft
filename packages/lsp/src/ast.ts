@@ -108,12 +108,45 @@ export interface SchemaAnnotation extends Node {
   kind: "Schema";
 }
 
+// Integration boundary annotation
+export type BoundaryKind = "api" | "database" | "queue" | "filesystem" | "ui" | "external";
+
+export interface BoundaryAnnotation extends Node {
+  kind: "Boundary";
+  boundary: BoundaryKind;
+  system?: string;
+}
+
+// Work prioritization annotation
+export type PriorityLevel = "p0" | "p1" | "p2" | "p3";
+
+export interface PriorityAnnotation extends Node {
+  kind: "Priority";
+  level: PriorityLevel;
+}
+
+// Implementation tracking annotation
+export type TodoStatus = "open" | "in_progress" | "blocked" | "done";
+
+export interface TodoAnnotation extends Node {
+  kind: "Todo";
+  summary: string;
+  id?: string;
+  owner?: string;
+  due?: string;
+  status: TodoStatus;
+  priority?: PriorityLevel;
+}
+
 export type TypeAnnotation =
   | ImplementsAnnotation
   | SeeAnnotation
   | RoleAnnotation
   | LifecycleAnnotation
-  | SchemaAnnotation;
+  | SchemaAnnotation
+  | BoundaryAnnotation
+  | PriorityAnnotation
+  | TodoAnnotation;
 
 // ============================================
 // Field-level annotations (for schema)

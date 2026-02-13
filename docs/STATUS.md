@@ -7,11 +7,15 @@ Last updated: 2026-02-11
 - Parser/LSP support for:
   - `@Rule`, `@Definition`, `@Decision`, `@OpenQuestion`
   - `type`, `struct`, `data`, `protocol`, `interface`, `service`, `enum`, `view`
-  - `@Implements`, `@See`, `@Role`, `@Lifecycle`, `@Schema`
+  - `@Implements`, `@See`, `@Role`, `@Lifecycle`, `@Schema`, `@Boundary`, `@Priority`, `@TODO`
   - `@Id`, `@Unique`, `@Index`, `@Required`
 - Type/reference validation (including prose references like `@Definition("...")`)
 - Cross-file validation in the language server across `.weft` files in the workspace
 - Architecture and lifecycle constraint checks
+- CLI workflow commands:
+  - `weft contract` (implementation contract view)
+  - `weft bootstrap` (agent bootstrap payload)
+  - `weft docs query` (local docs search)
 - VS Code and Zed extension scaffolding in repo
 
 ## Not Supported Yet

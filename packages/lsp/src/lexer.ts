@@ -39,6 +39,9 @@ export type TokenKind =
   | "@Role"
   | "@Lifecycle"
   | "@Schema"
+  | "@Boundary"
+  | "@Priority"
+  | "@TODO"
   | "@Id"
   | "@Unique"
   | "@Index"
@@ -106,6 +109,9 @@ const ANNOTATIONS = new Set([
   "@Role",
   "@Lifecycle",
   "@Schema",
+  "@Boundary",
+  "@Priority",
+  "@TODO",
   "@Id",
   "@Unique",
   "@Index",

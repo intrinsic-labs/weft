@@ -29,6 +29,9 @@ import type {
   TypeKeyword,
   RoleKind,
   LifecycleKind,
+  BoundaryKind,
+  PriorityLevel,
+  TodoStatus,
 } from "./ast.js";
 import { isPrimitive } from "./ast.js";
 
@@ -179,7 +182,7 @@ class Parser {
   private typeAnnotations(): TypeAnnotation[] {
     const annotations: TypeAnnotation[] = [];
 
-    while (this.check("@Implements", "@See", "@Role", "@Lifecycle", "@Schema")) {
+    while (this.check("@Implements", "@See", "@Role", "@Lifecycle", "@Schema", "@Boundary", "@Priority", "@TODO")) {
       if (this.match("@Implements")) {
         const start = this.previous().range.start;
         this.expect("(");
@@ -233,6 +236,84 @@ class Parser {
         const start = this.previous().range.start;
         annotations.push({
           kind: "Schema",
+          range: { start, end: this.previous().range.end },
+        });
+      } else if (this.match("@Boundary")) {
+        const start = this.previous().range.start;
+        this.expect("(");
+        const rawBoundary = this.expectAnnotationValue([
+          "api",
+          "database",
+          "db",
+          "queue",
+          "filesystem",
+          "fs",
+          "ui",
+          "external",
+        ]);
+        const boundary = this.normalizeBoundary(rawBoundary);
+        let system: string | undefined;
+        if (this.match(",")) {
+          system = this.expectString();
+        }
+        this.expect(")");
+        annotations.push({
+          kind: "Boundary",
+          boundary,
+          system,
+          range: { start, end: this.previous().range.end },
+        });
+      } else if (this.match("@Priority")) {
+        const start = this.previous().range.start;
+        this.expect("(");
+        const rawLevel = this.expectAnnotationValue(["p0", "p1", "p2", "p3", "critical", "high", "medium", "low"]);
+        const level = this.normalizePriority(rawLevel);
+        this.expect(")");
+        annotations.push({
+          kind: "Priority",
+          level,
+          range: { start, end: this.previous().range.end },
+        });
+      } else if (this.match("@TODO")) {
+        const start = this.previous().range.start;
+        this.expect("(");
+        const summary = this.expectString();
+        let id: string | undefined;
+        let owner: string | undefined;
+        let due: string | undefined;
+        let status: TodoStatus = "open";
+        let priority: PriorityLevel | undefined;
+
+        while (this.match(",")) {
+          const key = this.expectIdentifier();
+          this.expect(":");
+
+          if (key === "id") {
+            id = this.expectString();
+          } else if (key === "owner") {
+            owner = this.expectString();
+          } else if (key === "due") {
+            due = this.expectString();
+          } else if (key === "status") {
+            status = this.expectAnnotationValue(["open", "in_progress", "blocked", "done"]) as TodoStatus;
+          } else if (key === "priority") {
+            const raw = this.expectAnnotationValue(["p0", "p1", "p2", "p3", "critical", "high", "medium", "low"]);
+            priority = this.normalizePriority(raw);
+          } else {
+            this.error(`Unknown @TODO field: ${key}. Allowed: id, owner, due, status, priority`);
+            throw new Error("Parse error");
+          }
+        }
+
+        this.expect(")");
+        annotations.push({
+          kind: "Todo",
+          summary,
+          id,
+          owner,
+          due,
+          status,
+          priority,
           range: { start, end: this.previous().range.end },
         });
       }
@@ -712,6 +793,45 @@ class Parser {
     throw new Error("Parse error");
   }
 
+  private normalizePriority(raw: string): PriorityLevel {
+    switch (raw) {
+      case "p0":
+      case "critical":
+        return "p0";
+      case "p1":
+      case "high":
+        return "p1";
+      case "p2":
+      case "medium":
+        return "p2";
+      case "p3":
+      case "low":
+        return "p3";
+      default:
+        this.error(`Invalid priority: ${raw}`);
+        throw new Error("Parse error");
+    }
+  }
+
+  private normalizeBoundary(raw: string): BoundaryKind {
+    switch (raw) {
+      case "api":
+      case "database":
+      case "queue":
+      case "filesystem":
+      case "ui":
+      case "external":
+        return raw;
+      case "db":
+        return "database";
+      case "fs":
+        return "filesystem";
+      default:
+        this.error(`Invalid boundary: ${raw}`);
+        throw new Error("Parse error");
+    }
+  }
+
   private expect(...kinds: TokenKind[]): Token {
     for (const kind of kinds) {
       if (this.check(kind)) {
@@ -777,6 +897,9 @@ class Parser {
           "@OpenQuestion",
           "@Implements",
           "@See",
+          "@Boundary",
+          "@Priority",
+          "@TODO",
           "type",
           "struct",
           "data",

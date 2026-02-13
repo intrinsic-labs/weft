@@ -27,7 +27,7 @@ async, throws
 
 ```
 @Rule, @Definition, @Decision, @OpenQuestion
-@Implements, @See
+@Implements, @See, @Role, @Lifecycle, @Schema, @Boundary, @Priority, @TODO
 ```
 
 Planned but not parsed yet:
@@ -104,6 +104,12 @@ Annotation      = RuleAnnotation
                 | OpenQuestionAnnotation
                 | ImplementsAnnotation
                 | SeeAnnotation
+                | RoleAnnotation
+                | LifecycleAnnotation
+                | SchemaAnnotation
+                | BoundaryAnnotation
+                | PriorityAnnotation
+                | TodoAnnotation
 
 RuleAnnotation        = '@Rule' '(' STRING ',' Prose ')'
 DefinitionAnnotation  = '@Definition' '(' STRING ',' Prose ')'
@@ -112,6 +118,17 @@ OpenQuestionAnnotation = '@OpenQuestion' '(' STRING ',' Prose ')'
 
 ImplementsAnnotation  = '@Implements' '(' STRING ')'
 SeeAnnotation         = '@See' '(' STRING ')'
+RoleAnnotation        = '@Role' '(' IDENTIFIER ')'
+LifecycleAnnotation   = '@Lifecycle' '(' IDENTIFIER ')'
+SchemaAnnotation      = '@Schema'
+BoundaryAnnotation    = '@Boundary' '(' IDENTIFIER (',' STRING)? ')'
+PriorityAnnotation    = '@Priority' '(' IDENTIFIER ')'
+TodoAnnotation        = '@TODO' '(' STRING (',' TodoField (',' TodoField)*)? ')'
+TodoField             = 'id' ':' STRING
+                      | 'owner' ':' STRING
+                      | 'due' ':' STRING
+                      | 'status' ':' IDENTIFIER
+                      | 'priority' ':' IDENTIFIER
 
 Prose           = DOCSTRING | STRING
 ```
@@ -136,7 +153,14 @@ TypeDeclaration = TypeAnnotation* TypeKeyword IDENTIFIER TypeBody
 
 TypeKeyword     = 'type' | 'struct' | 'data' | 'protocol' | 'interface'
 
-TypeAnnotation  = ImplementsAnnotation | SeeAnnotation
+TypeAnnotation  = ImplementsAnnotation
+                | SeeAnnotation
+                | RoleAnnotation
+                | LifecycleAnnotation
+                | SchemaAnnotation
+                | BoundaryAnnotation
+                | PriorityAnnotation
+                | TodoAnnotation
 
 TypeBody        = '{' Docstring? Member* '}'
 
@@ -359,7 +383,7 @@ Weft files use the `.weft` extension.
 
 ```
 user.weft
-messaging.weft
+workflow-annotations.weft
 types/core.weft
 ```
 

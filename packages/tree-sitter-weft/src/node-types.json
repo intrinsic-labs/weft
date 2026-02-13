@@ -87,6 +87,30 @@
     "fields": {}
   },
   {
+    "type": "boundary_annotation",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "boundary_kind",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "boundary_kind",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "decision_annotation",
     "named": true,
     "fields": {},
@@ -237,6 +261,10 @@
       "required": true,
       "types": [
         {
+          "type": "boundary_annotation",
+          "named": true
+        },
+        {
           "type": "enum_body",
           "named": true
         },
@@ -253,6 +281,10 @@
           "named": true
         },
         {
+          "type": "priority_annotation",
+          "named": true
+        },
+        {
           "type": "role_annotation",
           "named": true
         },
@@ -262,6 +294,10 @@
         },
         {
           "type": "see_annotation",
+          "named": true
+        },
+        {
+          "type": "todo_annotation",
           "named": true
         }
       ]
@@ -518,6 +554,26 @@
     "fields": {}
   },
   {
+    "type": "priority_annotation",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "priority_level",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "priority_level",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "return_type",
     "named": true,
     "fields": {},
@@ -635,6 +691,10 @@
       "required": true,
       "types": [
         {
+          "type": "boundary_annotation",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         },
@@ -644,6 +704,10 @@
         },
         {
           "type": "lifecycle_annotation",
+          "named": true
+        },
+        {
+          "type": "priority_annotation",
           "named": true
         },
         {
@@ -660,6 +724,10 @@
         },
         {
           "type": "service_body",
+          "named": true
+        },
+        {
+          "type": "todo_annotation",
           "named": true
         }
       ]
@@ -745,6 +813,53 @@
     }
   },
   {
+    "type": "todo_annotation",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "string",
+          "named": true
+        },
+        {
+          "type": "todo_field",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "todo_field",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "priority_level",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        },
+        {
+          "type": "todo_status",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "todo_status",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "type_body",
     "named": true,
     "fields": {},
@@ -776,6 +891,10 @@
       "required": true,
       "types": [
         {
+          "type": "boundary_annotation",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         },
@@ -788,6 +907,10 @@
           "named": true
         },
         {
+          "type": "priority_annotation",
+          "named": true
+        },
+        {
           "type": "role_annotation",
           "named": true
         },
@@ -797,6 +920,10 @@
         },
         {
           "type": "see_annotation",
+          "named": true
+        },
+        {
+          "type": "todo_annotation",
           "named": true
         },
         {
@@ -853,6 +980,10 @@
       "required": true,
       "types": [
         {
+          "type": "boundary_annotation",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         },
@@ -865,6 +996,10 @@
           "named": true
         },
         {
+          "type": "priority_annotation",
+          "named": true
+        },
+        {
           "type": "role_annotation",
           "named": true
         },
@@ -874,6 +1009,10 @@
         },
         {
           "type": "see_annotation",
+          "named": true
+        },
+        {
+          "type": "todo_annotation",
           "named": true
         },
         {
@@ -932,6 +1071,10 @@
     "named": false
   },
   {
+    "type": "@Boundary",
+    "named": false
+  },
+  {
     "type": "@Decision",
     "named": false
   },
@@ -956,6 +1099,10 @@
     "named": false
   },
   {
+    "type": "@Priority",
+    "named": false
+  },
+  {
     "type": "@Role",
     "named": false
   },
@@ -969,6 +1116,10 @@
   },
   {
     "type": "@See",
+    "named": false
+  },
+  {
+    "type": "@TODO",
     "named": false
   },
   {
@@ -988,11 +1139,27 @@
     "named": false
   },
   {
+    "type": "api",
+    "named": false
+  },
+  {
+    "type": "blocked",
+    "named": false
+  },
+  {
     "type": "bool",
     "named": false
   },
   {
+    "type": "critical",
+    "named": false
+  },
+  {
     "type": "data",
+    "named": false
+  },
+  {
+    "type": "database",
     "named": false
   },
   {
@@ -1004,8 +1171,16 @@
     "named": false
   },
   {
+    "type": "db",
+    "named": false
+  },
+  {
     "type": "docstring",
     "named": true
+  },
+  {
+    "type": "done",
+    "named": false
   },
   {
     "type": "double",
@@ -1013,6 +1188,10 @@
   },
   {
     "type": "dto",
+    "named": false
+  },
+  {
+    "type": "due",
     "named": false
   },
   {
@@ -1024,6 +1203,10 @@
     "named": false
   },
   {
+    "type": "external",
+    "named": false
+  },
+  {
     "type": "false",
     "named": false
   },
@@ -1032,11 +1215,19 @@
     "named": false
   },
   {
+    "type": "filesystem",
+    "named": false
+  },
+  {
     "type": "float",
     "named": false
   },
   {
     "type": "fn",
+    "named": false
+  },
+  {
+    "type": "fs",
     "named": false
   },
   {
@@ -1052,8 +1243,20 @@
     "named": false
   },
   {
+    "type": "high",
+    "named": false
+  },
+  {
+    "type": "id",
+    "named": false
+  },
+  {
     "type": "identifier",
     "named": true
+  },
+  {
+    "type": "in_progress",
+    "named": false
   },
   {
     "type": "index_annotation",
@@ -1068,6 +1271,14 @@
     "named": false
   },
   {
+    "type": "low",
+    "named": false
+  },
+  {
+    "type": "medium",
+    "named": false
+  },
+  {
     "type": "null",
     "named": true
   },
@@ -1076,7 +1287,39 @@
     "named": true
   },
   {
+    "type": "open",
+    "named": false
+  },
+  {
+    "type": "owner",
+    "named": false
+  },
+  {
+    "type": "p0",
+    "named": false
+  },
+  {
+    "type": "p1",
+    "named": false
+  },
+  {
+    "type": "p2",
+    "named": false
+  },
+  {
+    "type": "p3",
+    "named": false
+  },
+  {
+    "type": "priority",
+    "named": false
+  },
+  {
     "type": "protocol",
+    "named": false
+  },
+  {
+    "type": "queue",
     "named": false
   },
   {
@@ -1100,6 +1343,10 @@
     "named": false
   },
   {
+    "type": "status",
+    "named": false
+  },
+  {
     "type": "string",
     "named": false
   },
@@ -1117,6 +1364,10 @@
   },
   {
     "type": "type",
+    "named": false
+  },
+  {
+    "type": "ui",
     "named": false
   },
   {

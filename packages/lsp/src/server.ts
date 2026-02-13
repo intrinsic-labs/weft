@@ -351,6 +351,20 @@ function formatSymbolHover(symbol: Symbol): string {
     lines.push(symbol.docstring.trim());
   }
 
+  const tags: string[] = [];
+  if (symbol.role) tags.push(`@Role(${symbol.role})`);
+  if (symbol.lifecycle) tags.push(`@Lifecycle(${symbol.lifecycle})`);
+  if (symbol.isSchema) tags.push("@Schema");
+  if (symbol.boundary) {
+    tags.push(`@Boundary(${symbol.boundary}${symbol.boundarySystem ? `, "${symbol.boundarySystem}"` : ""})`);
+  }
+  if (symbol.priority) tags.push(`@Priority(${symbol.priority})`);
+  if (symbol.todos?.length) tags.push(`@TODO(${symbol.todos.length})`);
+  if (tags.length > 0) {
+    lines.push("");
+    lines.push(tags.join(" "));
+  }
+
   // Members
   if (symbol.members && symbol.members.size > 0) {
     lines.push("");
@@ -391,6 +405,9 @@ connection.onCompletion((params): CompletionItem[] => {
       { label: "OpenQuestion", kind: CompletionItemKind.Keyword, insertText: 'OpenQuestion("$1", \'\'\'\n$2\n\'\'\')' },
       { label: "Role", kind: CompletionItemKind.Keyword, insertText: "Role(entity)" },
       { label: "Lifecycle", kind: CompletionItemKind.Keyword, insertText: "Lifecycle(singleton)" },
+      { label: "Boundary", kind: CompletionItemKind.Keyword, insertText: 'Boundary(api, "$1")' },
+      { label: "Priority", kind: CompletionItemKind.Keyword, insertText: "Priority(p1)" },
+      { label: "TODO", kind: CompletionItemKind.Keyword, insertText: 'TODO("$1", status: open, priority: p2)' },
       { label: "Schema", kind: CompletionItemKind.Keyword, insertText: "Schema" },
       { label: "Implements", kind: CompletionItemKind.Keyword, insertText: 'Implements("$1")' },
       { label: "See", kind: CompletionItemKind.Keyword, insertText: 'See("$1")' },
@@ -408,6 +425,24 @@ connection.onCompletion((params): CompletionItem[] => {
   if (/@Lifecycle\([^)]*$/.test(lineText)) {
     for (const scope of ["singleton", "session", "feature", "view"]) {
       items.push({ label: scope, kind: CompletionItemKind.EnumMember });
+    }
+  }
+
+  if (/@Boundary\([^)]*$/.test(lineText)) {
+    for (const boundary of ["api", "database", "queue", "filesystem", "ui", "external"]) {
+      items.push({ label: boundary, kind: CompletionItemKind.EnumMember });
+    }
+  }
+
+  if (/@Priority\([^)]*$/.test(lineText)) {
+    for (const priority of ["p0", "p1", "p2", "p3", "critical", "high", "medium", "low"]) {
+      items.push({ label: priority, kind: CompletionItemKind.EnumMember });
+    }
+  }
+
+  if (/@TODO\([^)]*status:\s*[^,\)]*$/.test(lineText)) {
+    for (const status of ["open", "in_progress", "blocked", "done"]) {
+      items.push({ label: status, kind: CompletionItemKind.EnumMember });
     }
   }
 

@@ -30,6 +30,15 @@ describe("Lexer", () => {
     expect(kinds).toEqual(["@Rule", "(", "string", ",", "string", ")", "eof"]);
   });
 
+  it("tokenizes workflow annotations", () => {
+    const tokens = lex(`@Boundary(api)\n@Priority(p1)\n@TODO("ship it", status: open)`);
+    const kinds = tokens.map((t) => t.kind);
+
+    expect(kinds).toContain("@Boundary");
+    expect(kinds).toContain("@Priority");
+    expect(kinds).toContain("@TODO");
+  });
+
   it("tokenizes docstrings", () => {
     const tokens = lex(`"""This is a docstring"""`);
 
@@ -145,6 +154,48 @@ describe("Parser", () => {
       expect(decl.annotations).toHaveLength(2);
       expect(decl.annotations[0].kind).toBe("Role");
       expect(decl.annotations[1].kind).toBe("Lifecycle");
+    }
+  });
+
+  it("parses boundary, priority, and TODO annotations", () => {
+    const { document, errors } = parse(`
+      @Boundary(api, "billing")
+      @Priority(high)
+      @TODO("Add retries", owner: "core", due: "2026-03-01", status: blocked, priority: p0)
+      service BillingGateway {
+        func charge(id: string) -> bool
+      }
+    `);
+
+    expect(errors).toHaveLength(0);
+    expect(document.declarations).toHaveLength(1);
+
+    const decl = document.declarations[0];
+    if (decl.kind === "ServiceDeclaration") {
+      expect(decl.annotations).toHaveLength(3);
+
+      const boundary = decl.annotations.find((a) => a.kind === "Boundary");
+      expect(boundary?.kind).toBe("Boundary");
+      if (boundary?.kind === "Boundary") {
+        expect(boundary.boundary).toBe("api");
+        expect(boundary.system).toBe("billing");
+      }
+
+      const priority = decl.annotations.find((a) => a.kind === "Priority");
+      expect(priority?.kind).toBe("Priority");
+      if (priority?.kind === "Priority") {
+        expect(priority.level).toBe("p1");
+      }
+
+      const todo = decl.annotations.find((a) => a.kind === "Todo");
+      expect(todo?.kind).toBe("Todo");
+      if (todo?.kind === "Todo") {
+        expect(todo.summary).toBe("Add retries");
+        expect(todo.owner).toBe("core");
+        expect(todo.due).toBe("2026-03-01");
+        expect(todo.status).toBe("blocked");
+        expect(todo.priority).toBe("p0");
+      }
     }
   });
 

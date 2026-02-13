@@ -16,6 +16,10 @@ import type {
   Range,
   RoleKind,
   LifecycleKind,
+  BoundaryKind,
+  PriorityLevel,
+  TodoStatus,
+  TodoAnnotation,
 } from "./ast.js";
 import { canDependOn, canInjectInto, ROLE_LAYERS } from "./ast.js";
 
@@ -35,6 +39,10 @@ export interface Symbol {
   role?: RoleKind;
   lifecycle?: LifecycleKind;
   isSchema?: boolean;
+  boundary?: BoundaryKind;
+  boundarySystem?: string;
+  priority?: PriorityLevel;
+  todos?: TodoAnnotation[];
   dependencies?: string[]; // Types this symbol depends on
 }
 
@@ -156,7 +164,7 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
       break;
 
     case "TypeDeclaration": {
-      const { role, lifecycle, isSchema } = extractAnnotations(decl.annotations);
+      const { role, lifecycle, isSchema, boundary, boundarySystem, priority, todos } = extractAnnotations(decl.annotations);
       const dependencies = collectDependencies(decl.members);
       addSymbol(symbols.types, decl.name, {
         name: decl.name,
@@ -168,13 +176,17 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
         role,
         lifecycle,
         isSchema,
+        boundary,
+        boundarySystem,
+        priority,
+        todos,
         dependencies,
       }, diagnostics);
       break;
     }
 
     case "ServiceDeclaration": {
-      const { role, lifecycle, isSchema } = extractAnnotations(decl.annotations);
+      const { role, lifecycle, isSchema, boundary, boundarySystem, priority, todos } = extractAnnotations(decl.annotations);
       const dependencies = collectServiceDependencies(decl.methods);
       addSymbol(symbols.types, decl.name, {
         name: decl.name,
@@ -186,13 +198,17 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
         role,
         lifecycle,
         isSchema,
+        boundary,
+        boundarySystem,
+        priority,
+        todos,
         dependencies,
       }, diagnostics);
       break;
     }
 
     case "EnumDeclaration": {
-      const { role, lifecycle, isSchema } = extractAnnotations(decl.annotations);
+      const { role, lifecycle, isSchema, boundary, boundarySystem, priority, todos } = extractAnnotations(decl.annotations);
       addSymbol(symbols.types, decl.name, {
         name: decl.name,
         kind: "enum",
@@ -203,12 +219,16 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
         role,
         lifecycle,
         isSchema,
+        boundary,
+        boundarySystem,
+        priority,
+        todos,
       }, diagnostics);
       break;
     }
 
     case "ViewDeclaration": {
-      const { role, lifecycle, isSchema } = extractAnnotations(decl.annotations);
+      const { role, lifecycle, isSchema, boundary, boundarySystem, priority, todos } = extractAnnotations(decl.annotations);
       const dependencies = collectDependencies(decl.members);
       addSymbol(symbols.types, decl.name, {
         name: decl.name,
@@ -220,6 +240,10 @@ function collectSymbol(decl: Declaration, symbols: SymbolTable, diagnostics: Dia
         role,
         lifecycle: lifecycle ?? "view", // Views are view-scoped by default
         isSchema,
+        boundary,
+        boundarySystem,
+        priority,
+        todos,
         dependencies,
       }, diagnostics);
       break;
@@ -231,10 +255,18 @@ function extractAnnotations(annotations: TypeDeclaration["annotations"]): {
   role?: RoleKind;
   lifecycle?: LifecycleKind;
   isSchema: boolean;
+  boundary?: BoundaryKind;
+  boundarySystem?: string;
+  priority?: PriorityLevel;
+  todos: TodoAnnotation[];
 } {
   let role: RoleKind | undefined;
   let lifecycle: LifecycleKind | undefined;
   let isSchema = false;
+  let boundary: BoundaryKind | undefined;
+  let boundarySystem: string | undefined;
+  let priority: PriorityLevel | undefined;
+  const todos: TodoAnnotation[] = [];
 
   for (const ann of annotations) {
     if (ann.kind === "Role") {
@@ -243,10 +275,17 @@ function extractAnnotations(annotations: TypeDeclaration["annotations"]): {
       lifecycle = ann.scope;
     } else if (ann.kind === "Schema") {
       isSchema = true;
+    } else if (ann.kind === "Boundary") {
+      boundary = ann.boundary;
+      boundarySystem = ann.system;
+    } else if (ann.kind === "Priority") {
+      priority = ann.level;
+    } else if (ann.kind === "Todo") {
+      todos.push(ann);
     }
   }
 
-  return { role, lifecycle, isSchema };
+  return { role, lifecycle, isSchema, boundary, boundarySystem, priority, todos };
 }
 
 function collectDependencies(members: Member[]): string[] {
@@ -471,6 +510,7 @@ function validateViewDeclaration(decl: ViewDeclaration, symbols: SymbolTable, di
 function validateTypeAnnotations(annotations: TypeAnnotation[], symbols: SymbolTable, diagnostics: Diagnostic[], uri?: string): void {
   const validRoles: RoleKind[] = ["entity", "usecase", "repository", "service", "viewmodel", "gateway", "dto", "adapter"];
   const validScopes: LifecycleKind[] = ["singleton", "session", "feature", "view"];
+  const dueDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 
   for (const ann of annotations) {
     if (ann.kind === "Implements") {
@@ -517,6 +557,16 @@ function validateTypeAnnotations(annotations: TypeAnnotation[], symbols: SymbolT
           uri,
           severity: "error",
           code: "invalid-lifecycle",
+        });
+      }
+    } else if (ann.kind === "Todo") {
+      if (ann.due && !dueDatePattern.test(ann.due)) {
+        diagnostics.push({
+          message: `Invalid @TODO due date: ${ann.due}. Expected YYYY-MM-DD.`,
+          range: ann.range,
+          uri,
+          severity: "warning",
+          code: "invalid-todo-due",
         });
       }
     }
@@ -874,6 +924,43 @@ export function getSchemaTypes(symbols: SymbolTable): Symbol[] {
   for (const sym of symbols.types.values()) {
     if (sym.isSchema) {
       result.push(sym);
+    }
+  }
+  return result;
+}
+
+export function getTypesByBoundary(symbols: SymbolTable, boundary: BoundaryKind): Symbol[] {
+  const result: Symbol[] = [];
+  for (const sym of symbols.types.values()) {
+    if (sym.boundary === boundary) {
+      result.push(sym);
+    }
+  }
+  return result;
+}
+
+export function getTypesByPriority(symbols: SymbolTable, priority: PriorityLevel): Symbol[] {
+  const result: Symbol[] = [];
+  for (const sym of symbols.types.values()) {
+    if (sym.priority === priority) {
+      result.push(sym);
+    }
+  }
+  return result;
+}
+
+export interface TodoRecord {
+  symbol: Symbol;
+  todo: TodoAnnotation;
+}
+
+export function getTodos(symbols: SymbolTable, status?: TodoStatus): TodoRecord[] {
+  const result: TodoRecord[] = [];
+  for (const sym of symbols.types.values()) {
+    for (const todo of sym.todos ?? []) {
+      if (!status || todo.status === status) {
+        result.push({ symbol: sym, todo });
+      }
     }
   }
   return result;

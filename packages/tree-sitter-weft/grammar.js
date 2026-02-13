@@ -104,6 +104,9 @@ module.exports = grammar({
       $.implements_annotation,
       $.see_annotation,
       $.schema_annotation,
+      $.boundary_annotation,
+      $.priority_annotation,
+      $.todo_annotation,
     ),
 
     role_annotation: $ => seq(
@@ -154,6 +157,66 @@ module.exports = grammar({
 
     schema_annotation: $ => seq(
       '@Schema',
+    ),
+
+    boundary_annotation: $ => seq(
+      '@Boundary',
+      '(',
+      $.boundary_kind,
+      optional(seq(',', $.string)),
+      ')',
+    ),
+
+    boundary_kind: $ => choice(
+      'api',
+      'database',
+      'db',
+      'queue',
+      'filesystem',
+      'fs',
+      'ui',
+      'external',
+    ),
+
+    priority_annotation: $ => seq(
+      '@Priority',
+      '(',
+      $.priority_level,
+      ')',
+    ),
+
+    priority_level: $ => choice(
+      'p0',
+      'p1',
+      'p2',
+      'p3',
+      'critical',
+      'high',
+      'medium',
+      'low',
+    ),
+
+    todo_annotation: $ => seq(
+      '@TODO',
+      '(',
+      $.string,
+      optional(seq(',', $.todo_field, repeat(seq(',', $.todo_field)))),
+      ')',
+    ),
+
+    todo_field: $ => choice(
+      seq('id', ':', $.string),
+      seq('owner', ':', $.string),
+      seq('due', ':', $.string),
+      seq('status', ':', $.todo_status),
+      seq('priority', ':', $.priority_level),
+    ),
+
+    todo_status: $ => choice(
+      'open',
+      'in_progress',
+      'blocked',
+      'done',
     ),
 
     // ========================================

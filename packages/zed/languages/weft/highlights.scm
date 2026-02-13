@@ -31,6 +31,9 @@
   (implements_annotation)
   (see_annotation)
   (schema_annotation)
+  (boundary_annotation)
+  (priority_annotation)
+  (todo_annotation)
   (id_annotation)
   (unique_annotation)
   (index_annotation)
@@ -41,6 +44,12 @@
 (role_kind) @constant
 
 (lifecycle_kind) @constant
+
+(boundary_kind) @constant
+
+(priority_level) @constant
+
+(todo_status) @constant
 
 ; Type/service/enum/view names
 (type_declaration

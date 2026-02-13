@@ -1,5 +1,8 @@
 @Role(entity)
 @Schema
+@Boundary(database, "core-storage")
+@Priority(p2)
+@TODO("Add workspace scoping key for future multi-workspace support", owner: "data", status: open, priority: p2)
 type Thread {
     """
     Conversation stream between participants.
@@ -22,6 +25,9 @@ enum MessageState {
 
 @Role(entity)
 @Schema
+@Boundary(database, "core-storage")
+@Priority(p1)
+@TODO("Add retention partitioning for high-volume message tables", owner: "platform", due: "2026-04-15", status: in_progress, priority: p1)
 type Message {
     """
     Message record tied to one thread and one sender.

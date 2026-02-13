@@ -1,5 +1,8 @@
 @Role(usecase)
 @Lifecycle(singleton)
+@Boundary(api, "moderation-engine")
+@Priority(p0)
+@TODO("Support policy version pinning for deterministic evaluations", owner: "safety", due: "2026-03-31", status: blocked, priority: p0)
 @Implements("moderation-required")
 @See("moderation-policy")
 service Moderation {
@@ -11,4 +14,3 @@ service Moderation {
     func evaluateMessage(sender: User, message: Message) -> bool
     func flagUser(actor: User, target: User, reason: string) throws
 }
-

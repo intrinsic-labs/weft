@@ -197,6 +197,18 @@
         {
           "type": "SYMBOL",
           "name": "schema_annotation"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "boundary_annotation"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "priority_annotation"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "todo_annotation"
         }
       ]
     },
@@ -348,6 +360,312 @@
         {
           "type": "STRING",
           "value": "@Schema"
+        }
+      ]
+    },
+    "boundary_annotation": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "@Boundary"
+        },
+        {
+          "type": "STRING",
+          "value": "("
+        },
+        {
+          "type": "SYMBOL",
+          "name": "boundary_kind"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": ","
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "string"
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "boundary_kind": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "api"
+        },
+        {
+          "type": "STRING",
+          "value": "database"
+        },
+        {
+          "type": "STRING",
+          "value": "db"
+        },
+        {
+          "type": "STRING",
+          "value": "queue"
+        },
+        {
+          "type": "STRING",
+          "value": "filesystem"
+        },
+        {
+          "type": "STRING",
+          "value": "fs"
+        },
+        {
+          "type": "STRING",
+          "value": "ui"
+        },
+        {
+          "type": "STRING",
+          "value": "external"
+        }
+      ]
+    },
+    "priority_annotation": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "@Priority"
+        },
+        {
+          "type": "STRING",
+          "value": "("
+        },
+        {
+          "type": "SYMBOL",
+          "name": "priority_level"
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "priority_level": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "p0"
+        },
+        {
+          "type": "STRING",
+          "value": "p1"
+        },
+        {
+          "type": "STRING",
+          "value": "p2"
+        },
+        {
+          "type": "STRING",
+          "value": "p3"
+        },
+        {
+          "type": "STRING",
+          "value": "critical"
+        },
+        {
+          "type": "STRING",
+          "value": "high"
+        },
+        {
+          "type": "STRING",
+          "value": "medium"
+        },
+        {
+          "type": "STRING",
+          "value": "low"
+        }
+      ]
+    },
+    "todo_annotation": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "@TODO"
+        },
+        {
+          "type": "STRING",
+          "value": "("
+        },
+        {
+          "type": "SYMBOL",
+          "name": "string"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": ","
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "todo_field"
+                },
+                {
+                  "type": "REPEAT",
+                  "content": {
+                    "type": "SEQ",
+                    "members": [
+                      {
+                        "type": "STRING",
+                        "value": ","
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "todo_field"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "todo_field": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "id"
+            },
+            {
+              "type": "STRING",
+              "value": ":"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "string"
+            }
+          ]
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "owner"
+            },
+            {
+              "type": "STRING",
+              "value": ":"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "string"
+            }
+          ]
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "due"
+            },
+            {
+              "type": "STRING",
+              "value": ":"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "string"
+            }
+          ]
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "status"
+            },
+            {
+              "type": "STRING",
+              "value": ":"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "todo_status"
+            }
+          ]
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "priority"
+            },
+            {
+              "type": "STRING",
+              "value": ":"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "priority_level"
+            }
+          ]
+        }
+      ]
+    },
+    "todo_status": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "open"
+        },
+        {
+          "type": "STRING",
+          "value": "in_progress"
+        },
+        {
+          "type": "STRING",
+          "value": "blocked"
+        },
+        {
+          "type": "STRING",
+          "value": "done"
         }
       ]
     },
