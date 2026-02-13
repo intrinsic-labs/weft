@@ -60,6 +60,121 @@ let rootPath: string | undefined;
 let workspaceSymbols: SymbolTable | undefined;
 const publishedUris = new Set<string>();
 
+const KEYWORD_HOVERS: Record<string, string> = {
+  Rule: [
+    "**annotation** `@Rule`",
+    "",
+    "Declares a system invariant or policy requirement.",
+    "",
+    "Syntax: `@Rule(\"id\", \"prose\")`",
+  ].join("\n"),
+  Definition: [
+    "**annotation** `@Definition`",
+    "",
+    "Declares a glossary/domain term for shared meaning.",
+    "",
+    "Syntax: `@Definition(\"id\", \"prose\")`",
+  ].join("\n"),
+  Decision: [
+    "**annotation** `@Decision`",
+    "",
+    "Declares architecture/product rationale and tradeoffs.",
+    "",
+    "Syntax: `@Decision(\"id\", \"prose\")`",
+  ].join("\n"),
+  OpenQuestion: [
+    "**annotation** `@OpenQuestion`",
+    "",
+    "Declares unresolved questions that block or affect implementation.",
+    "",
+    "Syntax: `@OpenQuestion(\"id\", \"prose\")`",
+  ].join("\n"),
+  Implements: [
+    "**annotation** `@Implements`",
+    "",
+    "Connects a type/service to a declared `@Rule`.",
+    "",
+    "Syntax: `@Implements(\"rule-id\")`",
+  ].join("\n"),
+  See: [
+    "**annotation** `@See`",
+    "",
+    "Declares cross-reference to another symbol or glossary/decision item.",
+    "",
+    "Syntax: `@See(\"target\")`",
+  ].join("\n"),
+  Role: [
+    "**annotation** `@Role`",
+    "",
+    "Assigns Clean Architecture role used by dependency validation.",
+    "",
+    "Syntax: `@Role(entity|usecase|repository|service|viewmodel|gateway|dto|adapter)`",
+  ].join("\n"),
+  Lifecycle: [
+    "**annotation** `@Lifecycle`",
+    "",
+    "Declares object lifetime used by lifecycle dependency validation.",
+    "",
+    "Syntax: `@Lifecycle(singleton|session|feature|view)`",
+  ].join("\n"),
+  Schema: [
+    "**annotation** `@Schema`",
+    "",
+    "Marks a type as persistence/schema-focused.",
+    "",
+    "Syntax: `@Schema`",
+  ].join("\n"),
+  Boundary: [
+    "**annotation** `@Boundary`",
+    "",
+    "Declares integration surface for implementation planning and queries.",
+    "",
+    "Syntax: `@Boundary(api|database|queue|filesystem|ui|external[, \"system\"])`",
+  ].join("\n"),
+  Priority: [
+    "**annotation** `@Priority`",
+    "",
+    "Declares implementation priority for a type/service/view.",
+    "",
+    "Syntax: `@Priority(p0|p1|p2|p3)`",
+  ].join("\n"),
+  TODO: [
+    "**annotation** `@TODO`",
+    "",
+    "Declares structured implementation work item (queryable).",
+    "",
+    "Syntax: `@TODO(\"summary\", status: open|in_progress|blocked|done, priority: p0|p1|p2|p3, owner: \"...\", due: \"YYYY-MM-DD\", id: \"...\")`",
+  ].join("\n"),
+  Id: [
+    "**annotation** `@Id`",
+    "",
+    "Marks schema field as identifier.",
+    "",
+    "Syntax: `@Id` or `@Id(generated)`",
+  ].join("\n"),
+  Unique: [
+    "**annotation** `@Unique`",
+    "",
+    "Marks schema field as unique.",
+    "",
+    "Syntax: `@Unique`",
+  ].join("\n"),
+  Index: [
+    "**annotation** `@Index`",
+    "",
+    "Marks schema field for indexing.",
+    "",
+    "Syntax: `@Index`",
+  ].join("\n"),
+  Required: [
+    "**annotation** `@Required`",
+    "",
+    "Marks schema field as required.",
+    "",
+    "Syntax: `@Required`",
+  ].join("\n"),
+};
+
 connection.onInitialize((params: InitializeParams): InitializeResult => {
   log(`onInitialize called`);
   log(`  Client: ${params.clientInfo?.name ?? "unknown"} ${params.clientInfo?.version ?? ""}`);
@@ -301,12 +416,22 @@ connection.onHover((params): Hover | null => {
 
   // Look up in symbol table
   const symbol = findSymbol(word, workspaceSymbols);
-  if (!symbol) return null;
+  if (symbol) {
+    return {
+      contents: {
+        kind: MarkupKind.Markdown,
+        value: formatSymbolHover(symbol),
+      },
+    };
+  }
+
+  const keywordDoc = findKeywordHover(text, offset, word);
+  if (!keywordDoc) return null;
 
   return {
     contents: {
       kind: MarkupKind.Markdown,
-      value: formatSymbolHover(symbol),
+      value: keywordDoc,
     },
   };
 });
@@ -375,6 +500,39 @@ function formatSymbolHover(symbol: Symbol): string {
   }
 
   return lines.join("\n");
+}
+
+function findKeywordHover(text: string, offset: number, fallbackWord: string): string | null {
+  // Prefer explicit annotation token when hovering around "@X".
+  const ann = findAnnotationNameAtOffset(text, offset);
+  if (ann && KEYWORD_HOVERS[ann]) {
+    return KEYWORD_HOVERS[ann];
+  }
+
+  // Fallback for cases where cursor is on plain "Role"/"TODO" etc.
+  if (KEYWORD_HOVERS[fallbackWord]) {
+    return KEYWORD_HOVERS[fallbackWord];
+  }
+
+  return null;
+}
+
+function findAnnotationNameAtOffset(text: string, offset: number): string | null {
+  const start = Math.max(0, offset - 80);
+  const end = Math.min(text.length, offset + 80);
+  const windowText = text.slice(start, end);
+
+  const regex = /@([A-Za-z_][A-Za-z0-9_]*)/g;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(windowText)) !== null) {
+    const fullStart = start + match.index;
+    const fullEnd = fullStart + match[0].length;
+    if (offset >= fullStart && offset <= fullEnd) {
+      return match[1];
+    }
+  }
+
+  return null;
 }
 
 // ============================================

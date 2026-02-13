@@ -18,15 +18,30 @@ impl zed::Extension for WeftExtension {
         _language_server_id: &LanguageServerId,
         worktree: &Worktree,
     ) -> Result<Command> {
-        // Keep the language server package installed at the latest npm version.
-        let latest = zed::npm_package_latest_version(LSP_NPM_PACKAGE)?;
+        // Prefer an already-installed local/global binary (dev-friendly path).
+        if let Some(server_path) = worktree.which(LSP_BINARY) {
+            return Ok(Command {
+                command: server_path,
+                args: vec!["--stdio".to_string()],
+                env: Default::default(),
+            });
+        }
+
+        // Fallback: try npm installation only if binary is missing.
+        let latest = zed::npm_package_latest_version(LSP_NPM_PACKAGE).map_err(|err| {
+            format!(
+                "failed to resolve {LSP_NPM_PACKAGE}: {err}. Install `{LSP_BINARY}` manually (for local dev: `npm link --workspace=@weft/lsp`)."
+            )
+        })?;
         let installed = zed::npm_package_installed_version(LSP_NPM_PACKAGE)?;
         if installed.as_deref() != Some(latest.as_str()) {
             zed::npm_install_package(LSP_NPM_PACKAGE, latest.as_str())?;
         }
 
         let server_path = worktree.which(LSP_BINARY).ok_or_else(|| {
-            format!("{LSP_BINARY} was not found after installing {LSP_NPM_PACKAGE}")
+            format!(
+                "{LSP_BINARY} was not found after npm install. For local development, run `npm link --workspace=@weft/lsp`."
+            )
         })?;
 
         Ok(Command {
