@@ -9,6 +9,8 @@
   "view"
   "enum"
   "func"
+  "fn"
+  "function"
   "throws"
 ] @keyword
 

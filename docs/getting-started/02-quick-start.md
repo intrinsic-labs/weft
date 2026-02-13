@@ -42,4 +42,4 @@ The LSP now resolves symbols across `.weft` files in the workspace.
 
 ## 4. Use a Real Spec
 
-Start from `/Users/asherpope/dev/ai/weft/examples/messaging.weft` and adapt it to your project domain.
+Start from `examples/messaging.weft` and adapt it to your project domain.

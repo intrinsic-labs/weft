@@ -167,7 +167,14 @@ module.exports = grammar({
       $.required_annotation,
     ),
 
-    id_annotation: $ => '@Id',
+    id_annotation: $ => seq(
+      '@Id',
+      optional(seq(
+        '(',
+        $.identifier,
+        ')',
+      )),
+    ),
     unique_annotation: $ => '@Unique',
     index_annotation: $ => '@Index',
     required_annotation: $ => '@Required',
@@ -293,7 +300,7 @@ module.exports = grammar({
 
     method: $ => seq(
       optional($.docstring),
-      optional('func'),
+      optional(choice('func', 'fn', 'function')),
       $.identifier,
       '(',
       optional($.parameter_list),
@@ -393,12 +400,10 @@ module.exports = grammar({
       seq("'", /[^']*/, "'"),
     ),
 
-    docstring: $ => choice(
-      // Tree-sitter uses Rust's `regex` crate, which does NOT support `[^]` to mean "any character".
-      // Use `[\s\S]` instead to match any char including newlines, and keep it non-greedy.
-      seq('"""', /[\s\S]*?/, '"""'),
-      seq("'''", /[\s\S]*?/, "'''"),
-    ),
+    docstring: _ => token(choice(
+      seq('"""', /([^"]|"[^"]|""[^"])*/, '"""'),
+      seq("'''", /([^']|'[^']|''[^'])*/, "'''"),
+    )),
 
     number: $ => /\d+(\.\d+)?/,
 

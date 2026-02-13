@@ -26,6 +26,6 @@ Weft aims to catch these while you are writing, before implementation.
 
 ## Current Direction
 
-The active product direction is in `/Users/asherpope/dev/ai/weft/VISION.md`.
+The active product direction is in `VISION.md`.
 
-For exact implementation status, see `/Users/asherpope/dev/ai/weft/docs/STATUS.md`.
+For exact implementation status, see `docs/STATUS.md`.

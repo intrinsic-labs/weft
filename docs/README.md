@@ -6,7 +6,7 @@ Weft is now focused on **verifiable specifications**:
 - Validate references, types, and architecture with the LSP
 - Keep prose and declarations in sync as specs evolve
 
-The product direction is defined in `/Users/asherpope/dev/ai/weft/VISION.md`.
+The product direction is defined in `VISION.md`.
 
 ## Start Here
 
@@ -35,6 +35,6 @@ The implemented language currently supports:
 
 ## Legacy Docs
 
-Many files under `/Users/asherpope/dev/ai/weft/docs/language`, `/Users/asherpope/dev/ai/weft/docs/ui`, `/Users/asherpope/dev/ai/weft/docs/data`, and related architecture docs describe the older cross-platform pseudocode direction.
+Many files under `docs/language`, `docs/ui`, `docs/data`, and related architecture docs describe the older cross-platform pseudocode direction.
 
 Treat those as archival notes for now. They are not the source of truth for current parser/LSP behavior.

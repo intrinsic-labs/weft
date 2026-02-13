@@ -187,11 +187,6 @@
     }
   },
   {
-    "type": "docstring",
-    "named": true,
-    "fields": {}
-  },
-  {
     "type": "enum_body",
     "named": true,
     "fields": {},
@@ -326,6 +321,21 @@
         },
         {
           "type": "unique_annotation",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "id_annotation",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "identifier",
           "named": true
         }
       ]
@@ -878,15 +888,7 @@
     "named": false
   },
   {
-    "type": "\"\"\"",
-    "named": false
-  },
-  {
     "type": "'",
-    "named": false
-  },
-  {
-    "type": "'''",
     "named": false
   },
   {
@@ -935,6 +937,10 @@
   },
   {
     "type": "@Definition",
+    "named": false
+  },
+  {
+    "type": "@Id",
     "named": false
   },
   {
@@ -998,6 +1004,10 @@
     "named": false
   },
   {
+    "type": "docstring",
+    "named": true
+  },
+  {
     "type": "double",
     "named": false
   },
@@ -1026,16 +1036,20 @@
     "named": false
   },
   {
+    "type": "fn",
+    "named": false
+  },
+  {
     "type": "func",
+    "named": false
+  },
+  {
+    "type": "function",
     "named": false
   },
   {
     "type": "gateway",
     "named": false
-  },
-  {
-    "type": "id_annotation",
-    "named": true
   },
   {
     "type": "identifier",

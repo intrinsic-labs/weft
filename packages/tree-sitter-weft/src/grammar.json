@@ -373,8 +373,38 @@
       ]
     },
     "id_annotation": {
-      "type": "STRING",
-      "value": "@Id"
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "@Id"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "("
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "identifier"
+                },
+                {
+                  "type": "STRING",
+                  "value": ")"
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        }
+      ]
     },
     "unique_annotation": {
       "type": "STRING",
@@ -788,8 +818,21 @@
           "type": "CHOICE",
           "members": [
             {
-              "type": "STRING",
-              "value": "func"
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "func"
+                },
+                {
+                  "type": "STRING",
+                  "value": "fn"
+                },
+                {
+                  "type": "STRING",
+                  "value": "function"
+                }
+              ]
             },
             {
               "type": "BLANK"
@@ -1161,43 +1204,46 @@
       ]
     },
     "docstring": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "SEQ",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "\"\"\""
-            },
-            {
-              "type": "PATTERN",
-              "value": "[\\s\\S]*?"
-            },
-            {
-              "type": "STRING",
-              "value": "\"\"\""
-            }
-          ]
-        },
-        {
-          "type": "SEQ",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "'''"
-            },
-            {
-              "type": "PATTERN",
-              "value": "[\\s\\S]*?"
-            },
-            {
-              "type": "STRING",
-              "value": "'''"
-            }
-          ]
-        }
-      ]
+      "type": "TOKEN",
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "\"\"\""
+              },
+              {
+                "type": "PATTERN",
+                "value": "([^\"]|\"[^\"]|\"\"[^\"])*"
+              },
+              {
+                "type": "STRING",
+                "value": "\"\"\""
+              }
+            ]
+          },
+          {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "'''"
+              },
+              {
+                "type": "PATTERN",
+                "value": "([^']|'[^']|''[^'])*"
+              },
+              {
+                "type": "STRING",
+                "value": "'''"
+              }
+            ]
+          }
+        ]
+      }
     },
     "number": {
       "type": "PATTERN",

@@ -452,7 +452,9 @@ connection.onDefinition((params): Definition | null => {
   const symbol = findSymbol(word, workspaceSymbols);
   if (!symbol) return null;
 
-  return Location.create(params.textDocument.uri, {
+  const targetUri = symbol.uri ?? params.textDocument.uri;
+
+  return Location.create(targetUri, {
     start: { line: symbol.range.start.line - 1, character: symbol.range.start.column - 1 },
     end: { line: symbol.range.end.line - 1, character: symbol.range.end.column - 1 },
   });
