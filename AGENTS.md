@@ -29,7 +29,7 @@ When docs and code disagree, trust sources in this order:
 ### Root
 
 - `package.json`: workspace scripts (`build`, `test`, `typecheck`)
-- `VISION.md`: product framing and why Weft exists
+- `README.md`: product framing and why Weft exists
 - `AGENTS.md`: this file (agent bootstrap)
 
 ### Core Runtime (`packages/lsp`)
@@ -214,4 +214,3 @@ Fix:
 - Keep this file short, factual, and implementation-aligned.
 - Update immediately when parser/analyzer/CLI behavior changes.
 - Do not expand legacy docs first; document runtime truth first.
-

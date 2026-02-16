@@ -1,560 +1,204 @@
-# Weft Grammar Specification
+# Weft Grammar
 
-This document defines the formal grammar for Weft, a structured specification language.
+This document describes the grammar accepted by the current parser implementation (`packages/lsp/src/parser.ts`).
 
-## Design Principles
+## 1. File Model
 
-1. **Familiar syntax** - Looks like TypeScript/Swift, minimal learning curve
-2. **Unambiguous** - No context-dependent parsing
-3. **Permissive with whitespace** - Indentation is not significant
-4. **Markdown inside prose** - Triple-quoted strings are opaque to the parser
+A `.weft` file is a sequence of declarations:
 
----
+- top-level annotation declaration: `@Rule`, `@Definition`, `@Decision`, `@OpenQuestion`
+- type declaration: `type|struct|data|protocol|interface`
+- `service` declaration
+- `enum` declaration
+- `view` declaration
 
-## Lexical Grammar
+## 2. Lexical Notes
 
-### Keywords
+Comments:
 
-```
-type, struct, data, enum, protocol, interface, service, view
-func, fn, function
-var, let, const
-true, false, null
-async, throws
-```
+- line: `// ...`
+- block: `/* ... */`
 
-### Annotation Keywords
+Prose/doc text:
 
-```
-@Rule, @Definition, @Decision, @OpenQuestion
-@Implements, @See, @Role, @Lifecycle, @Schema, @Boundary, @Priority, @TODO
-```
+- string: `"..."` or `'...'`
+- docstring: `"""..."""` or `'''...'''`
 
-Planned but not parsed yet:
+Identifiers:
 
-```
-@Constraint, @Example, @Assumption
-```
+- `[a-zA-Z_][a-zA-Z0-9_]*`
 
-### Primitives
+Primitives:
 
-```
-string, int, float, double, bool, date, datetime, url, void, any
-```
+- `string`, `int`, `float`, `double`, `bool`, `date`, `datetime`, `url`, `void`, `any`
 
-### Operators & Punctuation
-
-```
-:   Type annotation
-?   Optional type
-->  Return type
-[]  Array type
-{}  Block delimiters
-()  Parameter list
-,   Separator
-=   Default value
-```
-
-### Literals
-
-```
-STRING        = '"' [^"]* '"' | "'" [^']* "'"
-DOCSTRING     = '"""' .* '"""' | "'''" .* "'''"
-NUMBER        = [0-9]+ ('.' [0-9]+)?
-BOOLEAN       = 'true' | 'false'
-IDENTIFIER    = [a-zA-Z_][a-zA-Z0-9_]*
-```
-
-### Comments
-
-```
-LINE_COMMENT  = '//' .* '\n'
-BLOCK_COMMENT = '/*' .* '*/'
-```
-
-### Whitespace
-
-Whitespace (spaces, tabs, newlines) is ignored except as token separator.
-
----
-
-## Syntactic Grammar
-
-### Document
-
-A Weft file is a sequence of top-level declarations.
+## 3. Top-Level Annotation Declarations
 
 ```ebnf
-Document        = Declaration*
+RuleDecl         = '@Rule' '(' STRING ',' Prose ')'
+DefinitionDecl   = '@Definition' '(' STRING ',' Prose ')'
+DecisionDecl     = '@Decision' '(' STRING ',' Prose ')'
+OpenQuestionDecl = '@OpenQuestion' '(' STRING ',' Prose ')'
 
-Declaration     = Annotation
-                | TypeDeclaration
-                | ServiceDeclaration
-                | EnumDeclaration
+Prose            = STRING | DOCSTRING
 ```
 
-### Annotations
-
-Annotations are top-level or attached to declarations.
-
-```ebnf
-Annotation      = RuleAnnotation
-                | DefinitionAnnotation
-                | DecisionAnnotation
-                | OpenQuestionAnnotation
-                | ImplementsAnnotation
-                | SeeAnnotation
-                | RoleAnnotation
-                | LifecycleAnnotation
-                | SchemaAnnotation
-                | BoundaryAnnotation
-                | PriorityAnnotation
-                | TodoAnnotation
-
-RuleAnnotation        = '@Rule' '(' STRING ',' Prose ')'
-DefinitionAnnotation  = '@Definition' '(' STRING ',' Prose ')'
-DecisionAnnotation    = '@Decision' '(' STRING ',' Prose ')'
-OpenQuestionAnnotation = '@OpenQuestion' '(' STRING ',' Prose ')'
-
-ImplementsAnnotation  = '@Implements' '(' STRING ')'
-SeeAnnotation         = '@See' '(' STRING ')'
-RoleAnnotation        = '@Role' '(' IDENTIFIER ')'
-LifecycleAnnotation   = '@Lifecycle' '(' IDENTIFIER ')'
-SchemaAnnotation      = '@Schema'
-BoundaryAnnotation    = '@Boundary' '(' IDENTIFIER (',' STRING)? ')'
-PriorityAnnotation    = '@Priority' '(' IDENTIFIER ')'
-TodoAnnotation        = '@TODO' '(' STRING (',' TodoField (',' TodoField)*)? ')'
-TodoField             = 'id' ':' STRING
-                      | 'owner' ':' STRING
-                      | 'due' ':' STRING
-                      | 'status' ':' IDENTIFIER
-                      | 'priority' ':' IDENTIFIER
-
-Prose           = DOCSTRING | STRING
-```
-
-**Examples:**
+Examples:
 
 ```weft
-@Rule("verification-required", '''
-All social features require verified users.
-''')
-
-@Definition("soft-delete", "Records are never physically deleted.")
-
-@Implements("verification-required")
-service Messaging { ... }
+@Rule("verified-sender", '''Only verified senders can initiate contact.''')
+@Definition("verified-user", "User with verified identity state")
 ```
 
-### Type Declarations
+## 4. Declaration-Level Annotations
+
+Supported on `type|struct|data|protocol|interface|service|enum|view`:
 
 ```ebnf
-TypeDeclaration = TypeAnnotation* TypeKeyword IDENTIFIER TypeBody
+TypeAnnotation = Implements
+               | See
+               | Role
+               | Lifecycle
+               | Schema
+               | Boundary
+               | Priority
+               | Todo
 
-TypeKeyword     = 'type' | 'struct' | 'data' | 'protocol' | 'interface'
-
-TypeAnnotation  = ImplementsAnnotation
-                | SeeAnnotation
-                | RoleAnnotation
-                | LifecycleAnnotation
-                | SchemaAnnotation
-                | BoundaryAnnotation
-                | PriorityAnnotation
-                | TodoAnnotation
-
-TypeBody        = '{' Docstring? Member* '}'
-
-Member          = Docstring? Field
-                | Docstring? Method
-
-Field           = IDENTIFIER ':' Type FieldDefault?
-FieldDefault    = '=' Literal
-
-Method          = 'func'? IDENTIFIER '(' Parameters? ')' ReturnType? ThrowsClause?
-
-Parameters      = Parameter (',' Parameter)*
-Parameter       = IDENTIFIER ':' Type ParameterDefault?
-ParameterDefault = '=' Literal
-
-ReturnType      = '->' Type
-ThrowsClause    = 'throws' Type?
+Implements = '@Implements' '(' STRING ')'
+See        = '@See' '(' STRING ')'
+Schema     = '@Schema'
 ```
 
-**Examples:**
+`@Role` values:
 
-```weft
-type User {
-    """
-    Core identity in the system.
-    """
+- `entity`, `usecase`, `repository`, `service`, `viewmodel`, `gateway`, `dto`, `adapter`
 
-    id: string
-    email: string
-    isVerified: bool = false
-    profile: UserProfile?
-    roles: [Role]
+`@Lifecycle` values:
 
-    func hasRole(role: Role) -> bool
-}
+- `singleton`, `session`, `feature`, `view`
 
-protocol Repository {
-    func findById(id: string) -> Entity?
-    func save(entity: Entity) throws
-}
-```
+`@Boundary` values:
 
-### Service Declarations
+- canonical: `api`, `database`, `queue`, `filesystem`, `ui`, `external`
+- aliases accepted by parser: `db` -> `database`, `fs` -> `filesystem`
 
-Services are like types but semantically represent behavior groupings.
+Syntax:
 
 ```ebnf
-ServiceDeclaration = TypeAnnotation* 'service' IDENTIFIER ServiceBody
-
-ServiceBody     = '{' Docstring? ServiceMember* '}'
-
-ServiceMember   = Docstring? Method
+Boundary = '@Boundary' '(' BoundaryKind (',' STRING)? ')'
 ```
 
-**Examples:**
+`@Priority` values:
 
-```weft
-@Implements("verification-required")
-service Messaging {
-    """
-    Handles user-to-user messaging.
-    """
+- canonical: `p0`, `p1`, `p2`, `p3`
+- aliases accepted by parser: `critical`->`p0`, `high`->`p1`, `medium`->`p2`, `low`->`p3`
 
-    func sendMessage(sender: User, recipient: User, content: string) -> Message throws
-    func getConversation(userA: User, userB: User) -> [Message]
-}
-```
-
-### Enum Declarations
+`@TODO`:
 
 ```ebnf
-EnumDeclaration = 'enum' IDENTIFIER EnumBody
+Todo      = '@TODO' '(' STRING (',' TodoField (',' TodoField)*)? ')'
+TodoField = 'id' ':' STRING
+          | 'owner' ':' STRING
+          | 'due' ':' STRING
+          | 'status' ':' TodoStatus
+          | 'priority' ':' Priority
 
-EnumBody        = '{' Docstring? EnumCase* '}'
-
-EnumCase        = Docstring? IDENTIFIER EnumAssociatedValues?
-
-EnumAssociatedValues = '(' Parameters ')'
+TodoStatus = 'open' | 'in_progress' | 'blocked' | 'done'
 ```
 
-**Examples:**
+Notes:
 
-```weft
-enum TransactionStatus {
-    """
-    Possible states for a financial transaction.
-    """
+- only summary string is required
+- default status is `open`
 
-    pending
-    processing
-    completed
-    failed(reason: string)
-    refunded(amount: int, reason: string)
-}
-```
-
-### View Declarations
-
-Views represent UI components (for specs that include UI).
+## 5. Type/Service/Enum/View Declarations
 
 ```ebnf
-ViewDeclaration = 'view' IDENTIFIER ViewBody
+TypeDecl    = TypeAnnotation* TypeKeyword IDENT '{' Docstring? Member* '}'
+TypeKeyword = 'type' | 'struct' | 'data' | 'protocol' | 'interface'
 
-ViewBody        = '{' Docstring? ViewMember* '}'
-
-ViewMember      = Docstring? Field
-                | Docstring? Method
+ServiceDecl = TypeAnnotation* 'service' IDENT '{' Docstring? Method* '}'
+EnumDecl    = TypeAnnotation* 'enum' IDENT '{' Docstring? EnumCase* '}'
+ViewDecl    = TypeAnnotation* 'view' IDENT '{' Docstring? Member* '}'
 ```
 
-**Examples:**
-
-```weft
-view UserProfile {
-    """
-    Displays user profile information with edit capability.
-    """
-
-    user: User
-    isEditing: bool = false
-
-    func onSave()
-    func onCancel()
-}
-```
-
-### Types
+Members:
 
 ```ebnf
-Type            = PrimitiveType
-                | IDENTIFIER
-                | ArrayType
-                | DictionaryType
-                | OptionalType
+Member   = Docstring? Field | Docstring? Method
+Field    = FieldAnnotation* IDENT ':' Type FieldDefault?
+Method   = ('func' | 'fn' | 'function')? IDENT '(' Params? ')' ReturnType? ThrowsClause?
 
-PrimitiveType   = 'string' | 'int' | 'float' | 'double' | 'bool'
-                | 'date' | 'datetime' | 'url' | 'void' | 'any'
+Params   = Param (',' Param)*
+Param    = IDENT ':' Type ParamDefault?
 
-ArrayType       = '[' Type ']'
-DictionaryType  = '[' Type ':' Type ']'
-OptionalType    = Type '?'
+ReturnType   = '->' Type
+ThrowsClause = 'throws' Type?
 ```
 
-**Examples:**
+Field annotations:
+
+- `@Id` or `@Id(generated)`
+- `@Unique`
+- `@Index`
+- `@Required`
+
+Enum cases:
+
+```ebnf
+EnumCase = Docstring? IDENT ('(' Params? ')')?
+```
+
+## 6. Type Expressions
+
+```ebnf
+Type         = BaseType '?'?
+BaseType     = Primitive | IDENT | ArrayType | DictionaryType
+ArrayType    = '[' Type ']'
+DictionaryType = '[' Type ':' Type ']'
+```
+
+Examples:
 
 ```weft
-id: string
-count: int
-tags: [string]
+name: string
+owner: User
+items: [Message]
 metadata: [string: any]
 deletedAt: datetime?
 ```
 
-### Docstrings
-
-Docstrings are triple-quoted strings containing markdown. They attach to the next declaration or member.
+## 7. Default Values / Literals
 
 ```ebnf
-Docstring       = '"""' MarkdownContent '"""'
-                | "'''" MarkdownContent "'''"
-
-MarkdownContent = <opaque - passed through to LSP>
+Literal = STRING | NUMBER | 'true' | 'false' | 'null' | ArrayLiteral
+ArrayLiteral = '[' (Literal (',' Literal)*)? ']'
 ```
 
-The parser treats docstring content as opaque. Markdown parsing happens in the LSP for cross-reference extraction.
-
-**Examples:**
+Examples:
 
 ```weft
-type Transaction {
-    """
-    Represents a financial transaction.
-
-    ## Invariants
-    - Amount is always in cents
-    - Status follows: pending -> processing -> complete|failed
-
-    ## Related
-    See @Rule("transaction-immutability")
-    """
-
-    id: string
-    amount: int
-}
+isEnabled: bool = true
+retries: int = 3
+tags: [string] = ["a", "b"]
 ```
 
-### Literals
+## 8. Prose Reference Forms (Analyzer)
 
-```ebnf
-Literal         = STRING
-                | NUMBER
-                | BOOLEAN
-                | 'null'
-                | ArrayLiteral
+The analyzer scans prose/docstrings for:
 
-ArrayLiteral    = '[' (Literal (',' Literal)*)? ']'
-```
+- `@Rule("...")`
+- `@Definition("...")`
+- `@Decision("...")`
+- `@OpenQuestion("...")`
+- `` `TypeName` ``
+- `` `TypeName.fieldName` ``
 
----
+## 9. Explicit Non-Goals (Current)
 
-## Reference Syntax
+Not part of current grammar/runtime behavior:
 
-Within docstrings and prose, special syntax denotes references:
-
-```
-@Rule("rule-id")           Reference to a rule
-@Definition("term")        Reference to a definition
-@Decision("decision-id")   Reference to a decision
-
-`TypeName`                 Reference to a type
-`field.path`               Reference to a field path
-```
-
-The LSP parses these from docstring content for validation.
-
----
-
-## File Extension
-
-Weft files use the `.weft` extension.
-
-```
-user.weft
-workflow-annotations.weft
-types/core.weft
-```
-
----
-
-## Example: Complete Specification
-
-```weft
-// ============================================
-// Domain Definitions
-// ============================================
-
-@Definition("verified-user", '''
-A user who has completed email verification.
-Represented by `User.isVerified == true`.
-Required for all social features.
-''')
-
-@Definition("soft-delete", '''
-Records are marked deleted but not removed.
-All entities have `deletedAt: datetime?` field.
-''')
-
-// ============================================
-// Rules
-// ============================================
-
-@Rule("verification-required", '''
-All social features require `user.isVerified == true`.
-No exceptions, including admin users.
-
-**Affected services:**
-- `Messaging`
-- `Comments`
-- `Follows`
-''')
-
-@Rule("idempotency", '''
-All write operations must be idempotent.
-Client provides idempotency key, valid for 24 hours.
-''')
-
-// ============================================
-// Decisions
-// ============================================
-
-@Decision("use-cents", '''
-Store monetary amounts as integers (cents).
-
-**Considered:** float, decimal, integer
-**Chose:** integer cents for cross-platform precision
-''')
-
-// ============================================
-// Open Questions
-// ============================================
-
-@OpenQuestion("rate-limiting", '''
-How should we rate limit API endpoints?
-
-**Options:**
-1. Per-user token bucket
-2. Per-endpoint sliding window
-
-**Decide by:** Sprint 4
-''')
-
-// ============================================
-// Types
-// ============================================
-
-type User {
-    """
-    Core identity in the system.
-    See @Definition("verified-user") for verification rules.
-    """
-
-    id: string
-    email: string
-    isVerified: bool = false
-    createdAt: datetime
-    deletedAt: datetime?
-}
-
-type Message {
-    """
-    A message between two users.
-    """
-
-    id: string
-    sender: User
-    recipient: User
-    content: string
-    sentAt: datetime
-}
-
-enum TransactionStatus {
-    pending
-    processing
-    completed
-    failed(reason: string)
-}
-
-// ============================================
-// Services
-// ============================================
-
-@Implements("verification-required")
-@Implements("idempotency")
-service Messaging {
-    """
-    Handles all user-to-user messaging.
-    Requires verified users per @Rule("verification-required").
-    """
-
-    func sendMessage(sender: User, recipient: User, content: string) -> Message throws
-    func getConversation(userA: User, userB: User, limit: int = 50) -> [Message]
-    func markAsRead(messageId: string) throws
-}
-
-// ============================================
-// Views
-// ============================================
-
-view ConversationScreen {
-    """
-    Displays a conversation between two users.
-    """
-
-    currentUser: User
-    otherUser: User
-    messages: [Message]
-    draftMessage: string = ""
-
-    func onSend()
-    func onLoadMore()
-}
-```
-
----
-
-## Grammar Summary
-
-| Construct | Syntax |
-|-----------|--------|
-| Type | `type Name { fields... }` |
-| Protocol | `protocol Name { methods... }` |
-| Service | `service Name { methods... }` |
-| Enum | `enum Name { cases... }` |
-| View | `view Name { fields, methods... }` |
-| Field | `name: Type = default?` |
-| Method | `func name(params) -> Return throws?` |
-| Docstring | `""" markdown """` |
-| Rule | `@Rule("id", '''prose''')` |
-| Definition | `@Definition("term", '''prose''')` |
-| Decision | `@Decision("id", '''prose''')` |
-| Open Question | `@OpenQuestion("id", '''prose''')` |
-| Implements | `@Implements("rule-id")` |
-
----
-
-## Differences from Original Weft
-
-This grammar is intentionally simpler than the original Weft pseudocode language:
-
-| Original Weft | Spec Weft |
-|---------------|-----------|
-| Multiple syntax styles (let/const/var/val) | Single style per construct |
-| Function bodies with control flow | Signatures only |
-| Full expression language | Literals only |
-| Code generation target | Validation only |
-| UI component trees | UI type declarations |
-
-The goal is a minimal grammar that supports structured specifications, not a programming language.
+- imports/module declarations
+- executable control flow/function bodies
+- full expression language
+- planned-but-unimplemented annotations: `@Constraint`, `@Example`, `@Assumption`

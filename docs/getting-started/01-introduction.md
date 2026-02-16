@@ -26,6 +26,10 @@ Weft aims to catch these while you are writing, before implementation.
 
 ## Current Direction
 
-The active product direction is in `VISION.md`.
+The active product direction is in `README.md`.
 
-For exact implementation status, see `docs/STATUS.md`.
+For exact implementation behavior, read in this order:
+
+1. `docs/STATUS.md`
+2. `docs/GRAMMAR.md`
+3. `docs/PLAYBOOK.md`

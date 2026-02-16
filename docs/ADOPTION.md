@@ -2,6 +2,8 @@
 
 This guide is for testing Weft in real projects outside this repository.
 
+For local debugging workflows inside this repo, see `docs/PLAYBOOK.md`.
+
 ## 1. Prerequisites
 
 - Node.js 20+ (22+ recommended)
@@ -105,6 +107,8 @@ Treat non-zero exit as a failed spec gate.
 
 ## 8. Common Gotchas
 
+- If `weft` reports stale build artifacts, run:
+  `npm run build --workspace=@weft/lsp`
 - Restarting the language server is not the same as reloading syntax queries.
   After query/grammar changes, reinstall or reload the dev extension.
 - Ignore generated Zed grammar artifacts in project scans:

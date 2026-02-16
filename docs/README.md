@@ -1,40 +1,37 @@
 # Weft Docs
 
-Weft is now focused on **verifiable specifications**:
+This directory contains the canonical documentation for the current Weft implementation.
 
-- Write structured specs in `.weft`
-- Validate references, types, and architecture with the LSP
-- Keep prose and declarations in sync as specs evolve
+## Read Order (Required)
 
-The product direction is defined in `VISION.md`.
+1. [`STATUS.md`](STATUS.md) - exact implemented surface area
+2. [`GRAMMAR.md`](GRAMMAR.md) - accepted syntax
+3. [`GLOSSARY.md`](GLOSSARY.md) - term definitions
+4. [`PLAYBOOK.md`](PLAYBOOK.md) - build/test/debug command workflows
+5. [`getting-started/01-introduction.md`](getting-started/01-introduction.md)
+6. [`getting-started/02-quick-start.md`](getting-started/02-quick-start.md)
+7. [`getting-started/03-philosophy.md`](getting-started/03-philosophy.md)
+8. [`ADOPTION.md`](ADOPTION.md) - using Weft outside this repo
+9. [`RELEASING_NPM.md`](RELEASING_NPM.md) - npm release process
 
-## Start Here
+For realistic examples, read:
 
-1. [Introduction](getting-started/01-introduction.md)
-2. [Quick Start](getting-started/02-quick-start.md)
-3. [Current Status](STATUS.md)
-4. [Grammar](GRAMMAR.md)
-5. [Example Spec](../examples/workflow-annotations.weft)
+- [`../examples/workflow-annotations.weft`](../examples/workflow-annotations.weft)
+- `../examples/wild-collab/*.weft`
 
-## Current Scope
+## Source Of Truth Precedence
 
-The implemented language currently supports:
+When docs and code disagree, trust in this order:
 
-- Top-level spec annotations: `@Rule`, `@Definition`, `@Decision`, `@OpenQuestion`
-- Declarations: `type`, `struct`, `data`, `protocol`, `interface`, `service`, `enum`, `view`
-- Type-level annotations: `@Implements`, `@See`, `@Role`, `@Lifecycle`, `@Schema`, `@Boundary`, `@Priority`, `@TODO`
-- Field annotations: `@Id`, `@Unique`, `@Index`, `@Required`
-- Real-time validation in the LSP (including cross-file validation)
+1. `packages/lsp/src/*.ts`
+2. `examples/*.weft`
+3. `docs/STATUS.md`
+4. `docs/GRAMMAR.md`
 
-## Current Limitations
+## Scope
 
-- Markdown-in-docstring syntax highlighting is not enabled in editor extensions yet.
-  Docstrings are treated as plain Weft docstring text for now.
-- VS Code and Zed share the same `@weft/lsp` backend behavior, but syntax highlighting stacks differ:
-  Zed uses Tree-sitter queries and VS Code uses TextMate grammar rules.
+Weft is a **specification + validation** language.
+It is not an executable programming language.
 
-## Legacy Docs
-
-Many files under `docs/language`, `docs/ui`, `docs/data`, and related architecture docs describe the older cross-platform pseudocode direction.
-
-Treat those as archival notes for now. They are not the source of truth for current parser/LSP behavior.
+Legacy pseudocode/translation docs were removed to reduce drift and context bloat.
+Use git history for historical material.

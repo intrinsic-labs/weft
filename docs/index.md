@@ -1,19 +1,28 @@
-# Weft Documentation Index
+# Docs Index
 
-This index tracks the current spec-first direction.
+Canonical docs in this directory are intentionally small and single-purpose.
 
-## Canonical Documents
+## Core
 
-- `VISION.md` - Product direction and goals
-- `docs/README.md` - Entry point for current docs
-- `docs/STATUS.md` - What is implemented today
-- `docs/GRAMMAR.md` - Grammar and syntax
-- `docs/ADOPTION.md` - Using Weft in real projects
-- `docs/RELEASING_NPM.md` - Publish workflow for CLI/LSP
+- `docs/README.md` - entrypoint + read order
+- `docs/STATUS.md` - implementation status (current truth)
+- `docs/GRAMMAR.md` - syntax accepted by parser
+- `docs/GLOSSARY.md` - project terms
+- `docs/PLAYBOOK.md` - command workflows + triage
+
+## Orientation
+
 - `docs/getting-started/01-introduction.md`
 - `docs/getting-started/02-quick-start.md`
-- `examples/workflow-annotations.weft`
+- `docs/getting-started/03-philosophy.md`
 
-## Legacy Material
+## Operational
 
-Legacy pseudocode/translation docs are still present in the tree for reference but are not authoritative for parser/LSP behavior.
+- `docs/ADOPTION.md` - external project usage
+- `docs/RELEASING_NPM.md` - release process
+
+## Related Non-Docs Sources
+
+- `README.md` - product direction
+- `examples/workflow-annotations.weft` - compact example
+- `examples/wild-collab/*.weft` - multi-file realistic example
