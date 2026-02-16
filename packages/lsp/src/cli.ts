@@ -14,6 +14,7 @@
 import { readFileSync, existsSync, readdirSync, statSync, type Dirent } from "fs";
 import * as path from "path";
 import { parse } from "./parser.js";
+import { checkBuildFreshness } from "./build-freshness.js";
 import {
   analyzeWorkspace,
   coverage,
@@ -31,6 +32,12 @@ import type { Document, RoleKind, LifecycleKind, BoundaryKind, PriorityLevel, To
 // ============================================
 // CLI Entry Point
 // ============================================
+
+const freshness = checkBuildFreshness(import.meta.url, "weft");
+if (!freshness.ok) {
+  console.error(freshness.message);
+  process.exit(1);
+}
 
 const args = process.argv.slice(2);
 

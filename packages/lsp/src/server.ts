@@ -30,6 +30,13 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { parse } from "./parser.js";
 import { analyzeWorkspace, type SymbolTable, type Diagnostic, type Symbol, type AnalysisDocument } from "./analyzer.js";
+import { checkBuildFreshness } from "./build-freshness.js";
+
+const freshness = checkBuildFreshness(import.meta.url, "weft-lsp");
+if (!freshness.ok) {
+  console.error(freshness.message);
+  process.exit(1);
+}
 
 // ============================================
 // Logging
