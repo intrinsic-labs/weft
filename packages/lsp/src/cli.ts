@@ -13,6 +13,7 @@
 
 import { readFileSync, existsSync, readdirSync, statSync, type Dirent } from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import { parse } from "./parser.js";
 import { checkBuildFreshness } from "./build-freshness.js";
 import {
@@ -92,6 +93,9 @@ switch (command) {
   }
   case "docs":
     runDocs(args.slice(1));
+    break;
+  case "agents":
+    runAgents(args.slice(1));
     break;
   case "help":
   case "--help":
@@ -578,6 +582,28 @@ function runDocs(args: string[]): void {
   }
 }
 
+function runAgents(args: string[]): void {
+  if (args.length > 0) {
+    console.error("Usage: weft agents");
+    process.exit(1);
+  }
+
+  const agentsPath = findWeftAgentsFile();
+  if (!agentsPath) {
+    console.error("Error: Could not find Weft AGENTS.md.");
+    process.exit(1);
+  }
+
+  try {
+    const content = readFileSync(agentsPath, "utf-8");
+    process.stdout.write(content);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Error: Failed to read AGENTS.md at ${agentsPath}: ${message}`);
+    process.exit(1);
+  }
+}
+
 // ============================================
 // Query Helpers
 // ============================================
@@ -988,6 +1014,31 @@ function findDocsRoot(startDir: string): string | null {
   }
 }
 
+function findWeftAgentsFile(): string | null {
+  const cliPath = fileURLToPath(import.meta.url);
+  const distDir = path.dirname(cliPath);
+  const candidates = [
+    // Monorepo dev/build context: packages/lsp/dist -> repo root.
+    path.resolve(distDir, "../../AGENTS.md"),
+    // npm-installed package context: node_modules/@rocketbro/weft/AGENTS.md.
+    path.resolve(distDir, "../AGENTS.md"),
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      try {
+        if (statSync(candidate).isFile()) {
+          return candidate;
+        }
+      } catch {
+        // Ignore transient fs failures and try next candidate.
+      }
+    }
+  }
+
+  return null;
+}
+
 function collectDocsFiles(root: string): string[] {
   const files: string[] = [];
   const docsDir = path.join(root, "docs");
@@ -1155,6 +1206,7 @@ COMMANDS:
   contract [path] [--format]    Emit implementation contract (text/json)
   bootstrap [path] [options]    Emit agent bootstrap payload (text/json)
   docs query <terms...>          Search local Weft docs
+  agents                        Print Weft AGENTS guide
 
 QUERIES:
   types                         List all types
@@ -1184,5 +1236,6 @@ EXAMPLES:
   weft contract --format json
   weft bootstrap . --target typescript --format json
   weft docs query lifecycle singleton --limit 3
+  weft agents
 `);
 }

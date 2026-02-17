@@ -35,6 +35,7 @@ weft contract . --format json
 - `weft contract [path] [--format text|json]` implementation contract
 - `weft bootstrap [path] [--target <name>] [--format text|json]`
 - `weft docs query <terms...>` local docs search
+- `weft agents` print Weft's built-in `AGENTS.md` guide
 
 ## Editor Integration
 
