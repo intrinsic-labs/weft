@@ -32,7 +32,7 @@ When docs and code disagree, trust sources in this order:
 - `README.md`: product framing and why Weft exists
 - `AGENTS.md`: this file (agent bootstrap)
 
-### Core Runtime (`packages/lsp`)
+### Core Runtime (`packages/weft`)
 
 - `packages/lsp/src/lexer.ts`: tokenization
 - `packages/lsp/src/parser.ts`: recursive-descent parser, AST construction
@@ -45,7 +45,7 @@ When docs and code disagree, trust sources in this order:
 
 ### Editor Integrations
 
-- `packages/vscode/src/extension.ts`: launches `@weft/lsp/dist/server.js`
+- `packages/vscode/src/extension.ts`: launches `@rocketbro/weft/dist/server.js`
 - `packages/zed/src/lib.rs`: resolves `weft-lsp` binary and starts stdio server
 
 ### Grammar/Highlighting
@@ -101,9 +101,9 @@ Not supported yet (by implementation):
 From repo root:
 
 - Build all workspaces: `npm run build`
-- Build core package only: `npm run build --workspace=@weft/lsp`
-- Typecheck core: `npm run typecheck --workspace=@weft/lsp`
-- Tests once (no watch): `npm run test --workspace=@weft/lsp -- --run`
+- Build core package only: `npm run build --workspace=@rocketbro/weft`
+- Typecheck core: `npm run typecheck --workspace=@rocketbro/weft`
+- Tests once (no watch): `npm run test --workspace=@rocketbro/weft -- --run`
 - Full tests (non-watch): `CI=1 npm test`
 
 CLI smoke checks:
@@ -130,7 +130,7 @@ Current behavior:
 
 Fix:
 
-- `npm run build --workspace=@weft/lsp`
+- `npm run build --workspace=@rocketbro/weft`
 
 One-off bypass:
 
@@ -144,7 +144,7 @@ Symptom:
 
 Fix:
 
-- use `CI=1 npm test` or `npm run test --workspace=@weft/lsp -- --run`
+- use `CI=1 npm test` or `npm run test --workspace=@rocketbro/weft -- --run`
 
 ### Docs Drift
 
@@ -160,8 +160,8 @@ Fix:
 
 ### Parser issue
 
-1. Run `npm run build --workspace=@weft/lsp`
-2. Run `npm run test --workspace=@weft/lsp -- --run`
+1. Run `npm run build --workspace=@rocketbro/weft`
+2. Run `npm run test --workspace=@rocketbro/weft -- --run`
 3. Repro with `npx weft check <file-or-dir>`
 4. Inspect `packages/lsp/src/lexer.ts` then `packages/lsp/src/parser.ts`
 
@@ -174,9 +174,9 @@ Fix:
 ### Editor-only issue
 
 1. Confirm CLI behavior first (`npx weft check ...`)
-2. VS Code path: `packages/vscode/src/extension.ts` (loads `@weft/lsp/dist/server.js`)
+2. VS Code path: `packages/vscode/src/extension.ts` (loads `@rocketbro/weft/dist/server.js`)
 3. Zed path: `packages/zed/src/lib.rs` (resolves `weft-lsp` in PATH / npm package)
-4. Rebuild `@weft/lsp` before deeper investigation
+4. Rebuild `@rocketbro/weft` before deeper investigation
 
 ## 8. Glossary
 
@@ -199,8 +199,8 @@ Fix:
 
 1. Read this file fully.
 2. Run:
-   - `npm run build --workspace=@weft/lsp`
-   - `npm run test --workspace=@weft/lsp -- --run`
+   - `npm run build --workspace=@rocketbro/weft`
+   - `npm run test --workspace=@rocketbro/weft -- --run`
    - `npx weft check ./examples`
 3. Read these files:
    - `packages/lsp/src/parser.ts`

@@ -1,7 +1,26 @@
 {
-  "name": "@weft/lsp",
-  "version": "0.1.0",
-  "description": "Language Server Protocol implementation for Weft",
+  "name": "@rocketbro/weft",
+  "version": "0.1.2",
+  "description": "Weft CLI and LSP for machine-checkable specification files",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist/**",
+    "README.md"
+  ],
+  "keywords": [
+    "weft",
+    "specification",
+    "lsp",
+    "cli"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rocketbro/weft.git",
+    "directory": "packages/lsp"
+  },
   "type": "module",
   "main": "dist/server.js",
   "exports": {

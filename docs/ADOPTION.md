@@ -15,7 +15,7 @@ For local debugging workflows inside this repo, see `docs/PLAYBOOK.md`.
 If the package is published:
 
 ```bash
-npm install -g @weft/lsp
+npm install -g @rocketbro/weft
 ```
 
 Verify:
@@ -31,8 +31,8 @@ weft --help
 For local development without publishing, link the workspace package:
 
 ```bash
-npm run build --workspace=@weft/lsp
-npm link --workspace=@weft/lsp
+npm run build --workspace=@rocketbro/weft
+npm link --workspace=@rocketbro/weft
 ```
 
 Verify:
@@ -46,7 +46,7 @@ weft --help
 Remove the global link later if needed:
 
 ```bash
-npm unlink -g @weft/lsp
+npm unlink -g @rocketbro/weft
 ```
 
 ## 4. Use Weft in Any Project
@@ -108,7 +108,7 @@ Treat non-zero exit as a failed spec gate.
 ## 8. Common Gotchas
 
 - If `weft` reports stale build artifacts, run:
-  `npm run build --workspace=@weft/lsp`
+  `npm run build --workspace=@rocketbro/weft`
 - Restarting the language server is not the same as reloading syntax queries.
   After query/grammar changes, reinstall or reload the dev extension.
 - Ignore generated Zed grammar artifacts in project scans:

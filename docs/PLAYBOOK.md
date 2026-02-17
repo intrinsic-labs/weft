@@ -7,9 +7,9 @@ Operational commands and triage flows for working on Weft.
 From repo root:
 
 ```bash
-npm run build --workspace=@weft/lsp
-npm run typecheck --workspace=@weft/lsp
-npm run test --workspace=@weft/lsp -- --run
+npm run build --workspace=@rocketbro/weft
+npm run typecheck --workspace=@rocketbro/weft
+npm run test --workspace=@rocketbro/weft -- --run
 ```
 
 Workspace-wide checks:
@@ -35,13 +35,13 @@ npx weft bootstrap ./examples/wild-collab --target typescript
 1. Rebuild runtime artifacts:
 
 ```bash
-npm run build --workspace=@weft/lsp
+npm run build --workspace=@rocketbro/weft
 ```
 
 2. Run parser/analyzer tests:
 
 ```bash
-npm run test --workspace=@weft/lsp -- --run
+npm run test --workspace=@rocketbro/weft -- --run
 ```
 
 3. Re-run failing CLI command.
@@ -67,7 +67,7 @@ npx weft check <path>
 
 2. If CLI is healthy but editor is not:
 
-- rebuild `@weft/lsp`
+- rebuild `@rocketbro/weft`
 - restart language server/editor
 
 Integration locations:
@@ -78,13 +78,12 @@ Integration locations:
 ## 4. Release/Distribution
 
 - External usage: `docs/ADOPTION.md`
-- npm release flow: `docs/RELEASING_NPM.md`
 
 ## 5. Agent/Handoff Boot Sequence (5 Minutes)
 
 1. Read `docs/STATUS.md`.
 2. Read `docs/GRAMMAR.md`.
-3. Run build + tests (`@weft/lsp`).
+3. Run build + tests (`@rocketbro/weft`).
 4. Run `npx weft check ./examples`.
 5. Read:
    - `packages/lsp/src/parser.ts`

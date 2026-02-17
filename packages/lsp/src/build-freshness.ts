@@ -66,13 +66,13 @@ export function checkBuildFreshness(importMetaUrl: string, commandName: string):
 
   const details = stale.map((entry) => `  - ${entry}`).join("\n");
   const message = [
-    `${commandName} detected stale build artifacts for @weft/lsp.`,
+    `${commandName} detected stale build artifacts for @rocketbro/weft.`,
     "Source files are newer than dist output.",
     "",
     details,
     "",
     "Fix:",
-    "  npm run build --workspace=@weft/lsp",
+    "  npm run build --workspace=@rocketbro/weft",
     "",
     "If this is intentional, bypass once with WEFT_SKIP_BUILD_CHECK=1.",
   ].join("\n");

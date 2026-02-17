@@ -17,7 +17,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { readFileSync, existsSync } from "fs";
-import { parse } from "@weft/lsp/dist/parser.js";
+import { parse } from "@rocketbro/weft/dist/parser.js";
 import {
   analyze,
   coverage,
@@ -25,8 +25,8 @@ import {
   getTypesByLifecycle,
   getDependencyGraph,
   getSchemaTypes,
-} from "@weft/lsp/dist/analyzer.js";
-import type { RoleKind, LifecycleKind } from "@weft/lsp/dist/ast.js";
+} from "@rocketbro/weft/dist/analyzer.js";
+import type { RoleKind, LifecycleKind } from "@rocketbro/weft/dist/ast.js";
 
 // ============================================
 // Server Setup

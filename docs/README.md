@@ -12,7 +12,6 @@ This directory contains the canonical documentation for the current Weft impleme
 6. [`getting-started/02-quick-start.md`](getting-started/02-quick-start.md)
 7. [`getting-started/03-philosophy.md`](getting-started/03-philosophy.md)
 8. [`ADOPTION.md`](ADOPTION.md) - using Weft outside this repo
-9. [`RELEASING_NPM.md`](RELEASING_NPM.md) - npm release process
 
 For realistic examples, read:
 

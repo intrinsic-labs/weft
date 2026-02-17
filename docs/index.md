@@ -19,7 +19,6 @@ Canonical docs in this directory are intentionally small and single-purpose.
 ## Operational
 
 - `docs/ADOPTION.md` - external project usage
-- `docs/RELEASING_NPM.md` - release process
 
 ## Related Non-Docs Sources
 

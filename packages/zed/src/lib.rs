@@ -5,7 +5,7 @@ use zed_extension_api::{self as zed, Command, LanguageServerId, Result, Worktree
 /// Provides LSP support for Weft specification files via the weft-lsp server.
 struct WeftExtension;
 
-const LSP_NPM_PACKAGE: &str = "@weft/lsp";
+const LSP_NPM_PACKAGE: &str = "@rocketbro/weft";
 const LSP_BINARY: &str = "weft-lsp";
 
 impl zed::Extension for WeftExtension {
@@ -30,7 +30,7 @@ impl zed::Extension for WeftExtension {
         // Fallback: try npm installation only if binary is missing.
         let latest = zed::npm_package_latest_version(LSP_NPM_PACKAGE).map_err(|err| {
             format!(
-                "failed to resolve {LSP_NPM_PACKAGE}: {err}. Install `{LSP_BINARY}` manually (for local dev: `npm link --workspace=@weft/lsp`)."
+                "failed to resolve {LSP_NPM_PACKAGE}: {err}. Install `{LSP_BINARY}` manually (for local dev: `npm link --workspace=@rocketbro/weft`)."
             )
         })?;
         let installed = zed::npm_package_installed_version(LSP_NPM_PACKAGE)?;
@@ -40,7 +40,7 @@ impl zed::Extension for WeftExtension {
 
         let server_path = worktree.which(LSP_BINARY).ok_or_else(|| {
             format!(
-                "{LSP_BINARY} was not found after npm install. For local development, run `npm link --workspace=@weft/lsp`."
+                "{LSP_BINARY} was not found after npm install. For local development, run `npm link --workspace=@rocketbro/weft`."
             )
         })?;
 

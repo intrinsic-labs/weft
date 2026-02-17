@@ -8,14 +8,14 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "dev": "npm run dev --workspace=@weft/lsp",
+    "dev": "npm run dev --workspace=@rocketbro/weft",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "sync:zed-grammar": "echo \"Zed grammar is sourced via extension.toml repository/rev/path\""
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/intrinsic-labs/weft"
+    "url": "https://github.com/rocketbro/weft"
   },
   "author": "Intrinsic Labs",
   "license": "MIT"

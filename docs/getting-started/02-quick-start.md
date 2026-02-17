@@ -26,8 +26,16 @@ service Messaging {
 
 ## 2. Validate from CLI
 
+Install the CLI globally first:
+
 ```bash
-npx weft check spec.weft
+npm install -g @rocketbro/weft
+```
+
+Then validate:
+
+```bash
+weft check spec.weft
 ```
 
 If no issues are found, the command reports success.
@@ -35,8 +43,8 @@ If no issues are found, the command reports success.
 If you see a stale build error, rebuild and retry:
 
 ```bash
-npm run build --workspace=@weft/lsp
-npx weft check spec.weft
+npm run build --workspace=@rocketbro/weft
+weft check spec.weft
 ```
 
 ## 3. Validate in Editor

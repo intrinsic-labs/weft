@@ -51,12 +51,12 @@ CLI commands:
 
 ## Runtime Notes
 
-- CLI and LSP run from `@weft/lsp/dist/*`.
+- CLI and LSP run from `@rocketbro/weft/dist/*`.
 - Stale build artifacts are now detected at startup.
 - If source is newer than dist, rebuild:
 
 ```bash
-npm run build --workspace=@weft/lsp
+npm run build --workspace=@rocketbro/weft
 ```
 
 ## Canonical Implementation Files
