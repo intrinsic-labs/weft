@@ -8,6 +8,20 @@ It sits between two extremes:
 
 With Weft, you write `.weft` files and get fast feedback from the CLI and editor diagnostics when references, rules, or architecture constraints drift.
 
+## Status
+
+Weft works: it installs, builds, typechecks, and passes its full test suite today, after
+months with no maintenance (no feature commit since February 2026). What's changed is the
+founding bet. Weft's premise was that solo/indie teams need a typed spec DSL to keep design
+docs from drifting; coding agents got good enough, fast enough, that an LLM reading plain
+markdown now catches most of the same drift without asking anyone to learn new syntax. It's
+kept here as a working demonstration of the craft (hand-written lexer/parser/analyzer, a real
+language server wired into two editors, a tree-sitter grammar, `strict` TypeScript throughout),
+not as something under active pursuit
+for adoption. The one piece that still has a plausible future is `@weft/mcp`: handing an
+agent grounded, non-hallucinated structured facts about a spec, on demand, is a job this
+toolchain is still well-suited for even in an agent-heavy world.
+
 ## Install
 
 Install globally from npm:
